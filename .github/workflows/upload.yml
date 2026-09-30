@@ -8,6 +8,11 @@ on:
   schedule:
     - cron: "7 */4 * * *"
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Build the video but do not upload (for testing)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -58,9 +63,19 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           PUBLISH_HOURS_UTC: ${{ vars.PUBLISH_HOURS_UTC }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          FORCE: ${{ inputs.dry_run && '1' || '' }}
         run: node scripts/run.mjs
 
       # Persist which topics were used and what is scheduled, even if the upload step failed.
+      - name: Keep the test video
+        if: ${{ inputs.dry_run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-video
+          path: out/final.mp4
+          retention-days: 2
+
       - name: Save state
         if: always()
         run: |
