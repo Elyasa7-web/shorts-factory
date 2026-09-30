@@ -1,0 +1,25 @@
+{
+  "name": "shorts-factory",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio",
+    "make": "node scripts/run.mjs",
+    "dry": "DRY_RUN=1 node scripts/run.mjs",
+    "audit": "node scripts/audit.mjs",
+    "bank": "node scripts/build-bank.mjs",
+    "auth": "node scripts/auth.mjs"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.531",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.531",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}
