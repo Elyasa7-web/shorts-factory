@@ -51,8 +51,11 @@ def post_json(url, payload, headers, retries=4):
                 return r.read()
         except urllib.error.HTTPError as e:
             body = e.read().decode("utf-8", "replace")[:300]
-            if e.code in (429, 500, 503) and attempt < retries - 1:
-                time.sleep(8 * (attempt + 1))        # free tiers rate-limit: back off and retry
+            # A quota error means "no free quota left", retrying only wastes minutes: fail fast
+            # so the next provider takes over. Transient 5xx errors are worth a short retry.
+            transient = e.code in (500, 503) or (e.code == 429 and "quota" not in body.lower())
+            if transient and attempt < retries - 1:
+                time.sleep(8 * (attempt + 1))
                 continue
             raise RuntimeError(f"HTTP {e.code}: {body}")
 

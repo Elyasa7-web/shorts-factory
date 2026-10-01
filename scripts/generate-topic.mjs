@@ -41,7 +41,7 @@ async function candidate() {
 }
 
 function hashtags(title, extra) {
-  const skip = new Set(["countries", "highest", "largest", "world", "people"]);
+  const skip = new Set(["countries", "highest", "largest", "world", "people", "person", "which", "their"]);
   const words = title.toLowerCase().replace(/[^a-z ]/g, "").split(" ")
     .filter((w) => w.length > 5 && !skip.has(w));
   return [...new Set(["shorts", "top5", "facts", ...extra, ...words.slice(0, 3)])];
