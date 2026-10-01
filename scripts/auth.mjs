@@ -1,27 +1,31 @@
-// One-time, run LOCALLY: turns your Google OAuth client into a long-lived refresh token.
-//   $env:YT_CLIENT_ID="..."; $env:YT_CLIENT_SECRET="..."; node scripts/auth.mjs
-// The token is printed to this terminal only. Put it in GitHub -> Settings -> Secrets yourself.
+// One-time, run LOCALLY: turns your downloaded Google OAuth client file into a
+// long-lived refresh token. The token is written to .yt-refresh-token.txt (git-ignored)
+// and never printed, so it does not end up in terminal logs or chat.
+//   node scripts/auth.mjs "C:\path\to\client_secret_....json"
 import http from "node:http";
+import { readFileSync, writeFileSync } from "node:fs";
 
-const { YT_CLIENT_ID, YT_CLIENT_SECRET } = process.env;
-if (!YT_CLIENT_ID || !YT_CLIENT_SECRET) {
-  console.error("Set YT_CLIENT_ID and YT_CLIENT_SECRET first.");
+const file = process.argv[2];
+if (!file) {
+  console.error("usage: node scripts/auth.mjs <client_secret.json>");
   process.exit(1);
 }
+const { client_id, client_secret } = JSON.parse(readFileSync(file, "utf8")).installed;
 const PORT = 53682;
 const redirect = `http://127.0.0.1:${PORT}`;
 const authUrl =
   "https://accounts.google.com/o/oauth2/v2/auth?" +
   new URLSearchParams({
-    client_id: YT_CLIENT_ID,
+    client_id,
     redirect_uri: redirect,
     response_type: "code",
     scope: "https://www.googleapis.com/auth/youtube.upload",
     access_type: "offline",
     prompt: "consent",
+    login_hint: process.env.LOGIN_HINT ?? "",
   });
 
-console.log("\nOpen this URL in your browser and approve:\n\n" + authUrl + "\n");
+console.log("OPEN THIS URL:\n" + authUrl);
 
 http.createServer(async (req, res) => {
   const code = new URL(req.url, redirect).searchParams.get("code");
@@ -30,12 +34,17 @@ http.createServer(async (req, res) => {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      code, client_id: YT_CLIENT_ID, client_secret: YT_CLIENT_SECRET,
-      redirect_uri: redirect, grant_type: "authorization_code",
+      code, client_id, client_secret, redirect_uri: redirect, grant_type: "authorization_code",
     }),
   });
   const j = await r.json();
-  res.end(j.refresh_token ? "Done. You can close this tab." : "Failed, see terminal.");
-  console.log(j.refresh_token ? `\nYT_REFRESH_TOKEN=${j.refresh_token}\n` : j);
+  if (j.refresh_token) {
+    writeFileSync(".yt-refresh-token.txt", j.refresh_token);
+    res.end("Done. You can close this tab.");
+    console.log("SUCCESS: refresh token saved to .yt-refresh-token.txt");
+  } else {
+    res.end("Failed, see terminal.");
+    console.log("FAILED:", j.error, j.error_description);
+  }
   process.exit(0);
 }).listen(PORT);

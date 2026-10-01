@@ -146,6 +146,8 @@ def main():
     if not used:
         print("All voice providers failed:\n  " + "\n  ".join(errors), file=sys.stderr)
         sys.exit(1)
+    for e in errors:                                  # surface why earlier providers were skipped
+        print(f"voice fallback reason -> {e}", file=sys.stderr)
     print(f"voice provider: {used}")
 
     cmd = ["ffmpeg", "-y", "-loglevel", "error"]
