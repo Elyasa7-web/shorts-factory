@@ -13,6 +13,10 @@ on:
         description: "Build the video but do not upload (for testing)"
         type: boolean
         default: false
+      force:
+        description: "Upload even if a video was uploaded recently (testing)"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -65,7 +69,7 @@ jobs:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           PUBLISH_HOURS_UTC: ${{ vars.PUBLISH_HOURS_UTC }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
-          FORCE: ${{ inputs.dry_run && '1' || '' }}
+          FORCE: ${{ (inputs.force || inputs.dry_run) && '1' || '' }}
         run: node scripts/run.mjs
 
       # Persist which topics were used and what is scheduled, even if the upload step failed.
