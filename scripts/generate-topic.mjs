@@ -65,6 +65,7 @@ Data: ${topic.source}
     tags,
     props: {
       hook: topic.title,
+      emoji: topic.emoji ?? "🌍",
       accent: pick(ACCENTS),
       secondsPerItem: 5,
       outro: "Follow for more rankings",

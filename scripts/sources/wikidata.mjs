@@ -24,15 +24,15 @@ export const COUNTRIES = {
 // scale converts Wikidata's SI value (metres, m^2) to the displayed unit.
 // min/max = plausibility window; built = completed structures only.
 export const CATEGORIES = [
-  { id: "mountains", cls: ["Q8502"], prop: "P2044", unit: "m", scale: 1, dir: "DESC", min: 100, max: 8900,
+  { id: "mountains", emoji: "⛰️", cls: ["Q8502"], prop: "P2044", unit: "m", scale: 1, dir: "DESC", min: 100, max: 8900,
     noun: "Highest Mountains", scopes: ["world"] },
-  { id: "rivers", cls: ["Q4022"], prop: "P2043", unit: "km", scale: 1e-3, dir: "DESC", min: 50, max: 7000,
+  { id: "rivers", emoji: "🌊", cls: ["Q4022"], prop: "P2043", unit: "km", scale: 1e-3, dir: "DESC", min: 50, max: 7000,
     noun: "Longest Rivers", scopes: ["world"] },
-  { id: "lakes", cls: ["Q23397"], prop: "P2046", unit: "km²", scale: 1e-6, dir: "DESC", min: 10, max: 400000,
+  { id: "lakes", emoji: "💧", cls: ["Q23397"], prop: "P2046", unit: "km²", scale: 1e-6, dir: "DESC", min: 10, max: 400000,
     noun: "Largest Lakes", scopes: ["world"] },
-  { id: "islands", cls: ["Q23442"], prop: "P2046", unit: "km²", scale: 1e-6, dir: "DESC", min: 10, max: 2200000,
+  { id: "islands", emoji: "🏝️", cls: ["Q23442"], prop: "P2046", unit: "km²", scale: 1e-6, dir: "DESC", min: 10, max: 2200000,
     noun: "Largest Islands", scopes: ["world"] },
-  { id: "skyscrapers", cls: ["Q11303"], prop: "P2048", unit: "m", scale: 1, dir: "DESC", min: 100, max: 830, built: true,
+  { id: "skyscrapers", emoji: "🏢", cls: ["Q11303"], prop: "P2048", unit: "m", scale: 1, dir: "DESC", min: 100, max: 830, built: true,
     noun: "Tallest Skyscrapers", scopes: ["world"] },
 ];
 
@@ -117,6 +117,7 @@ export const wikidata = {
       key: `wd|${cat.id}|${cat.dir}|${scopeQid ?? "world"}`,
       title: `Top 5 ${cat.noun}${where}`,
       items,
+      emoji: cat.emoji,
       source: "Wikidata (CC0)",
       tags: ["geography", "world records", "facts"],
     };

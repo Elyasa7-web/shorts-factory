@@ -43,6 +43,7 @@ console.log(`Topic: ${topic.title}`);
 // Never reuse a stale voice track, and never publish a silent video: narrate.py
 // exits non-zero when every TTS provider fails, which aborts this run (retry next cycle).
 rmSync("out/narration.m4a", { force: true });
+sh(process.execPath, ["scripts/fetch-assets.mjs", "data/props.json"]);
 sh(python, ["scripts/narrate.py"], { env: { ...process.env, PYTHONIOENCODING: "utf-8" } });
 // Rendering is deterministic but Chrome can flake on a busy runner: retry once before giving up.
 for (let attempt = 1; ; attempt++) {

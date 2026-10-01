@@ -167,7 +167,30 @@ def main():
     run(cmd)
     for _, _, p in files:
         p.unlink(missing_ok=True)
-    print("narration ok")
+
+    # Music bed + sound effects timed to the on-screen reveals, mixed under the voice.
+    from audio_fx import make_music, make_sfx, save_wav
+    n_items = len(props["items"])
+    slot = props["secondsPerItem"]
+    events = [("riser", 0.0)]
+    for i in range(n_items):
+        start = HOOK_S + i * slot
+        events += [("whoosh", start), ("ding", start + 0.9)]
+        if i == n_items - 1:                              # last reveal = rank #1
+            events.append(("boom", start))
+    events.append(("ding", HOOK_S + n_items * slot))
+    save_wav(out / "music.wav", make_music(total))
+    save_wav(out / "sfx.wav", make_sfx(total, events))
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(out / "narration.m4a"),
+         "-i", str(out / "music.wav"), "-i", str(out / "sfx.wav"),
+         "-filter_complex",
+         "[0:a]volume=1.0[v];[1:a]volume=0.20[m];[2:a]volume=0.5[s];"
+         "[v][m][s]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.95[o]",
+         "-map", "[o]", "-c:a", "aac", "-b:a", "160k", str(out / "mixed.m4a")])
+    (out / "mixed.m4a").replace(out / "narration.m4a")
+    for f in ("music.wav", "sfx.wav"):
+        (out / f).unlink(missing_ok=True)
+    print("narration ok (voice + music + sfx)")
 
 if __name__ == "__main__":
     main()

@@ -42,25 +42,25 @@ const RENAME = {
 
 // kind: "total" (size matters), "ratio" (distorted by micro-states -> need minPop)
 const INDICATORS = [
-  { id: "SP.POP.TOTL", kind: "total", unit: "people", hi: "Most People", lo: "Fewest People" },
-  { id: "NY.GDP.MKTP.CD", kind: "total", unit: "$ billion", scale: 1e-9, hi: "Biggest Economy (GDP)", lo: "Smallest Economy (GDP)" },
-  { id: "NY.GDP.PCAP.CD", kind: "ratio", unit: "$ per person", hi: "Highest GDP Per Person", lo: "Lowest GDP Per Person" },
-  { id: "SP.DYN.LE00.IN", kind: "ratio", unit: "years", hi: "Highest Life Expectancy", lo: "Lowest Life Expectancy" },
-  { id: "EN.POP.DNST", kind: "total", unit: "people/km²", hi: "Most Crowded Land", lo: "Emptiest Land" },
-  { id: "AG.LND.FRST.ZS", kind: "ratio", unit: "% forest", hi: "Most Forest Cover", lo: "Least Forest Cover" },
-  { id: "IT.NET.USER.ZS", kind: "ratio", unit: "% online", hi: "Most People Online", lo: "Fewest People Online" },
-  { id: "SP.URB.TOTL.IN.ZS", kind: "ratio", unit: "% urban", hi: "Most Urban Population", lo: "Most Rural Population" },
-  { id: "SP.DYN.TFRT.IN", kind: "ratio", unit: "births per woman", hi: "Most Babies Per Woman", lo: "Fewest Babies Per Woman" },
-  { id: "AG.LND.TOTL.K2", kind: "total", unit: "km²", hi: "Most Land Area", lo: "Least Land Area" },
-  { id: "SP.POP.GROW", kind: "ratio", unit: "% per year", hi: "Fastest Growing Population", lo: null },
-  { id: "SH.XPD.CHEX.GD.ZS", kind: "ratio", unit: "% of GDP", hi: "Highest Health Spending", lo: "Lowest Health Spending" },
-  { id: "SP.DYN.IMRT.IN", kind: "ratio", unit: "deaths per 1,000 births", hi: "Highest Infant Mortality", lo: "Lowest Infant Mortality" },
-  { id: "MS.MIL.XPND.GD.ZS", kind: "ratio", unit: "% of GDP", hi: "Highest Military Spending", lo: "Lowest Military Spending" },
-  { id: "SP.POP.65UP.TO.ZS", kind: "ratio", unit: "% aged 65+", hi: "Biggest Share of Seniors (65+)", lo: "Smallest Share of Seniors (65+)" },
-  { id: "IT.CEL.SETS.P2", kind: "ratio", unit: "phones per 100", hi: "Most Phone Subscriptions Per Person", lo: "Fewest Phone Subscriptions Per Person" },
-  { id: "NY.GDP.MKTP.KD.ZG", kind: "ratio", unit: "% growth", hi: "Fastest Growing Economy", lo: null },
-  { id: "NE.EXP.GNFS.ZS", kind: "ratio", unit: "% of GDP", hi: "Most Export-Driven Economy", lo: "Least Export-Driven Economy" },
-  { id: "AG.LND.ARBL.ZS", kind: "ratio", unit: "% arable land", hi: "Most Arable Land", lo: "Least Arable Land" },
+  { id: "SP.POP.TOTL", emoji: "👥", kind: "total", unit: "people", hi: "Most People", lo: "Fewest People" },
+  { id: "NY.GDP.MKTP.CD", emoji: "💰", kind: "total", unit: "$ billion", scale: 1e-9, hi: "Biggest Economy (GDP)", lo: "Smallest Economy (GDP)" },
+  { id: "NY.GDP.PCAP.CD", emoji: "💵", kind: "ratio", unit: "$ per person", hi: "Highest GDP Per Person", lo: "Lowest GDP Per Person" },
+  { id: "SP.DYN.LE00.IN", emoji: "❤️", kind: "ratio", unit: "years", hi: "Highest Life Expectancy", lo: "Lowest Life Expectancy" },
+  { id: "EN.POP.DNST", emoji: "🏙️", kind: "total", unit: "people/km²", hi: "Most Crowded Land", lo: "Emptiest Land" },
+  { id: "AG.LND.FRST.ZS", emoji: "🌳", kind: "ratio", unit: "% forest", hi: "Most Forest Cover", lo: "Least Forest Cover" },
+  { id: "IT.NET.USER.ZS", emoji: "🌐", kind: "ratio", unit: "% online", hi: "Most People Online", lo: "Fewest People Online" },
+  { id: "SP.URB.TOTL.IN.ZS", emoji: "🏢", kind: "ratio", unit: "% urban", hi: "Most Urban Population", lo: "Most Rural Population" },
+  { id: "SP.DYN.TFRT.IN", emoji: "👶", kind: "ratio", unit: "births per woman", hi: "Most Babies Per Woman", lo: "Fewest Babies Per Woman" },
+  { id: "AG.LND.TOTL.K2", emoji: "🗺️", kind: "total", unit: "km²", hi: "Most Land Area", lo: "Least Land Area" },
+  { id: "SP.POP.GROW", emoji: "📈", kind: "ratio", unit: "% per year", hi: "Fastest Growing Population", lo: null },
+  { id: "SH.XPD.CHEX.GD.ZS", emoji: "🏥", kind: "ratio", unit: "% of GDP", hi: "Highest Health Spending", lo: "Lowest Health Spending" },
+  { id: "SP.DYN.IMRT.IN", emoji: "🍼", kind: "ratio", unit: "deaths per 1,000 births", hi: "Highest Infant Mortality", lo: "Lowest Infant Mortality" },
+  { id: "MS.MIL.XPND.GD.ZS", emoji: "🛡️", kind: "ratio", unit: "% of GDP", hi: "Highest Military Spending", lo: "Lowest Military Spending" },
+  { id: "SP.POP.65UP.TO.ZS", emoji: "👴", kind: "ratio", unit: "% aged 65+", hi: "Biggest Share of Seniors (65+)", lo: "Smallest Share of Seniors (65+)" },
+  { id: "IT.CEL.SETS.P2", emoji: "📱", kind: "ratio", unit: "phones per 100", hi: "Most Phone Subscriptions Per Person", lo: "Fewest Phone Subscriptions Per Person" },
+  { id: "NY.GDP.MKTP.KD.ZG", emoji: "🚀", kind: "ratio", unit: "% growth", hi: "Fastest Growing Economy", lo: null },
+  { id: "NE.EXP.GNFS.ZS", emoji: "🚢", kind: "ratio", unit: "% of GDP", hi: "Most Export-Driven Economy", lo: "Least Export-Driven Economy" },
+  { id: "AG.LND.ARBL.ZS", emoji: "🌾", kind: "ratio", unit: "% arable land", hi: "Most Arable Land", lo: "Least Arable Land" },
 ];
 
 const MIN_POP_FOR_RATIOS = 1_000_000;
@@ -90,7 +90,7 @@ async function getCountries() {
     countryCache = new Map(
       data[1]
         .filter((c) => c.region.value !== "Aggregates" && !NOT_COUNTRIES.has(c.id))
-        .map((c) => [c.id, { name: RENAME[c.name] ?? c.name, region: c.region.value.trim() }])
+        .map((c) => [c.id, { name: RENAME[c.name] ?? c.name, region: c.region.value.trim(), iso2: c.iso2Code }])
     );
   }
   return countryCache;
@@ -127,6 +127,7 @@ export const worldbank = {
       label: countries.get(r.countryiso3code).name,
       value: niceRound(r.value * scale),
       unit: indicator.unit,
+      iso2: countries.get(r.countryiso3code).iso2, // used to fetch the flag image
     }));
     // A chart where every bar is identical (or all zero) is not a ranking.
     if (new Set(items.map((i) => i.value)).size < 4 || items.every((i) => i.value <= 0)) return null;
@@ -138,6 +139,7 @@ export const worldbank = {
       key: `wb|${indicator.id}|${dir}|${region ?? "world"}`,
       title: `Top 5 Countries With The ${phrase}${where}`,
       items,
+      emoji: indicator.emoji,
       source: `World Bank Open Data (latest available, ${newest})`,
       tags: ["countries", "geography", "world", "statistics"],
     };

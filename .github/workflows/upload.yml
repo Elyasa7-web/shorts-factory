@@ -42,7 +42,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg espeak-ng libnss3 libdbus-1-3 libatk1.0-0 \
             libatk-bridge2.0-0 libgbm-dev libasound2t64 libxrandr2 libxkbcommon-dev \
-            libxfixes3 libxcomposite1 libxdamage1 libcups2
+            libxfixes3 libxcomposite1 libxdamage1 libcups2 fonts-noto-color-emoji
 
       - run: pip install edge-tts
       - run: npm ci
@@ -61,6 +61,7 @@ jobs:
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           PUBLISH_HOURS_UTC: ${{ vars.PUBLISH_HOURS_UTC }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
