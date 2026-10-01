@@ -6,8 +6,8 @@ import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
 
 const SCHEDULE = "data/schedule.json";
-const HOURS = (process.env.PUBLISH_HOURS_UTC ?? "2,6,10,14,18,22").split(",").map(Number);
-const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS ?? 3);
+const HOURS = (process.env.PUBLISH_HOURS_UTC || "2,6,10,14,18,22").split(",").map(Number);
+const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 3);
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
 
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", ...opts });
