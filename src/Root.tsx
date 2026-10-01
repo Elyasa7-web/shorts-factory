@@ -1,6 +1,7 @@
 import { CalculateMetadataFunction, Composition } from "remotion";
 import { Top5, top5Schema, Top5Props } from "./Top5";
 import { FPS, HOOK_SECONDS, OUTRO_SECONDS } from "./timing";
+import { Avatar, Banner } from "./Branding";
 
 // Duration is derived from the data, so a 3-item or 7-item list just works.
 const calculateMetadata: CalculateMetadataFunction<Top5Props> = ({ props }) => ({
@@ -24,6 +25,9 @@ const defaultProps: Top5Props = {
 };
 
 export const RemotionRoot: React.FC = () => (
+  <>
+  <Composition id="Avatar" component={Avatar} width={800} height={800} fps={FPS} durationInFrames={1} />
+  <Composition id="Banner" component={Banner} width={2560} height={1440} fps={FPS} durationInFrames={1} />
   <Composition
     id="Top5"
     component={Top5}
@@ -35,4 +39,5 @@ export const RemotionRoot: React.FC = () => (
     defaultProps={defaultProps}
     calculateMetadata={calculateMetadata}
   />
+  </>
 );
