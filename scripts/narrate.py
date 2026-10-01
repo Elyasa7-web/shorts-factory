@@ -14,6 +14,7 @@ import asyncio, base64, json, os, subprocess, sys, time, urllib.error, urllib.re
 from pathlib import Path
 
 HOOK_S, OUTRO_S = 2.5, 2.0
+MAX_SPEEDUP = 1.1  # never speed the voice up more than 10% to fit a slot
 
 UNIT_SPEECH = {
     "people": "people", "km": "kilometers", "m": "meters", "km²": "square kilometers",
@@ -21,7 +22,7 @@ UNIT_SPEECH = {
     "$ per person": "dollars per person", "years": "years", "seats": "seats",
     "births per woman": "births per woman", "% per year": "percent per year",
     "deaths per 1,000 births": "deaths per thousand births",
-    "phones per 100": "subscriptions per hundred people", "% growth": "percent growth",
+    "phones per 100": "per hundred people", "% growth": "percent growth",
 }
 
 def unit_speech(u: str) -> str:
@@ -68,7 +69,7 @@ def tts_gemini(text: str, path: Path):
     raw = post_json(
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
         {
-            "contents": [{"parts": [{"text": f"Say in a clear, upbeat, energetic narrator voice: {text}"}]}],
+            "contents": [{"parts": [{"text": f"Say in a clear, friendly narrator voice at a calm, measured pace (never rushed): {text}"}]}],
             "generationConfig": {
                 "responseModalities": ["AUDIO"],
                 "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
@@ -103,7 +104,7 @@ def tts_espeak(text: str, path: Path):
 
 def tts_edge(text: str, path: Path):
     import edge_tts
-    asyncio.run(edge_tts.Communicate(text, "en-US-AndrewNeural", rate="+8%").save(str(path)))
+    asyncio.run(edge_tts.Communicate(text, "en-US-AndrewNeural", rate=os.environ.get("VOICE_RATE", "-2%")).save(str(path)))
 
 PROVIDERS = {
     "gemini": ("GEMINI_API_KEY", tts_gemini),
@@ -112,36 +113,63 @@ PROVIDERS = {
     "espeak": (None, tts_espeak),
 }
 
-def segments(props):
-    items, slot = props["items"], props["secondsPerItem"]
+# The voice sets the pace: every scene lasts as long as its narration needs, spoken at natural speed.
+HOOK_MAX, OUTRO_MAX, ITEM_MAX_VOICE = 4.6, 3.6, 8.8     # longest narration we accept (seconds)
+HOOK_MIN, OUTRO_MIN = 2.5, 2.0                           # shortest scene
+ITEM_MIN_SLOT, ITEM_MAX_SLOT, PAD = 5.0, 10.5, 1.3        # per-country scene length bounds / breathing room
+
+def candidates(props):
+    """Narration texts per scene, richest first. The first one that fits is used, so a long
+    sentence is shortened instead of being sped up."""
+    items = props["items"]
     n = len(items)
-    segs = [(0.0, HOOK_S, props["hook"] + ".")]
+    title = props["hook"]
+    short_title = title.rsplit(" in ", 1)[0] if " in " in title else title
+    hook = [title + ".", short_title + ".", "Top 5 countries. Number one might surprise you."]
+    per_item = []
     for i, it in enumerate(items[::-1]):              # countdown: #N first
         rank = n - i
-        facts = it.get('facts') or []
-        extra = f" {facts[0]['say'].capitalize()}." if facts else ''
-        text = f"Number {rank}. {it['label']}. {fmt(it['value'])} {unit_speech(it['unit'])}.{extra}"
-        segs.append((HOOK_S + i * slot + 0.3, slot - 0.4, text))
-    segs.append((HOOK_S + n * slot, OUTRO_S, props["outro"] + " Tell us in the comments!"))
-    return segs, HOOK_S + n * slot + OUTRO_S
+        value = f"{fmt(it['value'])} {unit_speech(it['unit'])}."
+        facts = [f["say"].capitalize() + "." for f in (it.get("facts") or [])]
+        head = f"Number {rank}. {it['label']}. {value}"
+        c = []
+        if facts:
+            c.append(f"{head} {facts[0]}")
+        c.append(head)
+        c.append(f"{it['label']}. {value}")
+        per_item.append(c)
+    outro = [props["outro"] + " Tell us in the comments!", props["outro"]]
+    return hook, per_item, outro
+
+def synth_best(fn, cands, limit, path):
+    """Synthesise candidates until one fits `limit` seconds; returns (text, seconds)."""
+    text, dur = cands[0], 0.0
+    for text in cands:
+        fn(text, path)
+        dur = probe(path)
+        if dur <= limit:
+            break
+    return text, dur
 
 def main():
     props = json.load(open("data/current.json", encoding="utf-8"))["props"]
-    segs, total = segments(props)
     out = Path("out"); out.mkdir(exist_ok=True)
+    hook_c, item_c, outro_c = candidates(props)
 
-    files, used, errors = [], None, []
+    voices, used, errors = [], None, []
     for name in os.environ.get("TTS_ORDER", "gemini,elevenlabs,edge,espeak").split(","):
         env_key, fn = PROVIDERS[name.strip()]
         if env_key and not os.environ.get(env_key):
             errors.append(f"{name}: no {env_key}")
             continue
         try:
-            files = []
-            for k, (start, maxlen, text) in enumerate(segs):
+            voices = []
+            plan = [("hook", hook_c, HOOK_MAX)] + [(f"item{i}", c, ITEM_MAX_VOICE) for i, c in enumerate(item_c)] + [("outro", outro_c, OUTRO_MAX)]
+            for k, (label, cands, limit) in enumerate(plan):
                 p = out / f"seg{k}.mp3"
-                fn(text, p)
-                files.append((start, maxlen, p))
+                text, dur = synth_best(fn, cands, limit, p)
+                print(f"  voice {label}: {dur:.1f}s <- {text[:70]}")
+                voices.append((p, dur))
             used = name
             break
         except Exception as e:                        # try the next provider for the WHOLE video
@@ -155,32 +183,49 @@ def main():
         print(f"voice fallback reason -> {e}", file=sys.stderr)
     print(f"voice provider: {used}")
 
+    # ---- timeline: scene lengths follow the narration ----
+    hook_d, item_d, outro_d = voices[0][1], [v[1] for v in voices[1:-1]], voices[-1][1]
+    hook_s = max(HOOK_MIN, hook_d + 0.3)
+    slots = [min(ITEM_MAX_SLOT, max(ITEM_MIN_SLOT, d + PAD)) for d in item_d]
+    outro_s = max(OUTRO_MIN, outro_d + 0.5)
+    item_starts = [hook_s + sum(slots[:i]) for i in range(len(slots))]
+    outro_start = hook_s + sum(slots)
+    total = outro_start + outro_s
+
+    # tell Remotion the same timeline
+    pp = Path("data/props.json")
+    pj = json.loads(pp.read_text(encoding="utf-8"))
+    pj["durations"] = [round(x, 2) for x in slots]
+    pj["hookSeconds"] = round(hook_s, 2)
+    pj["outroSeconds"] = round(outro_s, 2)
+    pp.write_text(json.dumps(pj), encoding="utf-8")
+    print(f"timeline: hook {hook_s:.1f}s + items {[round(x, 1) for x in slots]} + outro {outro_s:.1f}s = {total:.1f}s")
+
+    layout = [(0.0, hook_s, voices[0])] +              [(item_starts[i] + 0.3, slots[i] - 0.3, voices[i + 1]) for i in range(len(slots))] +              [(outro_start + 0.1, outro_s - 0.1, voices[-1])]
     cmd = ["ffmpeg", "-y", "-loglevel", "error"]
     filt, labels = [], []
-    for k, (start, maxlen, p) in enumerate(files):
+    for k, (start, room, (p, dur)) in enumerate(layout):
         cmd += ["-i", str(p)]
-        tempo = min(max(1.0, probe(p) / maxlen), 1.6)  # squeeze long lines into their slot
+        tempo = min(max(1.0, dur / room), 1.15)       # only if a scene hit its maximum length
         ms = int(start * 1000)
         filt.append(f"[{k}:a]atempo={tempo:.3f},adelay={ms}|{ms}[a{k}]")
         labels.append(f"[a{k}]")
-    filt.append("".join(labels) + f"amix=inputs={len(files)}:normalize=0,apad=whole_dur={total},atrim=0:{total}[out]")
+    filt.append("".join(labels) + f"amix=inputs={len(layout)}:normalize=0,apad=whole_dur={total},atrim=0:{total}[out]")
     cmd += ["-filter_complex", ";".join(filt), "-map", "[out]", "-c:a", "aac", "-b:a", "128k",
             str(out / "narration.m4a")]
     run(cmd)
-    for _, _, p in files:
+    for p, _ in voices:
         p.unlink(missing_ok=True)
 
     # Music bed + sound effects timed to the on-screen reveals, mixed under the voice.
     from audio_fx import make_music, make_sfx, save_wav
-    n_items = len(props["items"])
-    slot = props["secondsPerItem"]
+    n_items = len(slots)
     events = [("riser", 0.0)]
     for i in range(n_items):
-        start = HOOK_S + i * slot
-        events += [("whoosh", start), ("ding", start + 0.9)]
+        events += [("whoosh", item_starts[i]), ("ding", item_starts[i] + 0.9)]
         if i == n_items - 1:                              # last reveal = rank #1
-            events.append(("boom", start))
-    events.append(("ding", HOOK_S + n_items * slot))
+            events.append(("boom", item_starts[i]))
+    events.append(("ding", outro_start))
     save_wav(out / "music.wav", make_music(total))
     save_wav(out / "sfx.wav", make_sfx(total, events))
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(out / "narration.m4a"),

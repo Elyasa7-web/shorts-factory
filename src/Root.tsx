@@ -4,11 +4,14 @@ import { FPS, HOOK_SECONDS, OUTRO_SECONDS } from "./timing";
 import { Avatar, Banner } from "./Branding";
 
 // Duration is derived from the data, so a 3-item or 7-item list just works.
-const calculateMetadata: CalculateMetadataFunction<Top5Props> = ({ props }) => ({
-  durationInFrames: Math.round(
-    (HOOK_SECONDS + props.items.length * props.secondsPerItem + OUTRO_SECONDS) * FPS
-  ),
-});
+const calculateMetadata: CalculateMetadataFunction<Top5Props> = ({ props }) => {
+  const hook = props.hookSeconds ?? HOOK_SECONDS;
+  const outro = props.outroSeconds ?? OUTRO_SECONDS;
+  const items = props.durations
+    ? props.durations.reduce((a, b) => a + b, 0)
+    : props.items.length * props.secondsPerItem;
+  return { durationInFrames: Math.round((hook + items + outro) * FPS) };
+};
 
 const defaultProps: Top5Props = {
   hook: "Top 5 Most Expensive Things Ever Sold",

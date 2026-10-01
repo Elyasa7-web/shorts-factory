@@ -24,6 +24,10 @@ export const top5Schema = z.object({
   emoji: z.string().optional(),
   accent: z.string(),
   secondsPerItem: z.number(),
+  // set by scripts/narrate.py so every scene lasts as long as its narration (natural speaking speed)
+  durations: z.array(z.number()).optional(),
+  hookSeconds: z.number().optional(),
+  outroSeconds: z.number().optional(),
   teaser: z.string().optional(), // curiosity hook shown on the opening card
   outro: z.string(),
   items: z.array(
@@ -254,14 +258,17 @@ const FlagIntro: React.FC<{ flag: string; accent: string; label: string }> = ({ 
   );
 };
 
+/* a new text chip lands at ~40% of the scene, then every ~17%: roughly when the voice mentions it */
+const chipFrame = (slotFrames: number, i: number) => Math.max(60, Math.round(slotFrames * (0.4 + 0.17 * i)));
+
 /* ---------- data-derived talking points, revealed one by one under the number ---------- */
-const Facts: React.FC<{ facts: NonNullable<Item["facts"]>; accent: string }> = ({ facts, accent }) => {
+const Facts: React.FC<{ facts: NonNullable<Item["facts"]>; accent: string; slotFrames: number }> = ({ facts, accent, slotFrames }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   return (
     <div style={{ position: "absolute", left: 40, right: 140, top: 930, display: "flex", flexDirection: "column", gap: 18, fontFamily }}>
       {facts.map((f, i) => {
-        const p = spring({ frame: frame - (52 + i * 28), fps, config: { damping: 15 } });
+        const p = spring({ frame: frame - chipFrame(slotFrames, i), fps, config: { damping: 15 } });
         return (
           <div
             key={i}
@@ -301,7 +308,7 @@ const ItemScene: React.FC<{
   title: string;
 }> = ({ item, rank, items, accent, emoji, title }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames: slotFrames } = useVideoConfig();
   const pop = spring({ frame, fps, config: { damping: 11, stiffness: 140 } });
   const card = spring({ frame: frame - 12, fps, config: { damping: 14 } });
   const count = spring({ frame: frame - 22, fps, durationInFrames: 42 });
@@ -311,7 +318,7 @@ const ItemScene: React.FC<{
 
   return (
     <AbsoluteFill style={{ transform: `translateX(${shake}px)` }}>
-      <Footage item={item} accent={accent} emoji={emoji} punches={[16, ...(item.facts ?? []).map((_, i) => 52 + i * 28)]} zoomOut={rank % 2 === 0} />
+      <Footage item={item} accent={accent} emoji={emoji} punches={[16, ...(item.facts ?? []).map((_, i) => chipFrame(slotFrames, i))]} zoomOut={rank % 2 === 0} />
       <Shade />
       <Title text={title} accent={accent} />
       <RankList items={items} currentRank={rank} accent={accent} />
@@ -371,7 +378,7 @@ const ItemScene: React.FC<{
         </div>
       </div>
 
-      {item.facts && item.facts.length ? <Facts facts={item.facts} accent={accent} /> : null}
+      {item.facts && item.facts.length ? <Facts facts={item.facts} accent={accent} slotFrames={slotFrames} /> : null}
       {item.flag ? <FlagIntro flag={item.flag} accent={accent} label={item.label} /> : null}
       {rank === 1 ? <Confetti accent={accent} /> : null}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
@@ -469,13 +476,15 @@ const Outro: React.FC<{ winner: Item; accent: string; emoji?: string; text: stri
   );
 };
 
-export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem, teaser, outro, items }) => {
+export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem, durations, hookSeconds, outroSeconds, teaser, outro, items }) => {
   const { fps, durationInFrames } = useVideoConfig();
-  const hookFrames = Math.round(HOOK_SECONDS * fps);
-  const itemFrames = Math.round(secondsPerItem * fps);
-  const outroFrames = Math.round(OUTRO_SECONDS * fps);
+  const hookFrames = Math.round((hookSeconds ?? HOOK_SECONDS) * fps);
+  const outroFrames = Math.round((outroSeconds ?? OUTRO_SECONDS) * fps);
   const countdown = [...items].reverse(); // items[0] is rank #1; show #N first
   const total = items.length;
+  const slots = countdown.map((_, i) => Math.round((durations?.[i] ?? secondsPerItem) * fps));
+  const starts = slots.map((_, i) => hookFrames + slots.slice(0, i).reduce((a, b) => a + b, 0));
+  const outroStart = hookFrames + slots.reduce((a, b) => a + b, 0);
 
   return (
     <AbsoluteFill style={{ background: "#000" }}>
@@ -483,11 +492,11 @@ export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem,
         <Hook items={countdown} title={hook} accent={accent} emoji={emoji} teaser={teaser ?? "Can you guess #1?"} />
       </Sequence>
       {countdown.map((item, i) => (
-        <Sequence key={item.label} from={hookFrames + i * itemFrames} durationInFrames={itemFrames}>
+        <Sequence key={item.label} from={starts[i]} durationInFrames={slots[i]}>
           <ItemScene item={item} rank={total - i} items={items} accent={accent} emoji={emoji} title={hook} />
         </Sequence>
       ))}
-      <Sequence from={hookFrames + total * itemFrames} durationInFrames={outroFrames}>
+      <Sequence from={outroStart} durationInFrames={outroFrames}>
         <Outro winner={items[0]} accent={accent} emoji={emoji} text={outro} loopItems={countdown} title={hook} teaser={teaser ?? "Can you guess #1?"} />
       </Sequence>
       <ProgressBar total={durationInFrames} />

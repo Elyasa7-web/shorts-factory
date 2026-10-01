@@ -73,7 +73,7 @@ function finalize(topic, history) {
       hook: topic.title,
       emoji: topic.emoji ?? "🌍",
       accent: pick(ACCENTS),
-      secondsPerItem: 5,
+      secondsPerItem: 6,
       teaser: topic.teaser ?? "Can you guess #1?",
       outro: pick(OUTROS),
       items: topic.items,
