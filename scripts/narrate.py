@@ -13,7 +13,7 @@ sync with the Remotion timeline (hook 2.5s, items 5s each, outro 3s)."""
 import asyncio, base64, json, os, subprocess, sys, time, urllib.error, urllib.request
 from pathlib import Path
 
-HOOK_S, OUTRO_S = 2.5, 3.0
+HOOK_S, OUTRO_S = 2.5, 2.0
 
 UNIT_SPEECH = {
     "people": "people", "km": "kilometers", "m": "meters", "km²": "square kilometers",
@@ -118,9 +118,11 @@ def segments(props):
     segs = [(0.0, HOOK_S, props["hook"] + ".")]
     for i, it in enumerate(items[::-1]):              # countdown: #N first
         rank = n - i
-        text = f"Number {rank}. {it['label']}. {fmt(it['value'])} {unit_speech(it['unit'])}."
+        facts = it.get('facts') or []
+        extra = f" {facts[0]['say'].capitalize()}." if facts else ''
+        text = f"Number {rank}. {it['label']}. {fmt(it['value'])} {unit_speech(it['unit'])}.{extra}"
         segs.append((HOOK_S + i * slot + 0.3, slot - 0.4, text))
-    segs.append((HOOK_S + n * slot, OUTRO_S, props["outro"] + "."))
+    segs.append((HOOK_S + n * slot, OUTRO_S, props["outro"] + " Tell us in the comments!"))
     return segs, HOOK_S + n * slot + OUTRO_S
 
 def main():

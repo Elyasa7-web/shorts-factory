@@ -11,6 +11,7 @@ const RECENT_WINDOW = 250; // don't repeat a ranking within this many uploads
 const WORLDBANK_SHARE = 0.95; // Wikidata has only 5 audited world records
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const OUTROS = ["Where does YOUR country rank?", "Is YOUR country on this list?", "Did #1 surprise you?", "Which one shocked you the most?"];
 const ACCENTS = ["#ffcc00", "#00e0ff", "#ff4d8d", "#7CFF6B", "#ff8a3d"];
 
 function loadHistory() {
@@ -56,19 +57,25 @@ function finalize(topic, history) {
   return {
     key: topic.key,
     title: topic.title,
-    description:
-      `${topic.title}
-
-Data: ${topic.source}
-
-` + tags.map((t) => `#${t}`).join(" "),
+    description: [
+      topic.title,
+      "",
+      ...topic.items.map((it, i) => `${i + 1}. ${it.label}: ${it.value.toLocaleString("en-US")} ${it.unit}`),
+      "",
+      "Where does YOUR country rank? Tell us in the comments!",
+      "",
+      `Data: ${topic.source}`,
+      "",
+      tags.map((t) => `#${t}`).join(" "),
+    ].join("\n"),
     tags,
     props: {
       hook: topic.title,
       emoji: topic.emoji ?? "🌍",
       accent: pick(ACCENTS),
       secondsPerItem: 5,
-      outro: "Follow for more rankings",
+      teaser: topic.teaser ?? "Can you guess #1?",
+      outro: pick(OUTROS),
       items: topic.items,
     },
   };

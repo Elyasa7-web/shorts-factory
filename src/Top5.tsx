@@ -24,12 +24,15 @@ export const top5Schema = z.object({
   emoji: z.string().optional(),
   accent: z.string(),
   secondsPerItem: z.number(),
+  teaser: z.string().optional(), // curiosity hook shown on the opening card
   outro: z.string(),
   items: z.array(
     z.object({
       label: z.string(),
       value: z.number(),
       unit: z.string(),
+      // short, data-derived talking points shown one by one under the number (and read aloud)
+      facts: z.array(z.object({ icon: z.string(), text: z.string(), say: z.string() })).optional(),
       iso2: z.string().optional(),
       flag: z.string().optional(), // file under public/, downloaded by scripts/fetch-assets.mjs
       clip: z.string().optional(), // stock footage under public/, same script
@@ -52,10 +55,18 @@ const fmt = (v: number) => {
 };
 
 /* ---------- background: stock footage, or flag/gradient when no clip is available ---------- */
-const Footage: React.FC<{ item: Item; accent: string; emoji?: string }> = ({ item, accent, emoji }) => {
+const Footage: React.FC<{ item: Item; accent: string; emoji?: string; punches?: number[]; zoomOut?: boolean }> = ({
+  item, accent, emoji, punches = [], zoomOut = false,
+}) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
-  const zoom = interpolate(frame, [0, durationInFrames], [1, 1.1]);
+  // slow push-in (or pull-out on alternate items) + a quick punch-zoom each time new text lands:
+  // a visual change every ~1.5-2 s is what keeps Shorts viewers from swiping away.
+  const base = zoomOut
+    ? interpolate(frame, [0, durationInFrames], [1.12, 1])
+    : interpolate(frame, [0, durationInFrames], [1, 1.1]);
+  const punch = punches.reduce((s, f) => (frame >= f ? s + 0.07 * Math.exp(-(frame - f) / 6) : s), 0);
+  const zoom = base + punch;
   if (item.clip) {
     return (
       <AbsoluteFill style={{ transform: `scale(${zoom})` }}>
@@ -218,18 +229,65 @@ const Confetti: React.FC<{ accent: string }> = ({ accent }) => {
 };
 
 /* ---------- flag intro: full-screen flag that shrinks into the info card, revealing the footage ---------- */
-const FlagIntro: React.FC<{ flag: string; accent: string }> = ({ flag, accent }) => {
+const FlagIntro: React.FC<{ flag: string; accent: string; label: string }> = ({ flag, accent, label }) => {
   const frame = useCurrentFrame();
-  const END = 40;
+  const END = 38;
   if (frame >= END) return null;
-  // radius of the circular clip: hold big for ~0.5 s, then collapse onto the card's flag
-  const r = interpolate(frame, [14, END], [2600, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-  const scale = interpolate(frame, [0, 14], [1.15, 1], { extrapolateRight: "clamp" });
+  // The whole flag is shown (never cropped) on a blurred copy of itself, with the country name;
+  // after ~0.8 s the circle collapses onto the card's flag and reveals the footage.
+  const r = interpolate(frame, [18, END], [2600, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const pop = interpolate(frame, [0, 12], [0.8, 1], { extrapolateRight: "clamp" });
   return (
-    <AbsoluteFill style={{ clipPath: `circle(${r}px at 177px 1505px)` }}>
-      <Img src={staticFile(flag)} style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${scale})` }} />
-      <AbsoluteFill style={{ background: `linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,0) 40%, rgba(0,0,0,.45))`, boxShadow: `inset 0 0 0 14px ${accent}` }} />
+    <AbsoluteFill style={{ clipPath: `circle(${r}px at 177px 1505px)`, background: "#0b0a24", overflow: "hidden" }}>
+      <Img
+        src={staticFile(flag)}
+        style={{ position: "absolute", width: "100%", height: "100%", objectFit: "cover", filter: "blur(46px) brightness(0.55)", transform: "scale(1.3)" }}
+      />
+      <div style={{ position: "absolute", left: 60, right: 60, top: 520, display: "flex", flexDirection: "column", alignItems: "center", transform: `scale(${pop})` }}>
+        <Img
+          src={staticFile(flag)}
+          style={{ width: 960, maxHeight: 700, objectFit: "contain", borderRadius: 24, border: "10px solid #fff", boxShadow: `0 20px 80px rgba(0,0,0,.7), 0 0 90px ${accent}88` }}
+        />
+        <div style={{ marginTop: 50, fontFamily, fontWeight: 900, fontSize: 110, color: "#fff", textAlign: "center", lineHeight: 1.05, ...outline(12) }}>{label}</div>
+      </div>
     </AbsoluteFill>
+  );
+};
+
+/* ---------- data-derived talking points, revealed one by one under the number ---------- */
+const Facts: React.FC<{ facts: NonNullable<Item["facts"]>; accent: string }> = ({ facts, accent }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  return (
+    <div style={{ position: "absolute", left: 40, right: 140, top: 930, display: "flex", flexDirection: "column", gap: 18, fontFamily }}>
+      {facts.map((f, i) => {
+        const p = spring({ frame: frame - (52 + i * 28), fps, config: { damping: 15 } });
+        return (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 20,
+              padding: "16px 26px",
+              borderRadius: 26,
+              background: "rgba(8,8,28,0.78)",
+              borderLeft: `10px solid ${accent}`,
+              color: "#fff",
+              fontWeight: 800,
+              fontSize: 46,
+              lineHeight: 1.15,
+              transform: `translateX(${(1 - p) * -420}px)`,
+              opacity: p,
+              boxShadow: "0 10px 30px rgba(0,0,0,.45)",
+            }}
+          >
+            <span style={{ fontSize: 56 }}>{f.icon}</span>
+            <span>{f.text}</span>
+          </div>
+        );
+      })}
+    </div>
   );
 };
 
@@ -253,7 +311,7 @@ const ItemScene: React.FC<{
 
   return (
     <AbsoluteFill style={{ transform: `translateX(${shake}px)` }}>
-      <Footage item={item} accent={accent} emoji={emoji} />
+      <Footage item={item} accent={accent} emoji={emoji} punches={[16, ...(item.facts ?? []).map((_, i) => 52 + i * 28)]} zoomOut={rank % 2 === 0} />
       <Shade />
       <Title text={title} accent={accent} />
       <RankList items={items} currentRank={rank} accent={accent} />
@@ -262,13 +320,12 @@ const ItemScene: React.FC<{
       <div
         style={{
           position: "absolute",
-          left: 0,
-          right: 100,
-          textAlign: "center",
-          top: 880,
+          right: 60,
+          textAlign: "right",
+          top: 430,
           fontFamily,
           fontWeight: 900,
-          fontSize: 330,
+          fontSize: 250,
           lineHeight: 1,
           color: rank === 1 ? "#ffd34d" : accent,
           transform: `scale(${0.4 + 0.6 * pop}) rotate(${(1 - pop) * -12}deg)`,
@@ -314,7 +371,8 @@ const ItemScene: React.FC<{
         </div>
       </div>
 
-      {item.flag && item.clip ? <FlagIntro flag={item.flag} accent={accent} /> : null}
+      {item.facts && item.facts.length ? <Facts facts={item.facts} accent={accent} /> : null}
+      {item.flag ? <FlagIntro flag={item.flag} accent={accent} label={item.label} /> : null}
       {rank === 1 ? <Confetti accent={accent} /> : null}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
@@ -322,11 +380,11 @@ const ItemScene: React.FC<{
 };
 
 /* ---------- hook: quick montage of all five locations + the question ---------- */
-const Hook: React.FC<{ items: Item[]; title: string; accent: string; emoji?: string }> = ({ items, title, accent, emoji }) => {
+const Hook: React.FC<{ items: Item[]; title: string; accent: string; emoji?: string; teaser: string; frozen?: boolean }> = ({ items, title, accent, emoji, teaser, frozen = false }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const cut = Math.floor(durationInFrames / items.length);
-  const idx = Math.min(items.length - 1, Math.floor(frame / cut));
+  const idx = frozen ? 0 : Math.min(items.length - 1, Math.floor(frame / cut));
   const pop = spring({ frame, fps, config: { damping: 10 } });
   const pulse = 1 + Math.sin(frame / 3) * 0.04;
   const text = title.replace(/^Top 5 /i, "");
@@ -348,8 +406,7 @@ const Hook: React.FC<{ items: Item[]; title: string; accent: string; emoji?: str
           fontSize: 100,
           lineHeight: 1.08,
           color: "#fff",
-          transform: `scale(${0.6 + 0.4 * pop})`,
-          opacity: pop,
+          transform: `scale(${0.85 + 0.15 * pop})`,
           ...outline(14),
         }}
       >
@@ -368,38 +425,51 @@ const Hook: React.FC<{ items: Item[]; title: string; accent: string; emoji?: str
         }}
       >
         <div style={{ fontFamily, fontWeight: 900, fontSize: 56, padding: "20px 48px", borderRadius: 60, background: accent, color: "#111" }}>
-          CAN YOU GUESS #1?
+          {teaser}
         </div>
       </div>
     </AbsoluteFill>
   );
 };
 
-/* ---------- outro: subscribe card over the winner's footage ---------- */
-const Outro: React.FC<{ winner: Item; accent: string; emoji?: string; text: string }> = ({ winner, accent, emoji, text }) => {
+/* fades its children in over `frames`, measured from the start of the surrounding Sequence */
+const FadeIn: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames, children }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  return <AbsoluteFill style={{ opacity: interpolate(frame, [0, frames], [0, 1], { extrapolateRight: "clamp" }) }}>{children}</AbsoluteFill>;
+};
+
+/* ---------- outro: subscribe card over the winner's footage ---------- */
+const Outro: React.FC<{ winner: Item; accent: string; emoji?: string; text: string; loopItems: Item[]; title: string; teaser: string }> = ({ winner, accent, emoji, text, loopItems, title, teaser }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const LOOP = 24; // last 0.8 s dissolve into the opening frame
+  const fade = interpolate(frame, [durationInFrames - LOOP, durationInFrames - LOOP + 8], [1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const pop = spring({ frame, fps, config: { damping: 9 } });
   const press = 1 + Math.max(0, Math.sin((frame - 30) / 4)) * 0.08;
   return (
     <AbsoluteFill>
       <Footage item={winner} accent={accent} emoji={emoji} />
       <AbsoluteFill style={{ background: "rgba(0,0,0,0.62)" }} />
-      <div style={{ position: "absolute", top: 560, width: "100%", textAlign: "center", fontFamily, fontWeight: 900, fontSize: 84, color: "#fff", lineHeight: 1.1, transform: `scale(${0.5 + 0.5 * pop})`, opacity: pop, ...outline(12) }}>
+      <div style={{ position: "absolute", top: 560, width: "100%", textAlign: "center", fontFamily, fontWeight: 900, fontSize: 84, color: "#fff", lineHeight: 1.1, transform: `scale(${0.5 + 0.5 * pop})`, opacity: pop * fade, ...outline(12) }}>
         {text}
-        <div style={{ fontSize: 52, color: accent, marginTop: 18 }}>Which one surprised you? 👇</div>
+        <div style={{ fontSize: 52, color: accent, marginTop: 18 }}>Comment your country's rank 👇</div>
       </div>
-      <div style={{ position: "absolute", top: 1010, width: "100%", display: "flex", justifyContent: "center", transform: `scale(${press})` }}>
+      <div style={{ position: "absolute", top: 1010, width: "100%", display: "flex", justifyContent: "center", transform: `scale(${press})`, opacity: fade }}>
         <div style={{ display: "flex", fontFamily, fontWeight: 900, fontSize: 64, borderRadius: 18, overflow: "hidden", boxShadow: "0 10px 40px rgba(0,0,0,.6)" }}>
           <div style={{ background: "#fff", color: "#111", padding: "26px 40px" }}>SUBSCRIBE</div>
           <div style={{ background: "#ff0033", color: "#fff", padding: "26px 40px" }}>NOW</div>
         </div>
       </div>
+      <Sequence from={durationInFrames - LOOP} durationInFrames={LOOP}>
+        <FadeIn frames={LOOP - 4}>
+          <Hook items={loopItems} title={title} accent={accent} emoji={emoji} teaser={teaser} frozen />
+        </FadeIn>
+      </Sequence>
     </AbsoluteFill>
   );
 };
 
-export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem, outro, items }) => {
+export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem, teaser, outro, items }) => {
   const { fps, durationInFrames } = useVideoConfig();
   const hookFrames = Math.round(HOOK_SECONDS * fps);
   const itemFrames = Math.round(secondsPerItem * fps);
@@ -410,7 +480,7 @@ export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem,
   return (
     <AbsoluteFill style={{ background: "#000" }}>
       <Sequence durationInFrames={hookFrames}>
-        <Hook items={countdown} title={hook} accent={accent} emoji={emoji} />
+        <Hook items={countdown} title={hook} accent={accent} emoji={emoji} teaser={teaser ?? "Can you guess #1?"} />
       </Sequence>
       {countdown.map((item, i) => (
         <Sequence key={item.label} from={hookFrames + i * itemFrames} durationInFrames={itemFrames}>
@@ -418,7 +488,7 @@ export const Top5: React.FC<Top5Props> = ({ hook, emoji, accent, secondsPerItem,
         </Sequence>
       ))}
       <Sequence from={hookFrames + total * itemFrames} durationInFrames={outroFrames}>
-        <Outro winner={items[0]} accent={accent} emoji={emoji} text={outro} />
+        <Outro winner={items[0]} accent={accent} emoji={emoji} text={outro} loopItems={countdown} title={hook} teaser={teaser ?? "Can you guess #1?"} />
       </Sequence>
       <ProgressBar total={durationInFrames} />
     </AbsoluteFill>

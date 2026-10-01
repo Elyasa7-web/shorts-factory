@@ -107,27 +107,31 @@ export const worldbank = {
   async build({ indicator, dir, region }) {
     if (!(dir === "DESC" ? indicator.hi : indicator.lo)) return null;
     const countries = await getCountries();
-    let rows = (await mostRecent(indicator.id)).filter((r) => countries.has(r.countryiso3code));
+    let pool = (await mostRecent(indicator.id)).filter((r) => countries.has(r.countryiso3code));
 
     if (indicator.kind === "ratio") {
       const pops = new Map((await mostRecent("SP.POP.TOTL")).map((r) => [r.countryiso3code, r.value]));
-      rows = rows.filter((r) => (pops.get(r.countryiso3code) ?? 0) >= MIN_POP_FOR_RATIOS);
+      pool = pool.filter((r) => (pops.get(r.countryiso3code) ?? 0) >= MIN_POP_FOR_RATIOS);
     }
-    if (region) rows = rows.filter((r) => countries.get(r.countryiso3code).region === region);
+    const newest = Math.max(...pool.map((r) => Number(r.date)));
+    pool = pool.filter((r) => newest - Number(r.date) <= MAX_STALE_YEARS);
+    const cmp = (a, b) => (dir === "DESC" ? b.value - a.value : a.value - b.value);
+    const worldSorted = [...pool].sort(cmp); // ranking across ALL countries, used for "#N in the world"
 
-    const newest = Math.max(...rows.map((r) => Number(r.date)));
-    rows = rows.filter((r) => newest - Number(r.date) <= MAX_STALE_YEARS);
-    rows.sort((a, b) => (dir === "DESC" ? b.value - a.value : a.value - b.value));
+    let rows = region ? pool.filter((r) => countries.get(r.countryiso3code).region === region) : pool;
+    rows = [...rows].sort(cmp);
 
     const top = rows.slice(0, 5);
     if (top.length < 5) return null;
 
     const scale = indicator.scale ?? 1;
-    const items = top.map((r) => ({
+    const facts = await buildFacts(indicator, top, worldSorted, Boolean(region), newest, dir);
+    const items = top.map((r, i) => ({
       label: countries.get(r.countryiso3code).name,
       value: niceRound(r.value * scale),
       unit: indicator.unit,
       iso2: countries.get(r.countryiso3code).iso2, // used to fetch the flag image
+      facts: facts[i],
     }));
     // A chart where every bar is identical (or all zero) is not a ranking.
     if (new Set(items.map((i) => i.value)).size < 4 || items.every((i) => i.value <= 0)) return null;
@@ -140,11 +144,114 @@ export const worldbank = {
       title: `Top 5 Countries With The ${phrase}${where}`,
       items,
       emoji: indicator.emoji,
+      teaser: buildTeaser(top, dir),
       source: `World Bank Open Data (latest available, ${newest})`,
       tags: ["countries", "geography", "world", "statistics"],
     };
   },
 };
+
+// ---- "why it matters" facts, all computed from official data (nothing is made up) ----
+const ADDITIVE = new Set(["SP.POP.TOTL", "NY.GDP.MKTP.CD", "AG.LND.TOTL.K2"]); // shares of a world total make sense
+
+const worldCache = new Map();
+async function worldValue(id) {
+  if (!worldCache.has(id)) {
+    try {
+      const d = await getJson(`${API}/country/WLD/indicator/${id}?format=json&mrnev=1`);
+      worldCache.set(id, d[1]?.[0]?.value ?? null);
+    } catch {
+      worldCache.set(id, null);
+    }
+  }
+  return worldCache.get(id);
+}
+
+async function valuesInYear(id, year) {
+  try {
+    const d = await getJson(`${API}/country/all/indicator/${id}?format=json&date=${year}&per_page=400`);
+    return new Map((d[1] ?? []).filter((x) => x.value != null).map((x) => [x.countryiso3code, x.value]));
+  } catch {
+    return new Map();
+  }
+}
+
+const pct = (x) => (x >= 10 ? `${Math.round(x)}%` : `${Math.round(x * 10) / 10}%`);
+
+async function buildFacts(indicator, top, worldSorted, isRegional, newest, dir) {
+  const wv = await worldValue(indicator.id);
+  const baseYear = newest - 10;
+  const base = await valuesInYear(indicator.id, baseYear);
+  const isPct = indicator.unit.startsWith("%");
+  return top.map((r) => {
+    const out = [];
+    const v = r.value;
+    // 1) compared with the whole world
+    if (wv && wv > 0 && v > 0) {
+      if (ADDITIVE.has(indicator.id)) {
+        const share = (v / wv) * 100;
+        if (share >= 0.05) {
+          const t = `${pct(share)} of the world total`;
+          out.push({ icon: "🌍", text: t, say: t });
+        }
+      } else {
+        const ratio = v / wv;
+        if (ratio >= 1.15) {
+          out.push({ icon: "🌍", text: `${ratio.toFixed(1)}× the world average`, say: `${ratio.toFixed(1)} times the world average` });
+        } else if (ratio <= 0.85) {
+          const p = Math.round((1 - ratio) * 100);
+          out.push({ icon: "🌍", text: `${p}% below the world average`, say: `${p} percent below the world average` });
+        }
+      }
+    }
+    // 2) change over the last ten years
+    const past = base.get(r.countryiso3code);
+    if (past != null && past !== 0) {
+      if (isPct) {
+        const diff = v - past;
+        if (Math.abs(diff) >= 0.3) {
+          const a = Math.abs(diff).toFixed(1);
+          out.push({
+            icon: diff > 0 ? "📈" : "📉",
+            text: `${diff > 0 ? "+" : "−"}${a} pts since ${baseYear}`,
+            say: `${diff > 0 ? "up" : "down"} ${a} percentage points since ${baseYear}`,
+          });
+        }
+      } else {
+        const chg = ((v - past) / Math.abs(past)) * 100;
+        if (Math.abs(chg) >= 2) {
+          const a = Math.round(Math.abs(chg));
+          out.push({
+            icon: chg > 0 ? "📈" : "📉",
+            text: `${chg > 0 ? "Up" : "Down"} ${a}% since ${baseYear}`,
+            say: `${chg > 0 ? "up" : "down"} ${a} percent since ${baseYear}`,
+          });
+        }
+      }
+    }
+    // 3) where it stands worldwide (only informative when the list is regional)
+    if (isRegional) {
+      const idx = worldSorted.findIndex((x) => x.countryiso3code === r.countryiso3code) + 1;
+      if (idx > 0) {
+        const word = dir === "DESC" ? "highest" : "lowest";
+        const t = idx === 1 ? `The ${word} in the whole world` : `#${idx} ${word} in the whole world`;
+        out.push({ icon: "🏅", text: t, say: idx === 1 ? t.toLowerCase() : `number ${idx} ${word} in the whole world` });
+      }
+    }
+    return out.slice(0, 3);
+  });
+}
+
+// The curiosity hook: how far ahead is #1?
+function buildTeaser(top, dir) {
+  const v1 = top[0].value;
+  const v2 = top[1].value;
+  if (v1 > 0 && v2 > 0) {
+    const r = dir === "DESC" ? v1 / v2 : v2 / v1;
+    if (r >= 1.3) return `#1 is ${r.toFixed(1)}× ${dir === "DESC" ? "bigger" : "smaller"} than #2`;
+  }
+  return "Can you guess #1?";
+}
 
 function niceRound(n) {
   const a = Math.abs(n);
