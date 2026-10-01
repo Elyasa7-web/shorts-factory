@@ -6,7 +6,7 @@ on:
   # the cycle if a video was already uploaded within MIN_GAP_HOURS, so both
   # triggers together never double-post.
   schedule:
-    - cron: "7 */4 * * *"
+    - cron: "7 */6 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
