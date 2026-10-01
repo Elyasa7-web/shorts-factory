@@ -41,13 +41,17 @@ jobs:
         with:
           python-version: "3.12"
 
-      # ffmpeg is NOT on the PATH of the runner image (voice mixing and muxing need it).
-      # --no-install-recommends keeps the download small.
+      # ffmpeg comes as a prebuilt static binary: apt-installing it pulled ~100 packages and
+      # sometimes stalled for minutes on the Ubuntu mirror, which is unacceptable unattended.
+      - name: ffmpeg (static build)
+        uses: FedericoCarboni/setup-ffmpeg@v3
+        with:
+          ffmpeg-version: release
+
       - name: System packages (offline voice, Chrome libs, emoji font)
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends ffmpeg espeak-ng libnss3 libdbus-1-3 libatk1.0-0             libatk-bridge2.0-0 libgbm1 libasound2t64 libxrandr2 libxkbcommon0             libxfixes3 libxcomposite1 libxdamage1 libcups2 fonts-noto-color-emoji
-          ffmpeg -version | head -1
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 update
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=20 install -y --no-install-recommends espeak-ng libnss3 libdbus-1-3 libatk1.0-0 libatk-bridge2.0-0 libgbm1 libasound2t64 libxrandr2 libxkbcommon0 libxfixes3 libxcomposite1 libxdamage1 libcups2 fonts-noto-color-emoji
 
       - run: pip install edge-tts
       - run: npm ci
