@@ -77,7 +77,9 @@ async function makeStory() {
   const description = [
     sc.title, "", sc.payoff.text, "", sc.cta, "",
     `Source: ${story.source.url} (Wikipedia, CC BY-SA)`,
-    "Footage: Pexels. Music and sound effects: Freesound (CC0).", "",
+    "Footage: Pexels, NASA, Wikimedia Commons. Music and sound effects: Freesound (CC0).",
+    ...(JSON.parse(readFileSync("data/story-props.json", "utf8")).credits ?? []).map((c) => `Image: ${c}`),
+    "",
     tags.map((t) => `#${t}`).join(" "),
   ].join("\n");
   return { format: "story", key: `story|${story.topic}`, title: sc.title, description, tags };

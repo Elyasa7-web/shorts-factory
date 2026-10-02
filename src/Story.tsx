@@ -1,6 +1,7 @@
 import { z } from "zod";
 import {
   AbsoluteFill,
+  Img,
   OffthreadVideo,
   Sequence,
   interpolate,
@@ -16,6 +17,7 @@ const { fontFamily } = loadFont("normal", { weights: ["700", "800", "900"], subs
 const wordSchema = z.object({ w: z.string(), s: z.number(), e: z.number() });
 export const storySchema = z.object({
   title: z.string(),
+  credits: z.array(z.string()).optional(),
   accent: z.string().optional(),
   totalSeconds: z.number().optional(),
   scenes: z.array(
@@ -24,6 +26,7 @@ export const storySchema = z.object({
       text: z.string(),
       visual: z.string().optional(),
       clip: z.string().optional(),
+      image: z.string().optional(), // a still: animated with a slow camera move
       seconds: z.number(),
       words: z.array(wordSchema),
     })
@@ -64,6 +67,21 @@ const Backdrop: React.FC<{ scene: Scene; accent: string; punches: number[]; zoom
     : interpolate(frame, [0, durationInFrames], [1.0, 1.14]);
   const punch = punches.reduce((s, f) => (frame >= f ? s + 0.06 * Math.exp(-(frame - f) / 5) : s), 0);
   const drift = Math.sin(frame / 38) * 16;
+  if (scene.image) {
+    // still image: stronger push-in/pull-out + drift so it never feels like a slideshow
+    const kb = zoomOut
+      ? interpolate(frame, [0, durationInFrames], [1.28, 1.0])
+      : interpolate(frame, [0, durationInFrames], [1.0, 1.28]);
+    const panX = interpolate(frame, [0, durationInFrames], [zoomOut ? 40 : -40, zoomOut ? -40 : 40]);
+    return (
+      <AbsoluteFill style={{ transform: `translateX(${panX}px) scale(${kb + punch})` }}>
+        <Img
+          src={staticFile(scene.image)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(1.15) contrast(1.05) brightness(0.92)" }}
+        />
+      </AbsoluteFill>
+    );
+  }
   if (scene.clip) {
     return (
       <AbsoluteFill style={{ transform: `translateX(${drift}px) scale(${base + punch})` }}>

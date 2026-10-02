@@ -5,3 +5,5 @@ data/props.json
 .yt-refresh-token.txt
 public/flags/
 public/clips/
+data/story.json
+data/story-props.json
