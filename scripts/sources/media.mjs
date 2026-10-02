@@ -334,7 +334,8 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       const about = c.exact ? 1 : relevance(topic, c.hay);
       const sameSense = c.exact || ctxHit(c.hay);
       // a moving clip is worth a little more than a still, a portrait frame fits the screen better
-      const rank = 0.6 * scene + (sameSense ? 0.6 * about : 0) + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) + (c.exact ? 0.05 : 0);
+      // showing the actual subject beats a generic clip that merely fits the scene words
+      const rank = 0.6 * scene + (sameSense ? 1.0 * about : 0) + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) + (c.exact ? 0.05 : 0);
       const ok = (TRUSTED.has(c.source) && scene >= 0.5) || (about >= 0.5 && sameSense);
       return { ...c, scene, about, rank, ok };
     })
