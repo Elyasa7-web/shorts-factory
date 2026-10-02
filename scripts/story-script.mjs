@@ -11,9 +11,32 @@ import { STORY_TOPICS, fetchSource } from "./sources/wiki.mjs";
 const HISTORY = "data/history.json";
 const OUT = "data/story.json";
 const RECENT = 120; // do not repeat a topic within this many uploads
-const MODELS = process.env.GEMINI_TEXT_MODEL
-  ? [process.env.GEMINI_TEXT_MODEL]
-  : ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.5-flash-lite"];
+// Gemini model names change often (older ones get retired for new users), so the model list is
+// discovered from the API instead of being hard-coded: newest "flash" first, "lite" as a last resort.
+let modelCache;
+async function textModels() {
+  if (process.env.GEMINI_TEXT_MODEL) return [process.env.GEMINI_TEXT_MODEL];
+  if (modelCache) return modelCache;
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", {
+      headers: { "x-goog-api-key": process.env.GEMINI_API_KEY },
+      signal: AbortSignal.timeout(30_000),
+    });
+    const { models = [] } = await res.json();
+    const ver = (n) => Number(n.match(/gemini-(\d+(?:\.\d+)?)/)?.[1] ?? 0);
+    modelCache = models
+      .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+      .map((m) => m.name.replace("models/", ""))
+      .filter((n) => /^gemini-[\d.]+-flash(-lite)?$/.test(n)) // stable text models, no preview/tts/image variants
+      .sort((a, b) => ver(b) - ver(a) || (a.includes("lite") ? 1 : 0) - (b.includes("lite") ? 1 : 0))
+      .slice(0, 4);
+    console.error(`Gemini text models available: ${modelCache.join(", ") || "none found"}`);
+  } catch (e) {
+    console.error(`model discovery failed (${e.message})`);
+  }
+  if (!modelCache?.length) modelCache = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"];
+  return modelCache;
+}
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const words = (s) => s.trim().split(/\s+/).filter(Boolean).length;
@@ -50,7 +73,7 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY missing");
   let lastErr;
-  for (const model of MODELS) {
+  for (const model of await textModels()) {
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {

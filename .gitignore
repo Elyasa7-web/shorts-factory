@@ -7,3 +7,4 @@ public/flags/
 public/clips/
 data/story.json
 data/story-props.json
+__pycache__/

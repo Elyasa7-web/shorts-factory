@@ -10,7 +10,7 @@ fails this script exits non-zero so the pipeline never publishes a silent video.
 
 Each spoken segment is placed at the start of its on-screen slot so the voice stays in
 sync with the Remotion timeline (hook 2.5s, items 5s each, outro 3s)."""
-import asyncio, base64, json, os, subprocess, sys, time, urllib.error, urllib.request
+import asyncio, base64, json, os, re, subprocess, sys, time, urllib.error, urllib.request
 from pathlib import Path
 
 HOOK_S, OUTRO_S = 2.5, 2.0
@@ -62,22 +62,63 @@ def post_json(url, payload, headers, retries=4):
 
 # ---- providers: each takes (text, out_path_mp3) ------------------------------------
 
+_gemini_tts_models = None
+
+def gemini_tts_models() -> list:
+    """Model names are retired/renamed often: ask the API which TTS models exist (newest first)."""
+    global _gemini_tts_models
+    if os.environ.get("GEMINI_TTS_MODEL"):
+        return [os.environ["GEMINI_TTS_MODEL"]]
+    if _gemini_tts_models is None:
+        found = []
+        try:
+            req = urllib.request.Request(
+                "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+                headers={"x-goog-api-key": os.environ["GEMINI_API_KEY"]})
+            with urllib.request.urlopen(req, timeout=30) as r:
+                for m in json.loads(r.read()).get("models", []):
+                    name = m["name"].replace("models/", "")
+                    if "tts" in name and "generateContent" in m.get("supportedGenerationMethods", []):
+                        found.append(name)
+        except Exception as e:
+            print(f"gemini tts model discovery failed: {e}", file=sys.stderr)
+        def ver(n):
+            mt = re.search(r"gemini-(\d+(?:\.\d+)?)", n)
+            return float(mt.group(1)) if mt else 0.0
+        found.sort(key=lambda n: (-ver(n), "preview" in n))
+        _gemini_tts_models = (found[:3] or []) + ["gemini-2.5-flash-preview-tts"]
+        print(f"gemini tts models: {_gemini_tts_models}", file=sys.stderr)
+    return _gemini_tts_models
+
 def tts_gemini(text: str, path: Path):
     key = os.environ["GEMINI_API_KEY"]
-    model = os.environ.get("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
     voice = os.environ.get("GEMINI_VOICE", "Kore")
-    raw = post_json(
-        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
-        {
-            "contents": [{"parts": [{"text": f"Say in a clear, friendly narrator voice at a calm, measured pace (never rushed): {text}"}]}],
-            "generationConfig": {
-                "responseModalities": ["AUDIO"],
-                "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
-            },
+    body = {
+        "contents": [{"parts": [{"text": f"Say in a clear, friendly narrator voice at a calm, measured pace (never rushed): {text}"}]}],
+        "generationConfig": {
+            "responseModalities": ["AUDIO"],
+            "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
         },
-        {"x-goog-api-key": key},
-    )
-    part = json.loads(raw)["candidates"][0]["content"]["parts"][0]["inlineData"]
+    }
+    part, last = None, None
+    for model in gemini_tts_models():
+        for attempt in range(2):   # a 200 reply without audio (safety/finish reason) is usually transient
+            try:
+                raw = post_json(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                    body, {"x-goog-api-key": key})
+                part = json.loads(raw)["candidates"][0]["content"]["parts"][0]["inlineData"]
+                break
+            except (KeyError, IndexError, TypeError) as e:
+                last = RuntimeError(f"{model}: reply had no audio ({e!r})")
+                time.sleep(3)
+            except RuntimeError as e:
+                last = e
+                break              # HTTP error (404 retired / quota): try the next model
+        if part:
+            break
+    if not part:
+        raise last or RuntimeError("gemini tts: no model produced audio")
     pcm = path.with_suffix(".pcm")
     pcm.write_bytes(base64.b64decode(part["data"]))   # 24 kHz, 16-bit, mono PCM
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1",
