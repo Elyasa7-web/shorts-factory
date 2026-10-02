@@ -17,6 +17,11 @@ on:
         description: "Upload even if a video was uploaded recently (testing)"
         type: boolean
         default: false
+      test_format:
+        description: "Testing only: which video to build (auto = normal alternation)"
+        type: choice
+        options: [auto, story, story-fixture, ranking]
+        default: auto
 
 permissions:
   contents: write
@@ -75,6 +80,9 @@ jobs:
           PUBLISH_HOURS_UTC: ${{ vars.PUBLISH_HOURS_UTC }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
           FORCE: ${{ (inputs.force || inputs.dry_run) && '1' || '' }}
+          # story-fixture builds a story from a built-in script: tests visuals, voice and render without Gemini text
+          FORMAT: ${{ (inputs.test_format == 'story' || inputs.test_format == 'story-fixture') && 'story' || (inputs.test_format == 'ranking' && 'ranking' || '') }}
+          STORY_FIXTURE: ${{ inputs.test_format == 'story-fixture' && '1' || '' }}
         run: node scripts/run.mjs
 
       # Persist which topics were used and what is scheduled, even if the upload step failed.
