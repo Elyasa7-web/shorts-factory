@@ -2,6 +2,7 @@ import { CalculateMetadataFunction, Composition } from "remotion";
 import { Top5, top5Schema, Top5Props } from "./Top5";
 import { FPS, HOOK_SECONDS, OUTRO_SECONDS } from "./timing";
 import { Avatar, Banner } from "./Branding";
+import { Story, storySchema, StoryProps } from "./Story";
 
 // Duration is derived from the data, so a 3-item or 7-item list just works.
 const calculateMetadata: CalculateMetadataFunction<Top5Props> = ({ props }) => {
@@ -11,6 +12,21 @@ const calculateMetadata: CalculateMetadataFunction<Top5Props> = ({ props }) => {
     ? props.durations.reduce((a, b) => a + b, 0)
     : props.items.length * props.secondsPerItem;
   return { durationInFrames: Math.round((hook + items + outro) * FPS) };
+};
+
+const storyMetadata: CalculateMetadataFunction<StoryProps> = ({ props }) => ({
+  durationInFrames: Math.max(
+    1,
+    Math.round((props.totalSeconds ?? props.scenes.reduce((a, b) => a + b.seconds, 0)) * FPS)
+  ),
+});
+
+const storyDefaults: StoryProps = {
+  title: "Preview",
+  accent: "#ffcc00",
+  scenes: [
+    { kind: "hook", text: "This animal has three hearts.", seconds: 3, words: [] },
+  ],
 };
 
 const defaultProps: Top5Props = {
@@ -41,6 +57,17 @@ export const RemotionRoot: React.FC = () => (
     durationInFrames={30 * FPS}
     defaultProps={defaultProps}
     calculateMetadata={calculateMetadata}
+  />
+  <Composition
+    id="Story"
+    component={Story}
+    schema={storySchema}
+    width={1080}
+    height={1920}
+    fps={FPS}
+    durationInFrames={35 * FPS}
+    defaultProps={storyDefaults}
+    calculateMetadata={storyMetadata}
   />
   </>
 );

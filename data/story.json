@@ -1,0 +1,46 @@
+{
+  "topic": "Octopus",
+  "category": "animals",
+  "source": {
+    "title": "Octopus",
+    "url": "https://en.wikipedia.org/wiki/Octopus"
+  },
+  "script": {
+    "title": "The Octopus Has Three Hearts, And That's Not The Strangest Part",
+    "hook": {
+      "text": "This animal has three hearts and blue blood.",
+      "visual": "octopus underwater"
+    },
+    "beats": [
+      {
+        "text": "Two hearts pump blood through its gills. A third one sends it around the rest of the body.",
+        "visual": "deep ocean water"
+      },
+      {
+        "text": "And when the octopus swims, that main heart actually stops beating. So it prefers crawling.",
+        "visual": "coral reef"
+      },
+      {
+        "text": "Its blood is blue because it carries oxygen with copper instead of iron.",
+        "visual": "blue ocean waves"
+      },
+      {
+        "text": "It is also a master of disguise, changing colour and texture to vanish into the seabed.",
+        "visual": "sea floor rocks"
+      }
+    ],
+    "payoff": {
+      "text": "Nature built an entire alien body plan, right here on Earth.",
+      "visual": "ocean sunlight"
+    },
+    "cta": "Which animal should we explore next?",
+    "tags": [
+      "octopus",
+      "ocean",
+      "animals",
+      "science",
+      "facts",
+      "nature"
+    ]
+  }
+}
