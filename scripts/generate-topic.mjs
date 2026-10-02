@@ -25,7 +25,9 @@ function loadHistory() {
 
 async function candidate() {
   if (Math.random() < WORLDBANK_SHARE) {
-    const regions = [null, ...(await worldbank.regions())];
+    const all = await worldbank.regions();
+    // Worldwide rankings have the broadest pull: 60% world, 40% regional.
+    const regions = Math.random() < 0.6 ? [null] : all;
     return worldbank.build({
       indicator: pick(worldbank.indicators),
       dir: pick(["DESC", "ASC"]),

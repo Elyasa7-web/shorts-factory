@@ -114,9 +114,9 @@ PROVIDERS = {
 }
 
 # The voice sets the pace: every scene lasts as long as its narration needs, spoken at natural speed.
-HOOK_MAX, OUTRO_MAX, ITEM_MAX_VOICE = 4.6, 3.6, 8.8     # longest narration we accept (seconds)
+HOOK_MAX, OUTRO_MAX, ITEM_MAX_VOICE = 4.6, 3.6, 7.6     # longest narration we accept (seconds)
 HOOK_MIN, OUTRO_MIN = 2.5, 2.0                           # shortest scene
-ITEM_MIN_SLOT, ITEM_MAX_SLOT, PAD = 5.0, 10.5, 1.3        # per-country scene length bounds / breathing room
+ITEM_MIN_SLOT, ITEM_MAX_SLOT, PAD = 5.0, 9.5, 0.9        # per-country scene length bounds / breathing room
 
 def candidates(props):
     """Narration texts per scene, richest first. The first one that fits is used, so a long
@@ -187,7 +187,7 @@ def main():
     hook_d, item_d, outro_d = voices[0][1], [v[1] for v in voices[1:-1]], voices[-1][1]
     hook_s = max(HOOK_MIN, hook_d + 0.3)
     slots = [min(ITEM_MAX_SLOT, max(ITEM_MIN_SLOT, d + PAD)) for d in item_d]
-    outro_s = max(OUTRO_MIN, outro_d + 0.5)
+    outro_s = max(OUTRO_MIN, outro_d + 0.3)
     item_starts = [hook_s + sum(slots[:i]) for i in range(len(slots))]
     outro_start = hook_s + sum(slots)
     total = outro_start + outro_s
@@ -218,7 +218,6 @@ def main():
         p.unlink(missing_ok=True)
 
     # Music bed + sound effects timed to the on-screen reveals, mixed under the voice.
-    from audio_fx import make_music, make_sfx, save_wav
     n_items = len(slots)
     events = [("riser", 0.0)]
     for i in range(n_items):
@@ -226,18 +225,28 @@ def main():
         if i == n_items - 1:                              # last reveal = rank #1
             events.append(("boom", item_starts[i]))
     events.append(("ding", outro_start))
-    save_wav(out / "music.wav", make_music(total))
-    save_wav(out / "sfx.wav", make_sfx(total, events))
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(out / "narration.m4a"),
-         "-i", str(out / "music.wav"), "-i", str(out / "sfx.wav"),
-         "-filter_complex",
-         "[0:a]volume=1.0[v];[1:a]volume=0.20[m];[2:a]volume=0.5[s];"
-         "[v][m][s]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.95[o]",
-         "-map", "[o]", "-c:a", "aac", "-b:a", "160k", str(out / "mixed.m4a")])
-    (out / "mixed.m4a").replace(out / "narration.m4a")
-    for f in ("music.wav", "sfx.wav"):
-        (out / f).unlink(missing_ok=True)
-    print("narration ok (voice + music + sfx)")
+    mixed = out / "mixed.m4a"
+    used_music = None
+    try:
+        from audio_library import mix as library_mix      # real CC0 music/effects (Freesound)
+        used_music = library_mix(out / "narration.m4a", mixed, total, events)
+    except Exception as e:                                # never lose a video over the sound bed
+        print(f"library mix failed ({e}); using synthetic music", file=sys.stderr)
+    if used_music is None:
+        from audio_fx import make_music, make_sfx, save_wav
+        save_wav(out / "music.wav", make_music(total))
+        save_wav(out / "sfx.wav", make_sfx(total, events))
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(out / "narration.m4a"),
+             "-i", str(out / "music.wav"), "-i", str(out / "sfx.wav"),
+             "-filter_complex",
+             "[0:a]volume=1.0[v];[1:a]volume=0.20[m];[2:a]volume=0.5[s];"
+             "[v][m][s]amix=inputs=3:normalize=0:duration=first,alimiter=limit=0.95[o]",
+             "-map", "[o]", "-c:a", "aac", "-b:a", "160k", str(mixed)])
+        for f in ("music.wav", "sfx.wav"):
+            (out / f).unlink(missing_ok=True)
+        used_music = "synthetic"
+    mixed.replace(out / "narration.m4a")
+    print(f"narration ok (voice + music: {used_music})")
 
 if __name__ == "__main__":
     main()

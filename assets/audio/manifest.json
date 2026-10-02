@@ -1,0 +1,279 @@
+{
+ "license": "Creative Commons 0 (CC0), verified per sound page",
+ "music": [
+  {
+   "id": 410520,
+   "user": "Jamessi",
+   "title": "Light Tune ~ No.1",
+   "duration": 34.9112,
+   "downloads": 2219,
+   "mp3": "https://cdn.freesound.org/previews/410/410520_7978243-hq.mp3",
+   "query": "upbeat background",
+   "file": "assets/audio/music/410520.mp3"
+  },
+  {
+   "id": 475870,
+   "user": "rionka",
+   "title": "SnowInTheAir.wav",
+   "duration": 51.7667,
+   "downloads": 298,
+   "mp3": "https://cdn.freesound.org/previews/475/475870_3374104-hq.mp3",
+   "query": "corporate background",
+   "file": "assets/audio/music/475870.mp3"
+  },
+  {
+   "id": 561190,
+   "user": "code_box",
+   "title": "Tropicorp Advertisement",
+   "duration": 37.6471,
+   "downloads": 3488,
+   "mp3": "https://cdn.freesound.org/previews/561/561190_10962806-hq.mp3",
+   "query": "corporate background",
+   "file": "assets/audio/music/561190.mp3"
+  },
+  {
+   "id": 333795,
+   "user": "frankum",
+   "title": "Electronic music loop M1",
+   "duration": 31.8053,
+   "downloads": 1530,
+   "mp3": "https://cdn.freesound.org/previews/333/333795_2305278-hq.mp3",
+   "query": "electronic loop",
+   "file": "assets/audio/music/333795.mp3"
+  },
+  {
+   "id": 659705,
+   "user": "Seth_Makes_Sounds",
+   "title": "Lofi Loop 70bpm",
+   "duration": 36.8571,
+   "downloads": 318,
+   "mp3": "https://cdn.freesound.org/previews/659/659705_13228046-hq.mp3",
+   "query": "lofi beat",
+   "file": "assets/audio/music/659705.mp3"
+  },
+  {
+   "id": 223442,
+   "user": "burning-mir",
+   "title": "technology ambience",
+   "duration": 30.917,
+   "downloads": 2598,
+   "mp3": "https://cdn.freesound.org/previews/223/223442_2098884-hq.mp3",
+   "query": "tech background",
+   "file": "assets/audio/music/223442.mp3"
+  },
+  {
+   "id": 529624,
+   "user": "SondreDrakensson",
+   "title": "Good Morning Heaven",
+   "duration": 84.1545,
+   "downloads": 889,
+   "mp3": "https://cdn.freesound.org/previews/529/529624_6628165-hq.mp3",
+   "query": "ambient uplifting",
+   "file": "assets/audio/music/529624.mp3"
+  }
+ ],
+ "sfx": {
+  "whoosh": [
+   {
+    "id": 60030,
+    "user": "qubodup",
+    "title": "Swosh / Whoosh / Air Cut",
+    "duration": 0.436825,
+    "downloads": 36873,
+    "mp3": "https://cdn.freesound.org/previews/60/60030_71257-hq.mp3",
+    "query": "whoosh",
+    "file": "assets/audio/sfx/whoosh/60030.mp3"
+   },
+   {
+    "id": 423798,
+    "user": "ch_ase",
+    "title": "Little Whoosh 3",
+    "duration": 2.46755,
+    "downloads": 6388,
+    "mp3": "https://cdn.freesound.org/previews/423/423798_3982955-hq.mp3",
+    "query": "whoosh",
+    "file": "assets/audio/sfx/whoosh/423798.mp3"
+   },
+   {
+    "id": 486234,
+    "user": "BennettFilmTeacher",
+    "title": "Whoosh For Whip Zoom",
+    "duration": 2.13065,
+    "downloads": 11152,
+    "mp3": "https://cdn.freesound.org/previews/486/486234_7254895-hq.mp3",
+    "query": "whoosh",
+    "file": "assets/audio/sfx/whoosh/486234.mp3"
+   },
+   {
+    "id": 459941,
+    "user": "huw2k8",
+    "title": "Whoosh.wav",
+    "duration": 1.91565,
+    "downloads": 96,
+    "mp3": "https://cdn.freesound.org/previews/459/459941_5438333-hq.mp3",
+    "query": "whoosh",
+    "file": "assets/audio/sfx/whoosh/459941.mp3"
+   },
+   {
+    "id": 802119,
+    "user": "ScythicBlade",
+    "title": "whoosh_fx",
+    "duration": 1.0,
+    "downloads": 85,
+    "mp3": "https://cdn.freesound.org/previews/802/802119_17255508-hq.mp3",
+    "query": "whoosh",
+    "file": "assets/audio/sfx/whoosh/802119.mp3"
+   }
+  ],
+  "swoosh": [
+   {
+    "id": 234551,
+    "user": "Electroviolence",
+    "title": "Electric Transition",
+    "duration": 1.79,
+    "downloads": 2070,
+    "mp3": "https://cdn.freesound.org/previews/234/234551_4238641-hq.mp3",
+    "query": "swoosh transition",
+    "file": "assets/audio/sfx/swoosh/234551.mp3"
+   },
+   {
+    "id": 786514,
+    "user": "migoreng1",
+    "title": "swoosh_v2",
+    "duration": 0.3,
+    "downloads": 305,
+    "mp3": "https://cdn.freesound.org/previews/786/786514_16837477-hq.mp3",
+    "query": "swoosh transition",
+    "file": "assets/audio/sfx/swoosh/786514.mp3"
+   },
+   {
+    "id": 632763,
+    "user": "adh.dreaming",
+    "title": "Transition Swoosh",
+    "duration": 1.49188,
+    "downloads": 3313,
+    "mp3": "https://cdn.freesound.org/previews/632/632763_12672694-hq.mp3",
+    "query": "swoosh transition",
+    "file": "assets/audio/sfx/swoosh/632763.mp3"
+   },
+   {
+    "id": 683101,
+    "user": "florianreichelt",
+    "title": "quick woosh",
+    "duration": 2.05298,
+    "downloads": 22581,
+    "mp3": "https://cdn.freesound.org/previews/683/683101_6253486-hq.mp3",
+    "query": "swoosh transition",
+    "file": "assets/audio/sfx/swoosh/683101.mp3"
+   }
+  ],
+  "ding": [
+   {
+    "id": 571513,
+    "user": "LegitCheese",
+    "title": "Soft-Notifications - Bell - Ding-Dong.mp3",
+    "duration": 0.800958,
+    "downloads": 1137,
+    "mp3": "https://cdn.freesound.org/previews/571/571513_2226836-hq.mp3",
+    "query": "ding notification",
+    "file": "assets/audio/sfx/ding/571513.mp3"
+   },
+   {
+    "id": 700332,
+    "user": "NoTomorrow12",
+    "title": "Notification Ding",
+    "duration": 0.627846,
+    "downloads": 794,
+    "mp3": "https://cdn.freesound.org/previews/700/700332_15145400-hq.mp3",
+    "query": "ding notification",
+    "file": "assets/audio/sfx/ding/700332.mp3"
+   }
+  ],
+  "chime": [
+   {
+    "id": 842513,
+    "user": "PiesHelpfulOven",
+    "title": "Triple_Ping_Notification_Sound_Mobile_Optimized",
+    "duration": 0.96875,
+    "downloads": 686,
+    "mp3": "https://cdn.freesound.org/previews/842/842513_14031674-hq.mp3",
+    "query": "success chime",
+    "file": "assets/audio/sfx/chime/842513.mp3"
+   },
+   {
+    "id": 717771,
+    "user": "1bob",
+    "title": "victory chime",
+    "duration": 0.807823,
+    "downloads": 1057,
+    "mp3": "https://cdn.freesound.org/previews/717/717771_11611892-hq.mp3",
+    "query": "success chime",
+    "file": "assets/audio/sfx/chime/717771.mp3"
+   }
+  ],
+  "boom": [
+   {
+    "id": 523783,
+    "user": "BennettFilmTeacher",
+    "title": "Boom Explosion",
+    "duration": 2.15086,
+    "downloads": 3301,
+    "mp3": "https://cdn.freesound.org/previews/523/523783_7254895-hq.mp3",
+    "query": "boom impact",
+    "file": "assets/audio/sfx/boom/523783.mp3"
+   },
+   {
+    "id": 718005,
+    "user": "Johnny25225",
+    "title": "HeavyWobblyImpactHit_16",
+    "duration": 4.0,
+    "downloads": 675,
+    "mp3": "https://cdn.freesound.org/previews/718/718005_7849740-hq.mp3",
+    "query": "boom impact",
+    "file": "assets/audio/sfx/boom/718005.mp3"
+   },
+   {
+    "id": 350977,
+    "user": "cabled_mess",
+    "title": "Boom_C_06",
+    "duration": 1.58925,
+    "downloads": 1013,
+    "mp3": "https://cdn.freesound.org/previews/350/350977_5450487-hq.mp3",
+    "query": "boom impact",
+    "file": "assets/audio/sfx/boom/350977.mp3"
+   }
+  ],
+  "riser": [
+   {
+    "id": 555643,
+    "user": "WildBurne",
+    "title": "Risers and dopplers_07.wav",
+    "duration": 5.99646,
+    "downloads": 65,
+    "mp3": "https://cdn.freesound.org/previews/555/555643_10487820-hq.mp3",
+    "query": "riser",
+    "file": "assets/audio/sfx/riser/555643.mp3"
+   },
+   {
+    "id": 806666,
+    "user": "johnjohnfm",
+    "title": "BASIC RISER GLITCH",
+    "duration": 4.0,
+    "downloads": 331,
+    "mp3": "https://cdn.freesound.org/previews/806/806666_2403755-hq.mp3",
+    "query": "riser",
+    "file": "assets/audio/sfx/riser/806666.mp3"
+   },
+   {
+    "id": 685256,
+    "user": "syntheffects",
+    "title": "Riser sound effect short.wav",
+    "duration": 3.04689,
+    "downloads": 7432,
+    "mp3": "https://cdn.freesound.org/previews/685/685256_12265588-hq.mp3",
+    "query": "riser",
+    "file": "assets/audio/sfx/riser/685256.mp3"
+   }
+  ]
+ }
+}
