@@ -34,5 +34,9 @@
  {
   "key": "wb|SP.POP.TOTL|DESC|world",
   "at": "2026-10-02T17:16:39.685Z"
+ },
+ {
+  "key": "wb|NY.GDP.MKTP.CD|ASC|world",
+  "at": "2026-10-02T17:39:50.029Z"
  }
 ]
