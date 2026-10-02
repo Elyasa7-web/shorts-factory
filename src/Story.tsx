@@ -142,7 +142,7 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean }> = ({ sc
       {chunk.map((w, i) => {
         const active = t >= w.s - 0.02 && t < w.e + 0.02;
         return (
-          <span key={i} style={{ color: active ? accent : "#fff", display: "inline-block", margin: "0 12px", transform: active ? "scale(1.07)" : "scale(1)" }}>
+          <span key={i} style={{ color: active ? accent : "#fff", display: "inline-block", margin: "0 18px", transform: active ? "scale(1.07)" : "scale(1)" }}>
             {w.w}
           </span>
         );

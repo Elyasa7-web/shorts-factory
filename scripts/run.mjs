@@ -42,7 +42,7 @@ const remotion = (composition, propsFile) => {
   // Rendering is deterministic but Chrome can flake on a busy runner: retry once before giving up.
   for (let attempt = 1; ; attempt++) {
     try {
-      sh(node, ["node_modules/@remotion/cli/remotion-cli.js", "render", "src/index.ts", composition, "out/video.mp4", `--props=${propsFile}`]);
+      sh(node, ["node_modules/@remotion/cli/remotion-cli.js", "render", "src/index.ts", composition, "out/video.mp4", `--props=${propsFile}`, "--crf=23"]);
       return;
     } catch (e) {
       if (attempt === 2) throw e;

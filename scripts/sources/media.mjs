@@ -47,7 +47,7 @@ export async function pexelsVideos(query, key) {
       if (!f || v.duration < 4) continue;
       // Pexels video URLs carry a descriptive slug: /video/ocean-waves-crashing-on-rocks-1234/
       const slug = (v.url ?? "").split("/video/")[1] ?? "";
-      out.push({ id: `pv${v.id}`, type: "video", url: f.link, score: relevance(query, slug), source: "Pexels", portrait: f.height >= f.width });
+      out.push({ id: `pv${v.id}`, type: "video", url: f.link, score: relevance(query, slug), hay: slug, source: "Pexels", portrait: f.height >= f.width });
     }
     if (out.length >= 8) break;
   }
@@ -60,7 +60,7 @@ export async function pexelsPhotos(query, key) {
   const { photos = [] } = await getJson(`https://api.pexels.com/v1/search?${p}`, { Authorization: key });
   return photos.map((ph) => ({
     id: `pp${ph.id}`, type: "image", url: ph.src.large2x ?? ph.src.large, source: "Pexels",
-    score: relevance(query, `${ph.alt ?? ""} ${(ph.url ?? "").split("/photo/")[1] ?? ""}`), portrait: ph.height >= ph.width,
+    score: relevance(query, `${ph.alt ?? ""} ${(ph.url ?? "").split("/photo/")[1] ?? ""}`), hay: `${ph.alt ?? ""} ${(ph.url ?? "").split("/photo/")[1] ?? ""}`, portrait: ph.height >= ph.width,
   }));
 }
 
@@ -73,7 +73,7 @@ export async function nasaImages(query) {
     const thumb = it.links?.[0]?.href ?? "";
     return {
       id: `nasa${d.nasa_id}`, type: "image", url: thumb.replace("~thumb", "~large"), fallbackUrl: thumb, source: "NASA",
-      score: relevance(query, `${d.title ?? ""} ${(d.keywords ?? []).join(" ")} ${d.description ?? ""}`.slice(0, 600)),
+      score: relevance(query, `${d.title ?? ""} ${(d.keywords ?? []).join(" ")} ${d.description ?? ""}`.slice(0, 600)), hay: `${d.title ?? ""} ${(d.keywords ?? []).join(" ")}`,
       portrait: false, credit: "NASA (public domain)",
     };
   }).filter((c) => c.url);
@@ -96,7 +96,7 @@ export async function commonsImages(query) {
     const artist = (ii.extmetadata?.Artist?.value ?? "").replace(/<[^>]+>/g, "").trim() || "Wikimedia Commons";
     out.push({
       id: `wc${pg.pageid}`, type: "image", url: ii.thumburl ?? ii.url, source: "Wikimedia Commons",
-      score: relevance(query, pg.title.replace(/^File:/, "")), portrait: ii.height >= ii.width,
+      score: relevance(query, pg.title.replace(/^File:/, "")), hay: pg.title.replace(/^File:/, ""), portrait: ii.height >= ii.width,
       credit: `${artist}, ${lic}, via Wikimedia Commons`,
     });
   }
@@ -110,7 +110,7 @@ const SPACE = /\b(space|galaxy|planet|star|moon|sun|solar|black hole|nebula|come
  * { type: "video"|"image", url, source, credit? } or null.
  * `used` is a Set of ids already shown in this video.
  */
-export async function findVisual(queries, used, { pexelsKey, spaceTopic }) {
+export async function findVisual(queries, used, { pexelsKey, spaceTopic, topic = "" }) {
   const safe = async (fn) => { try { return await fn(); } catch { return []; } };
   for (const q of queries) {
     const pools = await Promise.all([
@@ -122,7 +122,8 @@ export async function findVisual(queries, used, { pexelsKey, spaceTopic }) {
     const cands = pools.flat().filter((c) => !used.has(c.id));
     // a moving clip is worth a little more than a still, a portrait frame fits the screen better
     const ranked = cands
-      .map((c) => ({ ...c, rank: c.score + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) }))
+      // a clip that is actually ABOUT the topic (its title names it) beats a generic "ocean waves" clip
+      .map((c) => ({ ...c, rank: c.score + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) + (topic ? 0.4 * relevance(topic, c.hay) : 0) }))
       .filter((c) => c.score >= 0.34)
       .sort((a, b) => b.rank - a.rank);
     if (ranked.length) {

@@ -34,9 +34,9 @@ for (let i = 0; i < scenes.length; i++) {
     sc.clip = scenes[0].clip; sc.image = scenes[0].image;
     continue;
   }
-  const queries = [...new Set([sc.visual, `${story.topic} ${sc.visual}`, story.topic])];
+  const queries = [...new Set([`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
   try {
-    let v = await findVisual(queries, used, { pexelsKey: KEY, spaceTopic: story.category === "space" });
+    let v = await findVisual(queries, used, { pexelsKey: KEY, spaceTopic: story.category === "space", topic: story.topic });
     if (!v && KEY) { // last resort: any stock clip about the topic itself
       v = (await pexelsVideos(story.topic, KEY)).find((x) => !used.has(x.id)) ?? null;
       if (v) used.add(v.id);
