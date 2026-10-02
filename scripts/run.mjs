@@ -1,14 +1,17 @@
 // One full cycle: pick a video format -> make it -> upload (scheduled publish).
 // Formats alternate for the A/B test: "ranking" (data Top 5) and "story" (verified fact story).
-// Env: PUBLISH_HOURS_UTC="2,8,14,20"  MIN_GAP_HOURS=5  DRY_RUN=1  FORCE=1  FORMAT=ranking|story  STORY_FIXTURE=1
+// Env: PUBLISH_HOURS_UTC="10,13,17,20"  MIN_GAP_HOURS=2  MAX_QUEUE=6  DRY_RUN=1  FORCE=1  FORMAT=ranking|story  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
 
 const SCHEDULE = "data/schedule.json";
-const HOURS = (process.env.PUBLISH_HOURS_UTC || "2,8,14,20").split(",").map(Number);
-const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 5);
+// Four public slots per day, all inside the Turkish day (13:00, 16:00, 20:00, 23:00 TRT = 06, 09, 13, 16 US Eastern),
+// none around midnight. The queue length decides when a new video is made, not the trigger frequency.
+const HOURS = (process.env.PUBLISH_HOURS_UTC || "10,13,17,20").split(",").map(Number);
+const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 2);
+const MAX_QUEUE = Number(process.env.MAX_QUEUE || 6);   // videos scheduled but not yet public (1.5 days of slots)
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
 
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", ...opts });
@@ -18,6 +21,13 @@ const log = existsSync(SCHEDULE) ? JSON.parse(readFileSync(SCHEDULE, "utf8")) : 
 
 // Two triggers (GitHub cron + cron-job.org) can fire close together: upload only once per gap.
 const last = log.at(-1);
+// Self-regulating: the queue of scheduled-but-not-yet-public videos is topped up to MAX_QUEUE and no further,
+// so every trigger interval yields exactly the 4 videos/day the slots can publish (never a backlog, never a gap).
+const queued = log.filter((l) => Date.parse(l.publishAt) > Date.now()).length;
+if (!process.env.FORCE && queued >= MAX_QUEUE) {
+  console.log(`${queued} videos already scheduled (limit ${MAX_QUEUE}), nothing to make now.`);
+  process.exit(0);
+}
 if (last && !process.env.FORCE && Date.now() - Date.parse(last.uploadedAt) < MIN_GAP_H * 3600_000) {
   console.log(`Last upload was ${last.uploadedAt}; < ${MIN_GAP_H}h ago, skipping.`);
   process.exit(0);
