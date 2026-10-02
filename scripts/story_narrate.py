@@ -55,7 +55,7 @@ def main():
                 voices.append((p, N.probe(p)))
                 print(f"  voice {sc['kind']}: {voices[-1][1]:.1f}s <- {sc['text'][:60]}")
             spoken = sum(d for _, d in voices)
-            if spoken > 52 and name.strip() != os.environ.get("TTS_ORDER", "gemini,elevenlabs,edge,espeak").split(",")[-1].strip():
+            if spoken > 150 and name.strip() != os.environ.get("TTS_ORDER", "gemini,elevenlabs,edge,espeak").split(",")[-1].strip():
                 raise RuntimeError(f"voice too slow ({spoken:.0f}s of speech for a Short)")
             used = name
             break
