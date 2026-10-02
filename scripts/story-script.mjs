@@ -75,6 +75,7 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
   let lastErr;
   for (const model of await textModels()) {
     for (let attempt = 0; attempt < 2; attempt++) {
+      const t0 = Date.now();
       try {
         const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
           method: "POST",
@@ -84,13 +85,16 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
             contents: [{ role: "user", parts: [{ text: prompt }] }],
             generationConfig: { temperature, responseMimeType: "application/json", responseSchema: schema },
           }),
-          signal: AbortSignal.timeout(90_000),
+          signal: AbortSignal.timeout(60_000),
         });
         if (!res.ok) throw new Error(`${model} HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
         const data = await res.json();
-        return JSON.parse(data.candidates[0].content.parts[0].text);
+        const out = JSON.parse(data.candidates[0].content.parts[0].text);
+        console.error(`gemini ${model} ok in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+        return out;
       } catch (e) {
         lastErr = e;
+        console.error(`gemini ${model} attempt ${attempt + 1} failed after ${((Date.now() - t0) / 1000).toFixed(1)}s: ${e.message.slice(0, 160)}`);
         await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
       }
     }
@@ -165,10 +169,10 @@ export async function generateStory({ fixture = false, topic } = {}) {
     );
     if (audit.unsupported?.length) {
       console.error(`audit found unsupported claims (${t.title}): ${audit.unsupported.join(" | ")}`);
-      script = await gemini(`${base}\n\nRewrite the script and REMOVE or correct these unsupported claims: ${audit.unsupported.join(" | ")}`, SCHEMA);
+      script = await gemini(`${base}\n\nRewrite the script and REMOVE or correct these unsupported claims: ${audit.unsupported.join(" | ")}\nStay close to the source's own wording and numbers. No metaphors, exaggeration, or "secret"/"hidden" framing: state plainly what the source says.`, SCHEMA);
       if (validate(script).length) continue;
       const again = await gemini(
-        `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT:\n"""\n${[script.hook.text, ...script.beats.map((b) => b.text), script.payoff.text].join("\\n")}\n"""\n\nList unsupported claims.`,
+        `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT:\n"""\n${[script.hook.text, ...script.beats.map((b) => b.text), script.payoff.text].join("\n")}\n"""\n\nList unsupported claims.`,
         { type: "OBJECT", properties: { unsupported: { type: "ARRAY", items: { type: "STRING" } } }, required: ["unsupported"] },
         "You are a strict fact-checker. Only the SOURCE TEXT counts as evidence.",
         0
