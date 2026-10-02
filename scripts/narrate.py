@@ -127,7 +127,7 @@ def tts_gemini(text: str, path: Path):
     tighten_speech(text, path)
     time.sleep(6)                                     # stay under the free-tier requests/minute
 
-def tighten_speech(text: str, path: Path, target_spw: float = 0.40, max_tempo: float = 1.6):
+def tighten_speech(text: str, path: Path, target_spw: float = 0.36, max_tempo: float = 1.7):
     """Newer Gemini TTS models pad clips with long silences and can speak slowly (an 8-word line
     came back as 11 s). Cut leading/trailing/long inner silences, then speed the clip up toward a
     natural ~150 words/minute if it is still slower than that."""
