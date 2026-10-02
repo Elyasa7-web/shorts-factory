@@ -99,6 +99,7 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
         const data = await res.json();
         const out = JSON.parse(data.candidates[0].content.parts[0].text);
         console.error(`gemini ${model} ok in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+        if (modelCache?.[0] !== model && modelCache?.includes(model)) modelCache = [model, ...modelCache.filter((m) => m !== model)]; // stick with what works
         return out;
       } catch (e) {
         lastErr = e;
