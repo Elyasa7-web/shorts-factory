@@ -124,7 +124,28 @@ def tts_gemini(text: str, path: Path):
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1",
          "-i", str(pcm), str(path)])
     pcm.unlink(missing_ok=True)
+    tighten_speech(text, path)
     time.sleep(6)                                     # stay under the free-tier requests/minute
+
+def tighten_speech(text: str, path: Path, target_spw: float = 0.40, max_tempo: float = 1.6):
+    """Newer Gemini TTS models pad clips with long silences and can speak slowly (an 8-word line
+    came back as 11 s). Cut leading/trailing/long inner silences, then speed the clip up toward a
+    natural ~150 words/minute if it is still slower than that."""
+    tmp = path.with_name(path.stem + ".tight.mp3")
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-af",
+         "silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.4:stop_threshold=-45dB:stop_silence=0.12",
+         str(tmp)])
+    d = probe(tmp)
+    n = max(1, len(text.split()))
+    spw = d / n
+    if spw > target_spw * 1.2:
+        tempo = min(max_tempo, spw / target_spw)
+        paced = path.with_name(path.stem + ".paced.mp3")
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp), "-af", f"atempo={tempo:.3f}", str(paced)])
+        tmp.unlink(missing_ok=True)
+        tmp = paced
+        print(f"  gemini pace: {d:.1f}s for {n} words -> x{tempo:.2f}", file=sys.stderr)
+    tmp.replace(path)
 
 def tts_elevenlabs(text: str, path: Path):
     key = os.environ["ELEVENLABS_API_KEY"]
