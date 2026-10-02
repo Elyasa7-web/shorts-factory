@@ -73,7 +73,15 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY missing");
   let lastErr;
-  for (const model of await textModels()) {
+  // Demand spikes (503) hit every model at once and pass within a minute or two: after a full
+  // sweep over the models, wait and sweep again before giving up on the story.
+  for (let round = 0; round < 4; round++) {
+   if (round > 0) {
+     if (!/HTTP (429|5\d\d)/.test(lastErr?.message ?? "")) break;
+     console.error(`all models busy, waiting 30s (round ${round + 1}/4)`);
+     await new Promise((r) => setTimeout(r, 30_000));
+   }
+   for (const model of await textModels()) {
     for (let attempt = 0; attempt < 2; attempt++) {
       const t0 = Date.now();
       try {
@@ -95,9 +103,11 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
       } catch (e) {
         lastErr = e;
         console.error(`gemini ${model} attempt ${attempt + 1} failed after ${((Date.now() - t0) / 1000).toFixed(1)}s: ${e.message.slice(0, 160)}`);
+        if (/HTTP (404|429|5\d\d)/.test(e.message)) break; // overloaded or retired: the next model is a better bet than a retry
         await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
       }
     }
+   }
   }
   throw lastErr;
 }
