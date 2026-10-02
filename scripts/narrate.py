@@ -124,38 +124,46 @@ def tts_gemini(text: str, path: Path):
     run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1",
          "-i", str(pcm), str(path)])
     pcm.unlink(missing_ok=True)
-    tighten_speech(text, path)
+    tighten_speech(text, path, "gemini")
     time.sleep(6)                                     # stay under the free-tier requests/minute
 
-def tighten_speech(text: str, path: Path, target_spw: float = 0.44, max_tempo: float = 1.15):
-    """Newer Gemini TTS models pad clips with long silences and can speak slowly (an 8-word line
-    came back as 11 s). Cut leading/trailing/long inner silences, then speed the clip up toward a
-    natural ~150 words/minute if it is still slower than that."""
+def tighten_speech(text: str, path: Path, label: str = "voice"):
+    """Normalise ANY provider to a natural documentary pace (~140 words/minute):
+    cut leading/trailing/long inner silences, then speed a too-slow clip up (max x1.15) or slow a
+    too-fast one down (min x0.85). Gemini 3.x pads and drags (8 words took 11 s); ElevenLabs flash
+    reads ~215 words/minute, which sounds rushed on a Short."""
     tmp = path.with_name(path.stem + ".tight.mp3")
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-af",
          "silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.4:stop_threshold=-45dB:stop_silence=0.12",
          str(tmp)])
     d = probe(tmp)
     n = max(1, len(text.split()))
-    spw = d / n
-    if spw > target_spw * 1.2:
-        tempo = min(max_tempo, spw / target_spw)
+    spw = d / n                                   # seconds per word: 0.42 is ~143 wpm
+    tempo = 1.0
+    if spw > 0.53:
+        tempo = min(1.15, spw / 0.44)
+    elif spw < 0.36:
+        tempo = max(0.85, spw / 0.42)
+    if abs(tempo - 1.0) > 0.02:
         paced = path.with_name(path.stem + ".paced.mp3")
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp), "-af", f"atempo={tempo:.3f}", str(paced)])
         tmp.unlink(missing_ok=True)
         tmp = paced
-        print(f"  gemini pace: {d:.1f}s for {n} words -> x{tempo:.2f}", file=sys.stderr)
+        print(f"  {label} pace: {d:.1f}s for {n} words ({60 / max(spw, 0.01):.0f} wpm) -> x{tempo:.2f}", file=sys.stderr)
     tmp.replace(path)
 
 def tts_elevenlabs(text: str, path: Path):
     key = os.environ["ELEVENLABS_API_KEY"]
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
-    audio = post_json(
-        f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128",
-        {"text": text, "model_id": "eleven_flash_v2_5"},
-        {"xi-api-key": key},
-    )
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128"
+    body = {"text": text, "model_id": "eleven_flash_v2_5", "voice_settings": {"speed": 0.8}}
+    try:
+        audio = post_json(url, body, {"xi-api-key": key})
+    except RuntimeError:
+        body.pop("voice_settings")                # a model/voice that rejects "speed" must still produce audio
+        audio = post_json(url, body, {"xi-api-key": key})
     path.write_bytes(audio)
+    tighten_speech(text, path, "elevenlabs")
 
 def tts_espeak(text: str, path: Path):
     # Fully offline last resort (apt install espeak-ng): robotic, but it cannot fail on network.
@@ -167,6 +175,7 @@ def tts_espeak(text: str, path: Path):
 def tts_edge(text: str, path: Path):
     import edge_tts
     asyncio.run(edge_tts.Communicate(text, "en-US-AndrewNeural", rate=os.environ.get("VOICE_RATE", "-2%")).save(str(path)))
+    tighten_speech(text, path, "edge")
 
 PROVIDERS = {
     "gemini": ("GEMINI_API_KEY", tts_gemini),
