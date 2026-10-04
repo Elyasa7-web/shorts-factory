@@ -6,7 +6,7 @@ on:
   # the cycle if a video was already uploaded within MIN_GAP_HOURS, so both
   # triggers together never double-post.
   schedule:
-    - cron: "7 */6 * * *"
+    - cron: "7 * * * *"   # hourly; run.mjs only makes a video while the schedule queue is short
   workflow_dispatch:
     inputs:
       dry_run:

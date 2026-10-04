@@ -80,7 +80,8 @@
   "key": "wb|SP.POP.65UP.TO.ZS|ASC|Sub-Saharan Africa",
   "title": "Top 5 Countries With The Smallest Share of Seniors (65+) in Sub-Saharan Africa",
   "uploadedAt": "2026-10-03T21:22:18.222Z",
-  "publishAt": "2026-10-04T10:00:00.000Z"
+  "publishAt": "2026-10-04T10:00:00.000Z",
+  "cancelled": true
  },
  {
   "id": "1_E2IXyEXgk",
@@ -88,6 +89,7 @@
   "key": "story|Wow! signal",
   "title": "What Was the 1977 Wow! Signal From Space?",
   "uploadedAt": "2026-10-04T03:48:04.645Z",
-  "publishAt": "2026-10-04T13:00:00.000Z"
+  "publishAt": "2026-10-04T13:00:00.000Z",
+  "cancelled": true
  }
 ]

@@ -1,29 +1,36 @@
-// One full cycle: pick a video format -> make it -> upload (scheduled publish).
-// Formats alternate for the A/B test: "ranking" (data Top 5) and "story" (verified fact story).
-// Env: PUBLISH_HOURS_UTC="10,13,17,20"  MIN_GAP_HOURS=2  MAX_QUEUE=6  DRY_RUN=1  FORCE=1  FORMAT=ranking|story  STORY_FIXTURE=1
+// One full cycle for the "Canlı Garaj" channel: pick a vehicle topic -> script (Turkish, fact-checked) -> footage
+// -> voice -> render -> upload as a scheduled public video. The old English "ranking" format only runs with FORMAT=ranking.
+// Env: PUBLISH_HOURS_UTC="6,9,12,15,17,19"  MIN_GAP_HOURS=1  MAX_QUEUE=9  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
 
 const SCHEDULE = "data/schedule.json";
-// Four public slots per day, all inside the Turkish day (13:00, 16:00, 20:00, 23:00 TRT = 06, 09, 13, 16 US Eastern),
-// none around midnight. The queue length decides when a new video is made, not the trigger frequency.
-const HOURS = (process.env.PUBLISH_HOURS_UTC || "10,13,17,20").split(",").map(Number);
-const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 2);
-const MAX_QUEUE = Number(process.env.MAX_QUEUE || 6);   // videos scheduled but not yet public (1.5 days of slots)
+// Six public slots per day, all inside the Turkish day: 09:00, 12:00, 15:00, 18:00, 20:00, 22:00 TRT (UTC+3),
+// none around midnight. YouTube's free API quota (10,000 units, 1,600 per upload) allows 6 uploads a day, so that
+// is the maximum. The queue length decides when a new video is made, not the trigger frequency.
+const HOURS = (process.env.PUBLISH_HOURS_UTC || "6,9,12,15,17,19").split(",").map(Number);
+const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 1);
+const MAX_QUEUE = Number(process.env.MAX_QUEUE || 9);   // videos scheduled but not yet public (1.5 days of slots)
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
 
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", ...opts });
 const python = process.platform === "win32" ? "python" : "python3";
+
+// Kill switch: while data/PAUSE exists, normal (cron / dispatch) runs make nothing. Test runs (DRY_RUN) and FORCE ignore it.
+if (existsSync("data/PAUSE") && !process.env.DRY_RUN && !process.env.FORCE) {
+  console.log("data/PAUSE exists: production is paused.");
+  process.exit(0);
+}
 
 const log = existsSync(SCHEDULE) ? JSON.parse(readFileSync(SCHEDULE, "utf8")) : [];
 
 // Two triggers (GitHub cron + cron-job.org) can fire close together: upload only once per gap.
 const last = log.at(-1);
 // Self-regulating: the queue of scheduled-but-not-yet-public videos is topped up to MAX_QUEUE and no further,
-// so every trigger interval yields exactly the 4 videos/day the slots can publish (never a backlog, never a gap).
-const queued = log.filter((l) => Date.parse(l.publishAt) > Date.now()).length;
+// so every trigger interval yields exactly the 6 videos/day the slots can publish (never a backlog, never a gap).
+const queued = log.filter((l) => !l.cancelled && Date.parse(l.publishAt) > Date.now()).length;
 if (!process.env.FORCE && queued >= MAX_QUEUE) {
   console.log(`${queued} videos already scheduled (limit ${MAX_QUEUE}), nothing to make now.`);
   process.exit(0);
@@ -34,7 +41,7 @@ if (last && !process.env.FORCE && Date.now() - Date.parse(last.uploadedAt) < MIN
 }
 
 function nextFreeSlot() {
-  const taken = new Set(log.map((l) => l.publishAt));
+  const taken = new Set(log.filter((l) => !l.cancelled).map((l) => l.publishAt));
   const t = new Date(Date.now() + LEAD_MS);
   t.setUTCMinutes(0, 0, 0);
   for (let i = 0; i < 24 * 14; i++) {
@@ -74,41 +81,42 @@ async function makeRanking() {
   return { format: "ranking", key: topic.key, title: topic.title, description: topic.description, tags: topic.tags };
 }
 
-// ---------- format 2: verified fact story ----------
-async function makeStory() {
+// ---------- Canlı Garaj: Turkish, source-grounded vehicle explainers ----------
+const hashtag = (t) => t.toLowerCase().replace(/[^a-z0-9çğıöşü]/g, "");
+
+async function makeGarage() {
   sh(node, ["scripts/story-script.mjs", ...(process.env.STORY_FIXTURE ? ["--fixture"] : [])]);
   const story = JSON.parse(readFileSync("data/story.json", "utf8"));
   const sc = story.script;
-  console.log(`Story: ${story.topic} -> ${sc.title}`);
+  console.log(`Garage: ${story.topic} -> ${sc.title}`);
   sh(node, ["scripts/story-assets.mjs"]);
   sh(python, ["scripts/story_narrate.py"], { env });
   remotion("Story", "data/story-props.json");
-  const tags = [...new Set(["shorts", "facts", "didyouknow", ...sc.tags.map((t) => t.toLowerCase().replace(/[^a-z0-9]/g, "")).filter(Boolean)])].slice(0, 12);
+  const baseTags = ["shorts", "araba", "otomobil", "araç", "motor", "canlı garaj", "nasıl çalışır", "oto bilgi", "usta"];
+  const tags = [...new Set([...baseTags, ...sc.tags.map((t) => t.trim().toLowerCase()).filter(Boolean)])].slice(0, 15);
+  const tagLine = ["shorts", "araba", "otomobil", "canlıgaraj", ...sc.tags.map(hashtag).filter((t) => t && t.length > 2)].slice(0, 8);
+  const credits = JSON.parse(readFileSync("data/story-props.json", "utf8")).credits ?? [];
   const description = [
     sc.title, "", sc.payoff.text, "", sc.cta, "",
-    `Source: ${story.source.url} (Wikipedia, CC BY-SA)`,
-    "Footage: Pexels, Pixabay, NASA, Wikimedia Commons, Openverse, Smithsonian Open Access. Music and sound effects: Freesound (CC0).",
-    ...(JSON.parse(readFileSync("data/story-props.json", "utf8")).credits ?? []).map((c) => `Credit: ${c}`),
-    "",
-    tags.map((t) => `#${t}`).join(" "),
+    "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.", "",
+    `Kaynak: ${(story.source.urls ?? [story.source.url]).join(" , ")} (Vikipedi / Wikipedia, CC BY-SA)`,
+    "Görüntüler: Pexels, Pixabay, Wikimedia Commons, Openverse, NASA. Müzik ve ses efektleri: Freesound (CC0).",
+    ...credits.map((c) => `Görsel: ${c}`),
+    "", [...new Set(tagLine)].map((t) => `#${t}`).join(" "),
   ].join("\n");
-  return { format: "story", key: `story|${story.topic}`, title: sc.title, description, tags };
+  return { format: "garage", key: story.key, title: sc.title, description, tags };
 }
 
-// Alternate the formats so both collect comparable data; a failed story never costs a video.
-const wanted = process.env.FORMAT || (last?.format === "story" ? "ranking" : "story");
+// Only the garage format is made (the old English ranking videos do not fit the channel any more).
+// A failed attempt must never turn into an off-topic upload: the queue check at the top retries on the next trigger.
+const wanted = process.env.FORMAT === "ranking" ? "ranking" : "garage";
 rmSync("out/narration.m4a", { force: true });
 let made;
-if (wanted === "story") {
-  try {
-    made = await makeStory();
-  } catch (e) {
-    console.error(`story format failed (${e.message}); making a ranking video instead`);
-    rmSync("out/narration.m4a", { force: true });
-    made = await makeRanking();
-  }
-} else {
-  made = await makeRanking();
+try {
+  made = wanted === "ranking" ? await makeRanking() : await makeGarage();
+} catch (e) {
+  console.error(`::warning::no video made this cycle: ${e.message}`);
+  process.exit(process.env.DRY_RUN ? 1 : 0); // a normal cycle ends quietly (next trigger retries); a test run must show the failure
 }
 
 sh("ffmpeg", ["-y", "-loglevel", "error", "-i", "out/video.mp4", "-i", "out/narration.m4a",
@@ -123,7 +131,7 @@ const publishAt = nextFreeSlot();
 const id = await uploadToYouTube({ file: "out/final.mp4", title: made.title, description: made.description, tags: made.tags, publishAt });
 log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt });
 writeFileSync(SCHEDULE, JSON.stringify(log.slice(-500), null, 1));
-if (made.format === "story") {
+if (made.format === "garage") {
   // remember the topic so it is not repeated (rankings record themselves in generate-topic.mjs)
   const hp = "data/history.json";
   const h = existsSync(hp) ? JSON.parse(readFileSync(hp, "utf8")) : [];

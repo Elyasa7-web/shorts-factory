@@ -18,6 +18,9 @@ const wordSchema = z.object({ w: z.string(), s: z.number(), e: z.number() });
 export const storySchema = z.object({
   title: z.string(),
   credits: z.array(z.string()).optional(),
+  lang: z.string().optional(),       // "tr": captions are upper-cased with Turkish rules (i -> İ)
+  ctaLabel: z.string().optional(),
+  brand: z.string().optional(),
   accent: z.string().optional(),
   totalSeconds: z.number().optional(),
   scenes: z.array(
@@ -109,7 +112,7 @@ const Shade: React.FC = () => (
   />
 );
 
-const Captions: React.FC<{ scene: Scene; accent: string; big: boolean }> = ({ scene, accent, big }) => {
+const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: string }> = ({ scene, accent, big, lang }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const t = frame / fps;
@@ -124,6 +127,7 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean }> = ({ sc
   const size = big ? 118 : 100;
   return (
     <div
+      lang={lang}
       style={{
         position: "absolute",
         left: 50,
@@ -151,7 +155,7 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean }> = ({ sc
   );
 };
 
-const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string }> = ({ scene, index, total, accent }) => {
+const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; brand?: string }> = ({ scene, index, total, accent, lang, ctaLabel, brand }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const chunks = chunkWords(scene.words);
@@ -169,11 +173,16 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
           <div key={i} style={{ width: i === index ? 44 : 16, height: 16, borderRadius: 8, background: i <= index ? accent : "rgba(255,255,255,.35)" }} />
         ))}
       </div>
-      <Captions scene={scene} accent={accent} big={scene.kind === "hook" || isPayoff} />
+      {brand ? (
+        <div style={{ position: "absolute", top: 118, left: 0, right: 0, textAlign: "center", fontFamily, fontWeight: 800, fontSize: 30, letterSpacing: 8, color: "#fff", opacity: 0.8, textShadow: "0 2px 12px rgba(0,0,0,.7)" }}>
+          {brand}
+        </div>
+      ) : null}
+      <Captions scene={scene} accent={accent} big={scene.kind === "hook" || isPayoff} lang={lang} />
       {scene.kind === "cta" ? (
-        <div style={{ position: "absolute", top: 1330, width: "100%", display: "flex", justifyContent: "center" }}>
+        <div lang={lang} style={{ position: "absolute", top: 1330, width: "100%", display: "flex", justifyContent: "center" }}>
           <div style={{ fontFamily, fontWeight: 900, fontSize: 54, padding: "20px 48px", borderRadius: 60, background: accent, color: "#111" }}>
-            COMMENT YOUR ANSWER 👇
+            {ctaLabel}
           </div>
         </div>
       ) : null}
@@ -187,7 +196,7 @@ const FadeIn: React.FC<{ frames: number; children: React.ReactNode }> = ({ frame
   return <AbsoluteFill style={{ opacity: interpolate(frame, [0, frames], [0, 1], { extrapolateRight: "clamp" }) }}>{children}</AbsoluteFill>;
 };
 
-export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes }) => {
+export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang = "en", ctaLabel = "COMMENT YOUR ANSWER 👇", brand }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const lens = scenes.map((s) => Math.max(1, Math.round(s.seconds * fps)));
@@ -198,13 +207,13 @@ export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes }) => {
     <AbsoluteFill style={{ background: "#000" }}>
       {scenes.map((sc, i) => (
         <Sequence key={i} from={starts[i]} durationInFrames={lens[i]}>
-          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} />
+          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} brand={brand} />
         </Sequence>
       ))}
       {/* seamless loop: the Short's last frames fade into its first frame */}
       <Sequence from={starts[last] + lens[last] - LOOP} durationInFrames={LOOP}>
         <FadeIn frames={LOOP - 3}>
-          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} />
+          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} brand={brand} />
         </FadeIn>
       </Sequence>
       <div style={{ position: "absolute", top: 0, left: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: accent }} />

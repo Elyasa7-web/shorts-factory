@@ -49,7 +49,7 @@ for (let i = 0; i < scenes.length; i++) {
     continue;
   }
   const queries = [...new Set([`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
-  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article };
+  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true };
   let done = false;
   // up to 4 attempts: if the best candidate cannot be downloaded, its id stays in `used` and the next best is tried
   for (let attempt = 0; attempt < 4 && !done; attempt++) {
@@ -89,6 +89,9 @@ for (const sc of scenes) {
   report.push(`${sc.kind}: reused footage from another scene for "${sc.visual}"`);
 }
 
-writeFileSync("data/story-props.json", JSON.stringify({ scenes, title: s.title, credits: [...credits] }));
+writeFileSync("data/story-props.json", JSON.stringify({
+  scenes, title: s.title, credits: [...credits],
+  accent: "#ff7a1a", lang: story.lang ?? "tr", ctaLabel: story.lang === "en" ? "COMMENT YOUR ANSWER 👇" : "CEVABINI YORUMA YAZ 👇", brand: "CANLI GARAJ",
+}));
 console.log(report.map((r) => "  " + r).join("\n"));
 console.log(`story visuals: ${scenes.filter((x) => x.clip || x.image).length}/${scenes.length}${KEY ? "" : " (no PEXELS_API_KEY)"}`);

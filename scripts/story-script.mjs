@@ -1,16 +1,17 @@
-// Story Shorts, step 1: pick an evergreen topic, read its Wikipedia article, and have Gemini
-// turn ONLY the facts in that article into a curiosity-driven 35-40 s script. A second Gemini
-// pass audits the script for claims that are not in the source; any unsupported claim means
-// one repair attempt, then the story is rejected (the pipeline falls back to a ranking video).
+// "Canlı Garaj" Shorts, step 1: pick a vehicle topic, read its Wikipedia article(s), and have Gemini turn ONLY
+// that material into a ~50 s Turkish script told by a friendly garage master. A second Gemini pass audits the
+// script for claims the source does not support; unsupported claims mean one repair attempt, then the topic is
+// dropped and another one is tried.
 //
-// usage: node scripts/story-script.mjs [--fixture] [--topic "Octopus"]   -> data/story.json
+// usage: node scripts/story-script.mjs [--fixture] [--topic "Clutch"]   -> data/story.json
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { STORY_TOPICS, fetchSource } from "./sources/wiki.mjs";
+import { fetchSource } from "./sources/wiki.mjs";
+import { PARTS, SCENARIOS, ANGLES } from "./sources/garage-topics.mjs";
 
 const HISTORY = "data/history.json";
 const OUT = "data/story.json";
-const RECENT = 120; // do not repeat a topic within this many uploads
+
 // Gemini model names change often (older ones get retired for new users), so the model list is
 // discovered from the API instead of being hard-coded: newest "flash" first, "lite" as a last resort.
 let modelCache;
@@ -41,17 +42,22 @@ async function textModels() {
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const words = (s) => s.trim().split(/\s+/).filter(Boolean).length;
 
-const SYSTEM = `You write scripts for a YouTube Shorts channel that tells surprising TRUE stories.
+const SYSTEM = `You write scripts for "Canlı Garaj", a Turkish YouTube Shorts channel that explains how cars, motorcycles and every other kind of vehicle really work. The narrator is a friendly, knowledgeable garage master (usta) talking to ONE viewer.
+
+OUTPUT LANGUAGE: Turkish, natural SPOKEN Turkish (the text is read aloud by a voice and shown as captions). Short sentences, concrete, no filler, no "biliyor muydun", no "bu videoda", no "hadi başlayalım". Address the viewer informally ("sen"). Use the everyday workshop vocabulary Turkish drivers know (debriyaj, şanzıman, balata, amortisör, triger, enjektör, turbo...).
+
 Rules, all mandatory:
-1. Use ONLY facts that are written in the SOURCE TEXT. Never add numbers, names, dates, causes or claims from memory. If the source does not say it, do not say it.
-2. Voice: a sharp, curious narrator talking to one person. Short sentences. Concrete details and specific numbers from the source. No filler, no "did you know", no "in this video", no "let's dive in".
-3. Open with a hook of at most 12 words that creates a curiosity gap about something the source really supports (a surprising number, a contradiction, a "how is that even possible"). Never promise something the script does not deliver.
-4. Then exactly 4 beats of 14-20 words. Each beat reveals one new fact; every beat except the last ends on a small open loop that pulls the viewer to the next beat.
-5. Then a payoff of at most 16 words: the most surprising or meaningful conclusion, still from the source.
-6. End with a call to action of at most 12 words that asks a debatable question the viewer will want to answer in the comments.
-7. For the hook, every beat and the payoff give "visual": 2-4 words describing generic stock footage that can actually be filmed (e.g. "deep ocean water", "night sky stars", "ancient stone ruins"). Never a person's name or a brand.
-8. title: at most 70 characters, curiosity-driven but truthful, contains the topic.
-9. Never mention living people, political parties, religions in a negative way, or anything graphic.`;
+1. Facts come ONLY from the SOURCE TEXT. You may add simple, logical consequences that follow directly from the mechanics the source describes (for example: if the source says a gear has no synchronizer, you may explain that engaging it while moving grinds the gear teeth). Never invent numbers, percentages, names, dates, records, prices, model names or causes that the source does not support. If the source does not say it, leave it out.
+2. Never criticise or praise a brand. Brand names only when the source itself uses them for a fact.
+3. HOOK (the first sentence, at most 12 words): a concrete question, scenario or surprising claim about the topic that makes the viewer need the answer. Never promise something the script does not deliver.
+4. Then EXACTLY 5 beats of 12-22 words. Each beat gives one new idea. Every beat except the last ends on a small open loop that pulls the viewer to the next beat. Build to the answer.
+5. PAYOFF (at most 22 words): the useful takeaway, what a driver or rider should know.
+6. CTA (at most 14 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
+7. Spoken numbers and units: plain numbers may be digits, but write units in words ("kilometre", "derece", "bar", "devir") and never use abbreviations such as km/s, °C, rpm, hp.
+8. For the hook, every beat and the payoff give "visual": 2-5 ENGLISH words describing generic stock footage that can really be filmed and that fits that exact moment, specific to vehicles (examples: "car clutch pedal", "manual gearbox gears", "engine bay close up", "brake disc spinning", "motorcycle riding road"). Use different visuals for different scenes. Never a person's name or a brand.
+9. "title": Turkish, at most 70 characters, curiosity-driven but truthful, contains the topic, no emoji.
+10. "tags": 6-10 short keywords, mixing Turkish and English.
+11. Safety: never encourage dangerous driving, stunts, speeding, tampering with safety or emission systems, or risky do-it-yourself repair. When a failure can be dangerous, tell the viewer to go to a service ("servise git").`;
 
 const SCHEMA = {
   type: "OBJECT",
@@ -76,39 +82,39 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
   // Demand spikes (503) hit every model at once and pass within a minute or two: after a full
   // sweep over the models, wait and sweep again before giving up on the story.
   for (let round = 0; round < 4; round++) {
-   if (round > 0) {
-     if (!/HTTP (429|5\d\d)/.test(lastErr?.message ?? "")) break;
-     console.error(`all models busy, waiting 30s (round ${round + 1}/4)`);
-     await new Promise((r) => setTimeout(r, 30_000));
-   }
-   for (const model of await textModels()) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const t0 = Date.now();
-      try {
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-          body: JSON.stringify({
-            systemInstruction: { parts: [{ text: system }] },
-            contents: [{ role: "user", parts: [{ text: prompt }] }],
-            generationConfig: { temperature, responseMimeType: "application/json", responseSchema: schema },
-          }),
-          signal: AbortSignal.timeout(60_000),
-        });
-        if (!res.ok) throw new Error(`${model} HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
-        const data = await res.json();
-        const out = JSON.parse(data.candidates[0].content.parts[0].text);
-        console.error(`gemini ${model} ok in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
-        if (modelCache?.[0] !== model && modelCache?.includes(model)) modelCache = [model, ...modelCache.filter((m) => m !== model)]; // stick with what works
-        return out;
-      } catch (e) {
-        lastErr = e;
-        console.error(`gemini ${model} attempt ${attempt + 1} failed after ${((Date.now() - t0) / 1000).toFixed(1)}s: ${e.message.slice(0, 160)}`);
-        if (/HTTP (404|429|5\d\d)/.test(e.message)) break; // overloaded or retired: the next model is a better bet than a retry
-        await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
+    if (round > 0) {
+      if (!/HTTP (429|5\d\d)/.test(lastErr?.message ?? "")) break;
+      console.error(`all models busy, waiting 30s (round ${round + 1}/4)`);
+      await new Promise((r) => setTimeout(r, 30_000));
+    }
+    for (const model of await textModels()) {
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const t0 = Date.now();
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+            body: JSON.stringify({
+              systemInstruction: { parts: [{ text: system }] },
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: { temperature, responseMimeType: "application/json", responseSchema: schema },
+            }),
+            signal: AbortSignal.timeout(60_000),
+          });
+          if (!res.ok) throw new Error(`${model} HTTP ${res.status}: ${(await res.text()).slice(0, 200)}`);
+          const data = await res.json();
+          const out = JSON.parse(data.candidates[0].content.parts[0].text);
+          console.error(`gemini ${model} ok in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
+          if (modelCache?.[0] !== model && modelCache?.includes(model)) modelCache = [model, ...modelCache.filter((m) => m !== model)]; // stick with what works
+          return out;
+        } catch (e) {
+          lastErr = e;
+          console.error(`gemini ${model} attempt ${attempt + 1} failed after ${((Date.now() - t0) / 1000).toFixed(1)}s: ${e.message.slice(0, 160)}`);
+          if (/HTTP (404|429|5\d\d)/.test(e.message)) break; // overloaded or retired: the next model is a better bet than a retry
+          await new Promise((r) => setTimeout(r, 4000 * (attempt + 1)));
+        }
       }
     }
-   }
   }
   throw lastErr;
 }
@@ -116,29 +122,31 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
 function validate(s) {
   const problems = [];
   const w = (t) => words(t ?? "");
-  if (w(s.hook?.text) < 4 || w(s.hook.text) > 15) problems.push("hook must be 4-15 words");
-  if (!Array.isArray(s.beats) || s.beats.length !== 4) problems.push("need exactly 4 beats");
-  else s.beats.forEach((b, i) => { if (w(b.text) < 10 || w(b.text) > 26) problems.push(`beat ${i + 1} must be 10-26 words`); });
-  if (w(s.payoff?.text) < 4 || w(s.payoff.text) > 22) problems.push("payoff must be 4-22 words");
+  if (w(s.hook?.text) < 3 || w(s.hook.text) > 14) problems.push("hook must be 3-14 words");
+  if (!Array.isArray(s.beats) || s.beats.length !== 5) problems.push("need exactly 5 beats");
+  else s.beats.forEach((b, i) => { if (w(b.text) < 8 || w(b.text) > 26) problems.push(`beat ${i + 1} must be 8-26 words`); });
+  if (w(s.payoff?.text) < 4 || w(s.payoff.text) > 25) problems.push("payoff must be 4-25 words");
   if (w(s.cta) < 3 || w(s.cta) > 16) problems.push("cta must be 3-16 words");
   const total = w(s.hook?.text) + (s.beats ?? []).reduce((a, b) => a + w(b.text), 0) + w(s.payoff?.text) + w(s.cta);
-  if (total > 125) problems.push(`script too long (${total} words)`);
+  if (total > 150) problems.push(`script too long (${total} words)`);
   if (!s.title || s.title.length > 95) problems.push("title missing or too long");
+  for (const v of [s.hook, ...(s.beats ?? []), s.payoff]) if (!v?.visual || /[^\x00-\x7f]/.test(v.visual)) problems.push("every visual must be 2-5 plain English words");
   return problems;
 }
 
 const FIXTURE = {
-  title: "The Octopus Has Three Hearts, And That's Not The Strangest Part",
-  hook: { text: "This animal has three hearts and blue blood.", visual: "octopus underwater" },
+  title: "Debriyaj Nasıl Çalışır? Motoru Tekerlekten Ayıran Parça",
+  hook: { text: "Debriyaj olmasa araç dururken motor da dururdu.", visual: "car clutch pedal" },
   beats: [
-    { text: "Two hearts pump blood through its gills. A third one sends it around the rest of the body.", visual: "deep ocean water" },
-    { text: "And when the octopus swims, that main heart actually stops beating. So it prefers crawling.", visual: "coral reef" },
-    { text: "Its blood is blue because it carries oxygen with copper instead of iron.", visual: "blue ocean waves" },
-    { text: "It is also a master of disguise, changing colour and texture to vanish into the seabed.", visual: "sea floor rocks" },
+    { text: "Motor sürekli döner, tekerlekler ise durmak zorunda. İkisini birbirine bağlayıp ayıran parça debriyajdır.", visual: "engine bay close up" },
+    { text: "Pedala basınca debriyaj diski volandan ayrılır. Motorun gücü şanzımana gitmez ve vites rahatça değişir.", visual: "manual gearbox gears" },
+    { text: "Pedalı bırakınca yaylar diski volana bastırır. Sürtünme sayesinde güç yavaş yavaş tekerleklere aktarılır.", visual: "car driving road" },
+    { text: "Diskin üzerindeki sürtünme malzemesi zamanla aşınır. Yarım basarak sürmek bu aşınmayı hızlandırır.", visual: "mechanic car repair" },
+    { text: "Aşınan debriyaj kayar. Gaza basarsın, devir yükselir ama araç aynı hızla gitmez.", visual: "car dashboard tachometer" },
   ],
-  payoff: { text: "Nature built an entire alien body plan, right here on Earth.", visual: "ocean sunlight" },
-  cta: "Which animal should we explore next?",
-  tags: ["octopus", "ocean", "animals", "science", "facts", "nature"],
+  payoff: { text: "Debriyajı yarım basılı tutma, yoksa pahalı bir tamire doğru gidersin.", visual: "car garage workshop" },
+  cta: "Sen debriyajı en son ne zaman değiştirdin?",
+  tags: ["debriyaj", "şanzıman", "araba", "clutch", "otomobil", "usta"],
 };
 
 function loadHistory() {
@@ -146,53 +154,92 @@ function loadHistory() {
   try { return JSON.parse(readFileSync(HISTORY, "utf8")); } catch { return []; }
 }
 
+// ---- what to make next -------------------------------------------------------------------------------------
+// ~40 % "what happens if...?" scenarios (the viewer's own questions), the rest parts told from a rotating angle.
+function nextTopic(history, forced) {
+  const done = new Set(history.map((h) => h.key));
+  const all = [
+    ...SCENARIOS.map((s) => ({ ...s, key: `garage|q|${s.q}` })),
+    ...PARTS.flatMap((p) => ANGLES.map((a) => ({ ...p, angle: a, key: `garage|${p.wiki}|${a.id}` }))),
+  ];
+  if (forced) {
+    const f = all.filter((t) => t.wiki.toLowerCase() === forced.toLowerCase());
+    if (f.length) return pick(f);
+  }
+  let fresh = all.filter((t) => !done.has(t.key));
+  if (!fresh.length) fresh = all; // everything made once: start a new round
+  const scen = fresh.filter((t) => t.kind === "scenario");
+  const parts = fresh.filter((t) => t.kind === "part");
+  return scen.length && (!parts.length || Math.random() < 0.4) ? pick(scen) : pick(parts);
+}
+
+async function loadSource(t) {
+  const main = await fetchSource(t.wiki, t.kind === "scenario" ? 2800 : 3800);
+  let text = `[${main.title}]\n${main.text}`;
+  const urls = [main.url];
+  for (const extra of t.extra ?? []) {
+    try {
+      const e = await fetchSource(extra, 1500);
+      text += `\n\n[${e.title}]\n${e.text}`;
+      urls.push(e.url);
+    } catch { /* an optional extra article is not worth failing the video */ }
+  }
+  return { title: main.title, text, url: main.url, urls };
+}
+
+const AUDIT_SYSTEM = `You are a strict automotive fact-checker. Only the SOURCE TEXT and plain, well-established vehicle mechanics count as evidence.
+Flag a claim ONLY if it (a) states a specific number, name, date, record, price or model that is not in the source, (b) contradicts the source or well-established mechanics, (c) invents a cause or consequence that does not follow from the mechanics in the source, or (d) encourages dangerous driving, tampering with safety/emission systems or risky DIY repair.
+Do NOT flag rhetorical phrasing, paraphrases, or simple logical consequences of what the source describes. Write each flagged claim in English, briefly.`;
+
 export async function generateStory({ fixture = false, topic } = {}) {
-  if (fixture) return { topic: "Octopus", category: "animals", source: { title: "Octopus", url: "https://en.wikipedia.org/wiki/Octopus" }, script: FIXTURE };
-
+  if (fixture) {
+    return {
+      topic: "Clutch", key: "garage|fixture", category: "aktarma", lang: "tr",
+      source: { title: "Clutch", url: "https://en.wikipedia.org/wiki/Clutch" }, script: FIXTURE,
+    };
+  }
   const history = loadHistory();
-  const recent = new Set(history.slice(-RECENT).map((h) => h.key));
-  const pool = topic
-    ? STORY_TOPICS.filter((t) => t.title.toLowerCase() === topic.toLowerCase())
-    : STORY_TOPICS.filter((t) => !recent.has(`story|${t.title}`));
-  if (!pool.length) throw new Error("no story topic available");
 
-  for (let attempt = 0; attempt < 4; attempt++) {
-    const t = pick(pool);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const t = nextTopic(history, topic);
     let source;
-    try { source = await fetchSource(t.title); } catch (e) { console.error(`source failed (${t.title}): ${e.message}`); continue; }
+    try { source = await loadSource(t); } catch (e) { console.error(`source failed (${t.wiki}): ${e.message}`); history.push({ key: t.key }); continue; }
 
-    const base = `SOURCE TEXT (Wikipedia: ${source.title}):\n"""\n${source.text}\n"""\n\nWrite the Short script about "${source.title}".`;
+    const brief = t.kind === "scenario"
+      ? `VIDEO IDEA: answer this viewer question in Turkish: "${t.q}"`
+      : `VIDEO IDEA: tell the viewer about "${t.tr}" (Wikipedia: ${source.title}). Angle: ${t.angle.brief}.`;
+    const base = `SOURCE TEXT (Wikipedia):\n"""\n${source.text}\n"""\n\n${brief}\nWrite the Short script now.`;
     let script = await gemini(base, SCHEMA);
     let problems = validate(script);
     if (problems.length) {
       script = await gemini(`${base}\n\nYour previous attempt had these problems, fix them: ${problems.join("; ")}.`, SCHEMA);
       problems = validate(script);
-      if (problems.length) { console.error(`script rejected (${t.title}): ${problems.join("; ")}`); continue; }
+      if (problems.length) { console.error(`script rejected (${t.wiki}): ${problems.join("; ")}`); history.push({ key: t.key }); continue; }
     }
 
-    // Audit pass: every claim must be supported by the source text.
-    const narration = [script.hook.text, ...script.beats.map((b) => b.text), script.payoff.text].join("\n");
+    // Audit pass: every claim must be supported by the source text or follow from its mechanics.
+    const narration = (s) => [s.hook.text, ...s.beats.map((b) => b.text), s.payoff.text].join("\n");
+    const auditSchema = { type: "OBJECT", properties: { unsupported: { type: "ARRAY", items: { type: "STRING" } } }, required: ["unsupported"] };
     const audit = await gemini(
-      `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT:\n"""\n${narration}\n"""\n\nList every factual claim in the SCRIPT that is NOT directly supported by the SOURCE TEXT (wrong numbers, invented causes, extra details). If everything is supported, return an empty list.`,
-      { type: "OBJECT", properties: { unsupported: { type: "ARRAY", items: { type: "STRING" } } }, required: ["unsupported"] },
-      "You are a strict fact-checker. Only the SOURCE TEXT counts as evidence.",
-      0
+      `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT (Turkish):\n"""\n${narration(script)}\n"""\n\nList the claims that must be flagged. If none, return an empty list.`,
+      auditSchema, AUDIT_SYSTEM, 0
     );
     if (audit.unsupported?.length) {
-      console.error(`audit found unsupported claims (${t.title}): ${audit.unsupported.join(" | ")}`);
-      script = await gemini(`${base}\n\nRewrite the script and REMOVE or correct these unsupported claims: ${audit.unsupported.join(" | ")}\nStay close to the source's own wording and numbers. No metaphors, exaggeration, or "secret"/"hidden" framing: state plainly what the source says.`, SCHEMA);
-      if (validate(script).length) continue;
+      console.error(`audit found unsupported claims (${t.wiki}): ${audit.unsupported.join(" | ")}`);
+      script = await gemini(`${base}\n\nRewrite the script and REMOVE or correct these unsupported claims: ${audit.unsupported.join(" | ")}\nStay close to what the source says. No exaggeration; state plainly what the source supports.`, SCHEMA);
+      if (validate(script).length) { history.push({ key: t.key }); continue; }
       const again = await gemini(
-        `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT:\n"""\n${[script.hook.text, ...script.beats.map((b) => b.text), script.payoff.text].join("\n")}\n"""\n\nList unsupported claims.`,
-        { type: "OBJECT", properties: { unsupported: { type: "ARRAY", items: { type: "STRING" } } }, required: ["unsupported"] },
-        "You are a strict fact-checker. Only the SOURCE TEXT counts as evidence.",
-        0
+        `SOURCE TEXT:\n"""\n${source.text}\n"""\n\nSCRIPT (Turkish):\n"""\n${narration(script)}\n"""\n\nList the claims that must be flagged.`,
+        auditSchema, AUDIT_SYSTEM, 0
       );
-      if (again.unsupported?.length) { console.error(`still unsupported (${t.title}), rejecting`); continue; }
+      if (again.unsupported?.length) { console.error(`still unsupported (${t.wiki}), trying another topic`); history.push({ key: t.key }); continue; }
     }
-    return { topic: t.title, category: t.category, source: { title: source.title, url: source.url }, script };
+    return {
+      topic: source.title, key: t.key, category: t.category, lang: "tr",
+      source: { title: source.title, url: source.url, urls: source.urls }, script,
+    };
   }
-  throw new Error("could not produce a verified story");
+  throw new Error("could not produce a verified script");
 }
 
 if (process.argv[1]?.endsWith("story-script.mjs")) {

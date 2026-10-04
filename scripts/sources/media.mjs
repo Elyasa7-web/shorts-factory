@@ -204,7 +204,7 @@ export async function nasaVideos(query) {
 
 // ---- topic-exact media: files that are KNOWN to show the topic (no namesake problem) ----
 // "Octopus" the animal vs "Octopus fungus", "Mars" vs the candy bar: these sources are never ambiguous.
-async function commonsFileInfo(titles) {
+async function commonsFileInfo(titles, exactFromArticle = true) {
   const out = [];
   for (let i = 0; i < titles.length; i += 20) {
     const q = new URLSearchParams({
@@ -225,9 +225,9 @@ async function commonsFileInfo(titles) {
       if (vi && /^(video|application\/ogg)/.test(vi.mime ?? "") && (vi.duration ?? 0) >= 4) {
         const webm = (vi.derivatives ?? []).filter((d) => /webm/.test(d.type) && d.width >= 400 && d.width <= 1300);
         const best = webm.sort((a, b) => Math.abs(a.width - 720) - Math.abs(b.width - 720))[0];
-        if (best?.src) out.push({ id: `wa${pg.pageid}`, type: "video", url: best.src, source: "Wikimedia (topic)", exact: true, hay: title, portrait: best.height >= best.width, credit });
+        if (best?.src) out.push({ id: `wa${pg.pageid}`, type: "video", url: best.src, source: "Wikimedia (topic)", exact: exactFromArticle, hay: title, portrait: best.height >= best.width, credit });
       } else if (ii && /^image\/(jpeg|png)/.test(ii.mime ?? "") && ii.width >= 900 && ii.height >= 600) {
-        out.push({ id: `wa${pg.pageid}`, type: "image", url: ii.thumburl ?? ii.url, source: "Wikimedia (topic)", exact: true, hay: title, portrait: ii.height >= ii.width, credit });
+        out.push({ id: `wa${pg.pageid}`, type: "image", url: ii.thumburl ?? ii.url, source: "Wikimedia (topic)", exact: exactFromArticle, hay: title, portrait: ii.height >= ii.width, credit });
       }
     }
   }
@@ -256,7 +256,7 @@ export async function commonsCategoryMedia(topic) {
   const m = await getJson(`https://commons.wikimedia.org/w/api.php?${new URLSearchParams({
     action: "query", list: "categorymembers", cmtitle: `Category:${cat}`, cmtype: "file", cmlimit: "80", format: "json", formatversion: "2",
   })}`);
-  return commonsFileInfo((m.query?.categorymembers ?? []).map((x) => x.title).filter(FILE_OK));
+  return commonsFileInfo((m.query?.categorymembers ?? []).map((x) => x.title).filter(FILE_OK), false);
 }
 
 // ---- Smithsonian Open Access (CC0 museum + nature collections; DEMO_KEY works but is rate limited) ----
@@ -281,7 +281,22 @@ export async function smithsonianImages(query) {
 const SPACE = /\b(space|galaxy|planet|star|moon|sun|solar|black hole|nebula|comet|asteroid|mars|venus|saturn|jupiter|pluto|astronaut|rocket|orbit|telescope|cosmic|universe|eclipse|aurora)\b/i;
 
 // words that tell us a candidate is about the SAME THING as the topic (not a namesake)
+const VEHICLE = "car automobile vehicle engine automotive mechanic garage workshop transmission gearbox diesel petrol gasoline exhaust suspension steering truck motorcycle bike tire tyre brake wheel";
+const CRAFT = "aircraft airplane jet helicopter train locomotive railway ship boat submarine vessel bicycle tram tractor excavator crane bulldozer forklift";
+// A candidate whose own title/tags contain one of these is never used: people (faces, politics, celebrities),
+// and the classic namesakes of vehicle words (clutch = bag / dinosaur eggs, mouse, bat...).
+export const BLOCK_WORDS = new Set((
+  "president king queen minister politician senator trump biden obama putin celebrity actor actress singer model fashion bride wedding portrait " +
+  "dinosaur egg eggs nest fossil bag handbag purse dress football soccer baseball basketball wrestling boxing concert band guitar " +
+  "nude naked sexy bikini lingerie cat dog horse cow pig sheep"
+).split(" "));
+
 export const CATEGORY_CONTEXT = {
+  // Canlı Garaj topics
+  motor: VEHICLE, aktarma: VEHICLE, "fren-suspansiyon": VEHICLE, "elektrik-guvenlik": VEHICLE, elektrikli: `${VEHICLE} electric battery charging hybrid`,
+  motosiklet: `${VEHICLE} rider helmet scooter moped`, "agir-vasita": `${VEHICLE} ${CRAFT} heavy construction`, "diger-arac": `${CRAFT} engine vehicle racing`,
+  senaryo: `${VEHICLE} ${CRAFT}`,
+  // older channel categories (kept so the media layer still works for any topic)
   space: "space astronomy planet star galaxy nasa telescope universe cosmos orbit solar lunar nebula spacecraft rocket astronaut",
   animals: "animal wildlife wild species ocean sea marine underwater aquarium sealife zoo fish bird insect mammal reptile reef jungle savanna creature",
   body: "human anatomy medical biology body brain cell health scan microscope organ tissue",
@@ -300,7 +315,7 @@ export const CATEGORY_CONTEXT = {
  *   article media: embedded in the topic's Wikipedia article, so always the right subject
  * `used` = ids already shown (or that failed to download) in this video.
  */
-export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [] }) {
+export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [], strict = false }) {
   // `article` = topic-exact media (Wikipedia article + Commons category), searched once per story
   const safe = async (fn) => { try { return await fn(); } catch { return []; } };
   const jobs = [];
@@ -318,14 +333,17 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
     seen.add(c.id);
     return true;
   });
-  const topicWords = new Set(tokens(topic));
-  // same-sense test: the candidate shares a real word (not a substring) with the story, apart from the topic's own name
-  // one category word (marine, aquarium...) is enough; scene words ("floor", "water") are generic, so two different ones are needed
+  const topicWords = [...new Set(tokens(topic))];
+  const isTopicWord = (w) => topicWords.some((t) => sameWord(t, w));   // "clutches" is still the topic word "clutch"
+  // same-sense test: the candidate shares a real vehicle word with the story. In strict mode (vehicle channel)
+  // only category words count, because generic scene words ("road", "floor") match namesakes too.
   const ctxHit = (hay) => {
-    const t = tokens(hay).filter((w) => !topicWords.has(w));
+    const t = tokens(hay).filter((w) => !isTopicWord(w));
     if (t.some((w) => [...categoryWords].some((c) => sameWord(c, w)))) return true;
+    if (strict) return false;
     return new Set(t.filter((w) => [...context].some((c) => sameWord(c, w)))).size >= 2;
   };
+  const blocked = (hay) => tokens(hay).some((w) => BLOCK_WORDS.has(w));
   // Pexels / Pixabay / NASA label their media carefully; Openverse, Commons search and Smithsonian tags are noisy
   const TRUSTED = new Set(["Pexels", "Pixabay", "NASA"]);
   const ranked = cands
@@ -336,7 +354,7 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       // a moving clip is worth a little more than a still, a portrait frame fits the screen better
       // showing the actual subject beats a generic clip that merely fits the scene words
       const rank = 0.6 * scene + (sameSense ? 1.0 * about : 0) + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) + (c.exact ? 0.05 : 0);
-      const ok = (TRUSTED.has(c.source) && scene >= 0.5) || (about >= 0.5 && sameSense);
+      const ok = !blocked(c.hay) && ((TRUSTED.has(c.source) && scene >= 0.5) || (about >= 0.5 && sameSense));
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)

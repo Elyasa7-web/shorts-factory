@@ -13,6 +13,8 @@ sync with the Remotion timeline (hook 2.5s, items 5s each, outro 3s)."""
 import asyncio, base64, json, os, re, subprocess, sys, time, urllib.error, urllib.request
 from pathlib import Path
 
+LANG = os.environ.get("VOICE_LANG", "en")   # "tr" for Canlı Garaj; story_narrate.py sets it from the story props
+
 HOOK_S, OUTRO_S = 2.5, 2.0
 MAX_SPEEDUP = 1.1  # never speed the voice up more than 10% to fit a slot
 
@@ -90,11 +92,17 @@ def gemini_tts_models() -> list:
         print(f"gemini tts models: {_gemini_tts_models}", file=sys.stderr)
     return _gemini_tts_models
 
+def gemini_prompt(text: str) -> str:
+    if LANG == "tr":
+        return ("Say the following in natural Turkish, in a clear, warm voice of a friendly garage master, at a relaxed "
+                f"conversational pace (not slow, not rushed): {text}")
+    return f"Say in a clear, friendly narrator voice at a natural, relaxed conversational pace, like a documentary narrator (not slow, not rushed): {text}"
+
 def tts_gemini(text: str, path: Path):
     key = os.environ["GEMINI_API_KEY"]
     voice = os.environ.get("GEMINI_VOICE", "Kore")
     body = {
-        "contents": [{"parts": [{"text": f"Say in a clear, friendly narrator voice at a natural, relaxed conversational pace, like a documentary narrator (not slow, not rushed): {text}"}]}],
+        "contents": [{"parts": [{"text": gemini_prompt(text)}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}},
@@ -138,12 +146,14 @@ def tighten_speech(text: str, path: Path, label: str = "voice"):
          str(tmp)])
     d = probe(tmp)
     n = max(1, len(text.split()))
-    spw = d / n                                   # seconds per word: 0.42 is ~143 wpm
+    spw = d / n                                   # seconds per word
+    # natural narration: English ~0.42 s/word (143 wpm); Turkish words are longer, ~0.50 s/word (120 wpm)
+    target, slow_above, fast_below = (0.50, 0.62, 0.38) if LANG == "tr" else (0.44, 0.53, 0.36)
     tempo = 1.0
-    if spw > 0.53:
-        tempo = min(1.15, spw / 0.44)
-    elif spw < 0.36:
-        tempo = max(0.85, spw / 0.42)
+    if spw > slow_above:
+        tempo = min(1.15, spw / target)
+    elif spw < fast_below:
+        tempo = max(0.85, spw / (target - 0.02))
     if abs(tempo - 1.0) > 0.02:
         paced = path.with_name(path.stem + ".paced.mp3")
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(tmp), "-af", f"atempo={tempo:.3f}", str(paced)])
@@ -157,10 +167,12 @@ def tts_elevenlabs(text: str, path: Path):
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128"
     body = {"text": text, "model_id": "eleven_flash_v2_5", "voice_settings": {"speed": 0.8}}
+    if LANG != "en":
+        body["language_code"] = LANG
     try:
         audio = post_json(url, body, {"xi-api-key": key})
     except RuntimeError:
-        body.pop("voice_settings")                # a model/voice that rejects "speed" must still produce audio
+        body.pop("voice_settings", None)          # a model/voice that rejects "speed" must still produce audio
         audio = post_json(url, body, {"xi-api-key": key})
     path.write_bytes(audio)
     tighten_speech(text, path, "elevenlabs")
@@ -168,13 +180,14 @@ def tts_elevenlabs(text: str, path: Path):
 def tts_espeak(text: str, path: Path):
     # Fully offline last resort (apt install espeak-ng): robotic, but it cannot fail on network.
     wav = path.with_suffix(".wav")
-    run(["espeak-ng", "-v", "en-us", "-s", "155", "-w", str(wav), text])
+    run(["espeak-ng", "-v", "tr" if LANG == "tr" else "en-us", "-s", "150", "-w", str(wav), text])
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), str(path)])
     wav.unlink(missing_ok=True)
 
 def tts_edge(text: str, path: Path):
     import edge_tts
-    asyncio.run(edge_tts.Communicate(text, "en-US-AndrewNeural", rate=os.environ.get("VOICE_RATE", "-2%")).save(str(path)))
+    voice = os.environ.get("EDGE_VOICE") or ("tr-TR-AhmetNeural" if LANG == "tr" else "en-US-AndrewNeural")
+    asyncio.run(edge_tts.Communicate(text, voice, rate=os.environ.get("VOICE_RATE", "-2%")).save(str(path)))
     tighten_speech(text, path, "edge")
 
 PROVIDERS = {

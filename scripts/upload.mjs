@@ -37,8 +37,9 @@ export async function uploadToYouTube(v) {
       title: v.title.slice(0, 100),
       description: v.description.slice(0, 4900),
       tags: v.tags,
-      categoryId: "27", // Education
-      defaultLanguage: "en",
+      categoryId: "2", // Autos & Vehicles
+      defaultLanguage: "tr",
+      defaultAudioLanguage: "tr",
     },
     status: {
       // A scheduled video must be uploaded as private; YouTube flips it to public at publishAt.

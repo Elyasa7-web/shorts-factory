@@ -38,11 +38,13 @@ def main():
     pp = Path("data/story-props.json")
     props = json.loads(pp.read_text(encoding="utf-8"))
     scenes = props["scenes"]
+    N.LANG = props.get("lang", "en")
     out = Path("out")
     out.mkdir(exist_ok=True)
 
     voices, used, errors = [], None, []
-    for name in os.environ.get("TTS_ORDER", "gemini,elevenlabs,edge,espeak").split(","):
+    default_order = "edge,gemini,elevenlabs,espeak" if N.LANG == "tr" else "gemini,elevenlabs,edge,espeak"   # edge is free and unlimited
+    for name in os.environ.get("TTS_ORDER", default_order).split(","):
         env_key, fn = N.PROVIDERS[name.strip()]
         if env_key and not os.environ.get(env_key):
             errors.append(f"{name}: no {env_key}")
@@ -55,7 +57,7 @@ def main():
                 voices.append((p, N.probe(p)))
                 print(f"  voice {sc['kind']}: {voices[-1][1]:.1f}s <- {sc['text'][:60]}")
             spoken = sum(d for _, d in voices)
-            if spoken > 150 and name.strip() != os.environ.get("TTS_ORDER", "gemini,elevenlabs,edge,espeak").split(",")[-1].strip():
+            if spoken > 150 and name.strip() != os.environ.get("TTS_ORDER", default_order).split(",")[-1].strip():
                 raise RuntimeError(f"voice too slow ({spoken:.0f}s of speech for a Short)")
             used = name
             break

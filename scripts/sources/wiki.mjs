@@ -57,14 +57,14 @@ export const STORY_TOPICS = Object.entries(CATEGORIES).flatMap(([category, title
 const UA = "shorts-factory/1.0 (personal educational project)";
 
 // Plain-text article body (first ~3500 characters), straight from Wikipedia.
-export async function fetchSource(title) {
+export async function fetchSource(title, chars = 3800) {
   const url =
     "https://en.wikipedia.org/w/api.php?" +
     new URLSearchParams({
       action: "query",
       prop: "extracts|pageprops",
       explaintext: "1",
-      exchars: "3800",
+      exchars: String(chars),
       redirects: "1",
       titles: title,
       format: "json",
