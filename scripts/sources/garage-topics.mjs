@@ -7,7 +7,15 @@
 //              when it fails, surprising facts)  -> 4 different videos per topic
 //   scenarios  a concrete question the viewer has always wondered about ("70 km/s giderken R'ye takarsan?")
 
-const P = (category, rows) => rows.map(([wiki, tr]) => ({ kind: "part", category, wiki, tr }));
+// What KIND of vehicle a topic is about: footage for a topic may only come from the same kind (no trains in a car video).
+export const KIND_OF_CATEGORY = {
+  motor: "car", aktarma: "car", "fren-suspansiyon": "car", "elektrik-guvenlik": "car", elektrikli: "car", "otomobil-turleri": "car", senaryo: "car",
+  motosiklet: "motorcycle", tren: "train", ucak: "aircraft", gemi: "ship", "is-makinesi": "machine", "kamyon-otobus": "truck",
+};
+// how often each kind is made (the channel is about cars and motorcycles first)
+export const KIND_WEIGHT = { car: 70, motorcycle: 20, train: 2, aircraft: 2, ship: 2, machine: 2, truck: 2 };
+
+const P = (category, rows) => rows.map(([wiki, tr]) => ({ kind: "part", category, wiki, tr, vehicle: KIND_OF_CATEGORY[category] }));
 
 export const PARTS = [
   ...P("motor", [
@@ -68,6 +76,24 @@ export const PARTS = [
     ["Single-cylinder engine", "tek silindirli motor"], ["V-twin engine", "V-twin motor"], ["Inline-four engine", "dört silindirli motosiklet motoru"],
     ["Motorcycle transmission", "motosiklet şanzımanı"], ["Slipper clutch", "slipper (kaymalı) debriyaj"], ["Wheelie", "wheelie"],
   ]),
+  ...P("tren", [
+    ["Steam locomotive", "buharlı lokomotif"], ["Diesel locomotive", "dizel lokomotif"], ["High-speed rail", "hızlı tren"],
+    ["Tram", "tramvay"], ["Maglev", "manyetik levitasyonlu tren"], ["Rapid transit", "metro"],
+  ]),
+  ...P("ucak", [
+    ["Airplane", "uçak"], ["Jet engine", "jet motoru"], ["Helicopter", "helikopter"], ["Turbofan", "turbofan motor"],
+    ["Hot air balloon", "sıcak hava balonu"], ["Airliner", "yolcu uçağı"],
+  ]),
+  ...P("gemi", [
+    ["Ship", "gemi"], ["Submarine", "denizaltı"], ["Hovercraft", "hovercraft"], ["Container ship", "konteyner gemisi"], ["Sailboat", "yelkenli"],
+  ]),
+  ...P("is-makinesi", [
+    ["Excavator", "ekskavatör (kazıcı)"], ["Bulldozer", "dozer"], ["Forklift", "forklift"], ["Dump truck", "damperli kamyon"],
+    ["Crane (machine)", "vinç"], ["Concrete mixer", "beton mikseri"], ["Tractor", "traktör"],
+  ]),
+  ...P("kamyon-otobus", [
+    ["Semi-trailer truck", "tır"], ["Truck", "kamyon"], ["Bus", "otobüs"], ["Tow truck", "çekici"], ["Fire engine", "itfaiye aracı"], ["Ambulance", "ambulans"],
+  ]),
   ...P("otomobil-turleri", [
     ["Sedan (automobile)", "sedan"], ["Hatchback", "hatchback"], ["Station wagon", "station wagon (steyşın)"],
     ["Sport utility vehicle", "SUV"], ["Crossover (automobile)", "crossover"], ["Coupé", "coupe"],
@@ -90,7 +116,14 @@ export const ANGLES = [
   { id: "surprise", brief: "the most surprising, little-known facts and history about it (only facts from the source)" },
 ];
 
-const S = (q, wiki) => ({ kind: "scenario", category: "senaryo", q, wiki: wiki[0], extra: wiki.slice(1) });
+const inferVehicle = (q, wiki) =>
+  /motosiklet|motor(?:lar)?ı? zincir|virajda neden yatar/i.test(q) ? "motorcycle"
+  : /uçak|jet motoru|helikopter/i.test(q) ? "aircraft"
+  : /denizaltı|gemi/i.test(q) ? "ship"
+  : /tren|raylar/i.test(q) ? "train"
+  : /ekskavatör|vinç|dozer|forklift|iş makine/i.test(q) ? "machine"
+  : "car";
+const S = (q, wiki) => ({ kind: "scenario", category: "senaryo", q, wiki: wiki[0], extra: wiki.slice(1), vehicle: inferVehicle(q, wiki) });
 
 export const SCENARIOS = [
   S("Araç 70 km/s hızla giderken birden R (geri) vitesine takarsan ne olur?", ["Manual transmission", "Synchromesh"]),
@@ -170,6 +203,11 @@ export const SCENARIOS = [
   S("Neden bazı arabalar yakıtı daha az harcar? (Aerodinamik ve ağırlık)", ["Automobile drag coefficient", "Fuel efficiency"]),
   S("Otomatik şanzımanda tork konvertörü debriyajın yerini nasıl tutar?", ["Torque converter", "Automatic transmission"]),
   S("Çarpışma testi yıldızları ne anlama gelir?", ["Euro NCAP", "Crumple zone"]),
+  S("Uçak koca gövdesiyle havada nasıl kalır?", ["Lift (force)", "Airplane"]),
+  S("Jet motoru nasıl çalışır?", ["Jet engine"]),
+  S("Denizaltı suyun altında nasıl dalar ve yüzeye çıkar?", ["Submarine", "Buoyancy"]),
+  S("Tren raylardan neden çıkmaz?", ["Rail transport", "Flange"]),
+  S("Ekskavatör kolunu hidrolikle nasıl hareket ettirir?", ["Excavator", "Hydraulics"]),
 ];
 
 export const GARAGE_TOPICS = [...PARTS, ...SCENARIOS];

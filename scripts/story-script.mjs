@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fetchSource } from "./sources/wiki.mjs";
-import { PARTS, SCENARIOS, ANGLES } from "./sources/garage-topics.mjs";
+import { PARTS, SCENARIOS, ANGLES, KIND_WEIGHT } from "./sources/garage-topics.mjs";
 
 const HISTORY = "data/history.json";
 const OUT = "data/story.json";
@@ -42,7 +42,7 @@ async function textModels() {
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const words = (s) => s.trim().split(/\s+/).filter(Boolean).length;
 
-const SYSTEM = `You write scripts for "Canlı Garaj", a Turkish YouTube Shorts channel that explains how CARS and MOTORCYCLES (every type, their parts, systems and the odd "what happens if...?" questions) really work. Never talk about trains, aircraft, ships or bicycles. The narrator is a friendly, knowledgeable garage master (usta) talking to ONE viewer.
+const SYSTEM = `You write scripts for "Canlı Garaj", a Turkish YouTube Shorts channel that explains how CARS and MOTORCYCLES (every type, their parts, systems and the odd "what happens if...?" questions) really work, and now and then other vehicles. Stay strictly on the vehicle of the topic: a car video never mentions trains, aircraft or ships, and the other way round. The narrator is a friendly, knowledgeable garage master (usta) talking to ONE viewer.
 
 OUTPUT LANGUAGE: Turkish, natural SPOKEN Turkish (the text is read aloud by a voice and shown as captions). Short sentences, concrete, no filler, no "biliyor muydun", no "bu videoda", no "hadi başlayalım". Address the viewer informally ("sen"). Use the everyday workshop vocabulary Turkish drivers know (debriyaj, şanzıman, balata, amortisör, triger, enjektör, turbo...).
 
@@ -168,8 +168,14 @@ function nextTopic(history, forced) {
   }
   let fresh = all.filter((t) => !done.has(t.key));
   if (!fresh.length) fresh = all; // everything made once: start a new round
-  const scen = fresh.filter((t) => t.kind === "scenario");
-  const parts = fresh.filter((t) => t.kind === "part");
+  // 1) which KIND of vehicle (cars first, then motorcycles, a little of everything else)
+  const kinds = [...new Set(fresh.map((t) => t.vehicle))];
+  let roll = Math.random() * kinds.reduce((a, k) => a + (KIND_WEIGHT[k] ?? 1), 0);
+  const kind = kinds.find((k) => (roll -= KIND_WEIGHT[k] ?? 1) < 0) ?? kinds[0];
+  const pool = fresh.filter((t) => t.vehicle === kind);
+  // 2) a "what happens if...?" question (40 %) or a part told from a fresh angle
+  const scen = pool.filter((t) => t.kind === "scenario");
+  const parts = pool.filter((t) => t.kind === "part");
   return scen.length && (!parts.length || Math.random() < 0.4) ? pick(scen) : pick(parts);
 }
 
@@ -235,7 +241,7 @@ export async function generateStory({ fixture = false, topic } = {}) {
       if (again.unsupported?.length) { console.error(`still unsupported (${t.wiki}), trying another topic`); history.push({ key: t.key }); continue; }
     }
     return {
-      topic: source.title, key: t.key, category: t.category, lang: "tr",
+      topic: source.title, key: t.key, category: t.category, vehicle: t.vehicle, lang: "tr",
       source: { title: source.title, url: source.url, urls: source.urls }, script,
     };
   }

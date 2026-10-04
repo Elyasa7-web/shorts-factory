@@ -44,16 +44,30 @@ const credits = new Set();
 
 // If nothing matches a scene's own description, search generic footage of the right KIND of vehicle instead of
 // reusing an old clip or showing an unrelated one (a rack-and-pinion topic once returned a mountain railway).
-const CAR_POOL = ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car steering wheel",
-  "car dashboard", "garage workshop tools", "highway traffic cars", "car brake disc", "car interior driver", "engine bay open hood", "car tire road"];
-const FALLBACK = {
-  motosiklet: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet", "motorcycle exhaust", "motorcycle chain close up", "motorcycle dashboard"],
+const POOLS = {
+  car: ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car steering wheel", "car dashboard",
+    "garage workshop tools", "highway traffic cars", "car brake disc", "car interior driver", "engine bay open hood", "car tire road"],
+  motorcycle: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet",
+    "motorcycle exhaust", "motorcycle chain close up", "motorcycle dashboard"],
+  train: ["train railway tracks", "locomotive close up", "train passing station", "railway wheels", "train interior"],
+  aircraft: ["airplane flying sky", "airplane engine close up", "airplane cockpit", "airport runway takeoff", "helicopter flying"],
+  ship: ["ship at sea", "cargo ship ocean", "ship engine room", "ship bow waves", "port harbor ships"],
+  machine: ["excavator digging", "construction site machinery", "bulldozer working", "forklift warehouse", "crane lifting"],
+  truck: ["truck driving highway", "truck engine close up", "bus city street", "truck wheels road", "truck loading"],
 };
-const fallbackQueries = FALLBACK[story.category] ?? CAR_POOL;
-// words that mean "wrong vehicle / not a photo" for car and motorcycle topics (trains, planes, boats, cartoons)
-const OFF_VEHICLE = "train railway railroad locomotive tram cog funicular aircraft airplane airport helicopter ship boat bicycle bike skyline";
-// every Canlı Garaj topic is a CAR or a MOTORCYCLE: trains, planes, ships, bicycles never belong in the footage
-const extraBlock = OFF_VEHICLE.split(" ").filter((w) => !(story.category === "motosiklet" && w === "bike"));
+// A topic's footage may ONLY show its own kind of vehicle: these words are blocked for everything else
+const KIND_WORDS = {
+  car: "car cars automobile sedan suv hatchback", motorcycle: "motorcycle motorbike scooter moped",
+  train: "train railway railroad locomotive tram rail", aircraft: "aircraft airplane airport helicopter jet aviation plane",
+  ship: "ship boat vessel submarine harbor yacht sailing", machine: "excavator bulldozer crane forklift tractor construction",
+  truck: "truck lorry bus trailer",
+};
+const kind = story.vehicle ?? "car";
+const fallbackQueries = POOLS[kind] ?? POOLS.car;
+const extraBlock = Object.entries(KIND_WORDS).filter(([k]) => k !== kind).flatMap(([, w]) => w.split(" "))
+  .concat(["bicycle", "skyline", "cartoon", "clipart"])
+  // a truck or a machine topic may legitimately show trucks/cars on the road; keep those words only for the car/motorcycle kinds
+  .filter((w) => !(["truck", "machine"].includes(kind) && ["car", "cars", "automobile"].includes(w)));
 const report = [];
 for (let i = 0; i < scenes.length; i++) {
   const sc = scenes[i];

@@ -297,6 +297,9 @@ export const CATEGORY_CONTEXT = {
   motor: VEHICLE, "otomobil-turleri": VEHICLE, aktarma: VEHICLE, "fren-suspansiyon": VEHICLE, "elektrik-guvenlik": VEHICLE, elektrikli: `${VEHICLE} electric battery charging hybrid`,
   motosiklet: `${VEHICLE} rider helmet scooter moped`, "agir-vasita": `${VEHICLE} ${CRAFT} heavy construction`, "diger-arac": `${CRAFT} engine vehicle racing`,
   senaryo: `${VEHICLE} ${CRAFT}`,
+  tren: "train railway railroad locomotive tram rail station track", ucak: "aircraft airplane jet helicopter aviation airport cockpit flight",
+  gemi: "ship boat submarine vessel sea ocean harbor port sailing", "is-makinesi": "excavator bulldozer crane forklift tractor construction machinery site",
+  "kamyon-otobus": "truck lorry bus trailer ambulance tow firefighter highway",
   // older channel categories (kept so the media layer still works for any topic)
   space: "space astronomy planet star galaxy nasa telescope universe cosmos orbit solar lunar nebula spacecraft rocket astronaut",
   animals: "animal wildlife wild species ocean sea marine underwater aquarium sealife zoo fish bird insect mammal reptile reef jungle savanna creature",
