@@ -288,7 +288,8 @@ const CRAFT = "aircraft airplane jet helicopter train locomotive railway ship bo
 export const BLOCK_WORDS = new Set((
   "president king queen minister politician senator trump biden obama putin celebrity actor actress singer model fashion bride wedding portrait " +
   "dinosaur egg eggs nest fossil bag handbag purse dress football soccer baseball basketball wrestling boxing concert band guitar " +
-  "nude naked sexy bikini lingerie cat dog horse cow pig sheep"
+  "nude naked sexy bikini lingerie cat dog horse cow pig sheep " +
+  "dollar money cash coin finance business clipart cartoon vector illustration icon logo emoji sticker drawing sketch"
 ).split(" "));
 
 export const CATEGORY_CONTEXT = {
@@ -315,7 +316,7 @@ export const CATEGORY_CONTEXT = {
  *   article media: embedded in the topic's Wikipedia article, so always the right subject
  * `used` = ids already shown (or that failed to download) in this video.
  */
-export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [], strict = false }) {
+export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [], strict = false, extraBlock = [] }) {
   // `article` = topic-exact media (Wikipedia article + Commons category), searched once per story
   const safe = async (fn) => { try { return await fn(); } catch { return []; } };
   const jobs = [];
@@ -343,18 +344,20 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
     if (strict) return false;
     return new Set(t.filter((w) => [...context].some((c) => sameWord(c, w)))).size >= 2;
   };
-  const blocked = (hay) => tokens(hay).some((w) => BLOCK_WORDS.has(w));
+  const extra = new Set(extraBlock);
+  const blocked = (hay) => tokens(hay).some((w) => BLOCK_WORDS.has(w) || extra.has(w));
   // Pexels / Pixabay / NASA label their media carefully; Openverse, Commons search and Smithsonian tags are noisy
   const TRUSTED = new Set(["Pexels", "Pixabay", "NASA"]);
   const ranked = cands
     .map((c) => {
       const scene = visual ? relevance(visual, c.hay) : 0;
-      const about = c.exact ? 1 : relevance(topic, c.hay);
-      const sameSense = c.exact || ctxHit(c.hay);
-      // a moving clip is worth a little more than a still, a portrait frame fits the screen better
-      // showing the actual subject beats a generic clip that merely fits the scene words
-      const rank = 0.6 * scene + (sameSense ? 1.0 * about : 0) + (c.type === "video" ? 0.12 : 0) + (c.portrait ? 0.06 : 0) + (c.exact ? 0.05 : 0);
-      const ok = !blocked(c.hay) && ((TRUSTED.has(c.source) && scene >= 0.5) || (about >= 0.5 && sameSense));
+      const about = relevance(topic, c.hay);
+      const sameSense = ctxHit(c.hay);
+      const trusted = TRUSTED.has(c.source);
+      // What the scene says is on screen matters most; being about the topic is a bonus. A moving clip beats a still,
+      // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
+      const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.15 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
+      const ok = !blocked(c.hay) && scene >= 0.34 && (trusted || sameSense);
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)

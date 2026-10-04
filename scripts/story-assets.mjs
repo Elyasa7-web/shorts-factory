@@ -41,6 +41,21 @@ for (const [name, fn] of [["article", wikiArticleMedia], ["commons category", co
 const article = [...new Map(exact.map((c) => [c.id, c])).values()];
 console.log(`  topic-exact media: ${article.length} files (${article.filter((a) => a.type === "video").length} videos)`);
 const credits = new Set();
+
+// If nothing matches a scene's own description, search generic footage of the right KIND of vehicle instead of
+// reusing an old clip or showing an unrelated one (a rack-and-pinion topic once returned a mountain railway).
+const CAR_POOL = ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car steering wheel",
+  "car dashboard", "garage workshop tools", "highway traffic cars", "car brake disc", "car interior driver", "engine bay open hood", "car tire road"];
+const FALLBACK = {
+  motosiklet: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet", "motorcycle exhaust"],
+  "agir-vasita": ["truck driving highway", "excavator construction", "bus city street", "heavy machinery", "tractor field", "crane construction"],
+  "diger-arac": [`${story.topic}`, `${story.topic} moving`, `${story.topic} close up`],
+};
+const fallbackQueries = FALLBACK[story.category] ?? CAR_POOL;
+// words that mean "wrong vehicle / not a photo" for car and motorcycle topics (trains, planes, boats, cartoons)
+const OFF_VEHICLE = "train railway railroad locomotive tram cog funicular aircraft airplane airport helicopter ship boat bicycle bike skyline";
+const extraBlock = ["motor", "aktarma", "fren-suspansiyon", "elektrik-guvenlik", "elektrikli", "motosiklet"].includes(story.category)
+  ? OFF_VEHICLE.split(" ").filter((w) => !(story.category === "motosiklet" && w === "bike")) : [];
 const report = [];
 for (let i = 0; i < scenes.length; i++) {
   const sc = scenes[i];
@@ -49,7 +64,7 @@ for (let i = 0; i < scenes.length; i++) {
     continue;
   }
   const queries = [...new Set([`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
-  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true };
+  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true, extraBlock };
   let done = false;
   // up to 4 attempts: if the best candidate cannot be downloaded, its id stays in `used` and the next best is tried
   for (let attempt = 0; attempt < 4 && !done; attempt++) {
@@ -78,6 +93,27 @@ for (let i = 0; i < scenes.length; i++) {
     }
   }
 }
+
+// scenes that found nothing: search the generic pool of this kind of vehicle (still never an off-topic clip)
+for (let i = 0; i < scenes.length; i++) {
+  const sc = scenes[i];
+  if (sc.kind === "cta" || sc.clip || sc.image) continue;
+  for (const q of [...fallbackQueries].sort(() => Math.random() - 0.5)) {
+    try {
+      const v = await findVisual([q], used, { pexelsKey: KEY, pixabayKey: PIXABAY, topic: "", visual: q, context, categoryWords, strict: true, extraBlock });
+      if (!v) continue;
+      const rel = `clips/story-${i}.${v.type === "video" ? "mp4" : "jpg"}`;
+      await download(v.url, `public/${rel}`, v.type === "image" ? 30_000 : 0);
+      if (v.type === "video") sc.clip = rel; else sc.image = rel;
+      if (v.credit) credits.add(v.credit);
+      report.push(`${sc.kind}: generic ${v.type} from ${v.source} for "${q}" (scene wanted "${sc.visual}")`);
+      break;
+    } catch (e) { /* try the next generic query */ }
+  }
+}
+
+// the CTA reuses the hook's visual so the Short loops
+for (const sc of scenes) if (sc.kind === "cta") { sc.clip = scenes[0].clip; sc.image = scenes[0].image; }
 
 // a scene with no footage reuses a good one from this video (the camera move differs per scene) instead of a bare gradient
 const withMedia = scenes.filter((x) => x.kind !== "cta" && (x.clip || x.image));

@@ -162,11 +162,114 @@ def tighten_speech(text: str, path: Path, label: str = "voice"):
         print(f"  {label} pace: {d:.1f}s for {n} words ({60 / max(spw, 0.01):.0f} wpm) -> x{tempo:.2f}", file=sys.stderr)
     tmp.replace(path)
 
+
+# ---- Gemini: the WHOLE script in one call (natural flow, 1 request instead of 8), split at the pauses ----
+def _silences(wav: Path, noise: str = "-36dB", dur: float = 0.25):
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(wav), "-af", f"silencedetect=noise={noise}:d={dur}", "-f", "null", "-"],
+                       capture_output=True, text=True)
+    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r.stderr)]
+    ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]
+    return [(a, b) for a, b in zip(starts, ends)]
+
+def split_at_pauses(wav: Path, texts: list, out_dir: Path) -> list:
+    """Cut one long recording into len(texts) pieces at the natural pauses nearest to where each scene should end
+    (estimated from character counts). Falls back to the estimate itself when the voice did not pause."""
+    total = probe(wav)
+    sil = _silences(wav)
+    lead = sil[0][1] if sil and sil[0][0] < 0.05 else 0.0
+    trail = sil[-1][0] if sil and sil[-1][1] >= total - 0.05 else total
+    speech = max(0.5, trail - lead)
+    weights = [len(re.sub(r"\s+", "", t)) + 6 for t in texts]
+    cum, acc = [], 0
+    for w in weights:
+        acc += w
+        cum.append(acc / sum(weights))
+    cuts, prev = [], lead
+    for k in range(len(texts) - 1):
+        expect = lead + cum[k] * speech
+        window = 0.14 * speech
+        cand = [(b - a, (a + b) / 2) for a, b in sil if abs((a + b) / 2 - expect) <= window and (a + b) / 2 > prev + 0.8]
+        cut = max(cand)[1] if cand else expect       # the longest pause near the expected spot
+        cut = max(cut, prev + 0.8)
+        cuts.append(cut)
+        prev = cut
+    edges = [0.0] + cuts + [total]
+    paths = []
+    for k, text in enumerate(texts):
+        seg = out_dir / f"seg{k}.mp3"
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-ss", f"{edges[k]:.3f}", "-to", f"{edges[k + 1]:.3f}",
+             "-c:a", "libmp3lame", "-q:a", "3", str(seg)])
+        tighten_speech(text, seg, "gemini")
+        paths.append(seg)
+    return paths
+
+def tts_gemini_script(texts: list, out_dir: Path) -> list:
+    key = os.environ["GEMINI_API_KEY"]
+    voice = os.environ.get("GEMINI_VOICE", "Charon" if LANG == "tr" else "Kore")
+    lang_name = "Turkish" if LANG == "tr" else "English"
+    script = "\n\n".join(texts)
+    prompt = (f"Read the following {lang_name} script aloud like a warm, expressive, knowledgeable garage master telling a story to a friend: "
+              "natural human rhythm, relaxed conversational pace, gentle emphasis on the key words, a short pause of about one second "
+              f"between paragraphs. Read only the script, add nothing:\n\n{script}")
+    body = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
+    }
+    part, last = None, None
+    for model in gemini_tts_models():
+        for attempt in range(2):
+            try:
+                raw = post_json(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", body, {"x-goog-api-key": key})
+                part = json.loads(raw)["candidates"][0]["content"]["parts"][0]["inlineData"]
+                break
+            except (KeyError, IndexError, TypeError) as e:
+                last = RuntimeError(f"{model}: reply had no audio ({e!r})")
+                time.sleep(3)
+            except RuntimeError as e:
+                last = e
+                break
+        if part:
+            print(f"  gemini voice model: {model}, voice {voice}", file=sys.stderr)
+            break
+    if not part:
+        raise last or RuntimeError("gemini tts: no model produced audio")
+    pcm = out_dir / "script.pcm"
+    wav = out_dir / "script.wav"
+    pcm.write_bytes(base64.b64decode(part["data"]))
+    run(["ffmpeg", "-y", "-loglevel", "error", "-f", "s16le", "-ar", "24000", "-ac", "1", "-i", str(pcm), str(wav)])
+    pcm.unlink(missing_ok=True)
+    try:
+        return split_at_pauses(wav, texts, out_dir)
+    finally:
+        wav.unlink(missing_ok=True)
+
+# ---- Google Cloud Text-to-Speech: Chirp 3 HD voices are the most natural; generous free monthly allowance ----
+def tts_gcloud(text: str, path: Path):
+    key = os.environ.get("GOOGLE_TTS_API_KEY") or os.environ["GEMINI_API_KEY"]
+    code = "tr-TR" if LANG == "tr" else "en-US"
+    voices = ([os.environ["GCLOUD_VOICE"]] if os.environ.get("GCLOUD_VOICE") else
+              [f"{code}-Chirp3-HD-Charon", f"{code}-Chirp3-HD-Orus", f"{code}-Wavenet-E" if LANG == "tr" else f"{code}-Neural2-D"])
+    last = None
+    for v in voices:
+        try:
+            raw = post_json(f"https://texttospeech.googleapis.com/v1/text:synthesize?key={key}",
+                            {"input": {"text": text}, "voice": {"languageCode": code, "name": v},
+                             "audioConfig": {"audioEncoding": "MP3", "speakingRate": 1.0}}, {})
+            path.write_bytes(base64.b64decode(json.loads(raw)["audioContent"]))
+            tighten_speech(text, path, "gcloud")
+            return
+        except RuntimeError as e:
+            last = e
+            if "403" in str(e) or "PERMISSION" in str(e).upper():
+                break                      # the API is not enabled for this key: no point trying other voices
+    raise last or RuntimeError("gcloud tts failed")
+
 def tts_elevenlabs(text: str, path: Path):
     key = os.environ["ELEVENLABS_API_KEY"]
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice}?output_format=mp3_44100_128"
-    body = {"text": text, "model_id": "eleven_flash_v2_5", "voice_settings": {"speed": 0.8}}
+    body = {"text": text, "model_id": os.environ.get("ELEVENLABS_MODEL") or ("eleven_multilingual_v2" if LANG != "en" else "eleven_flash_v2_5"),
+            "voice_settings": {"speed": 0.8 if LANG == "en" else 0.92}}
     if LANG != "en":
         body["language_code"] = LANG
     try:
@@ -192,6 +295,7 @@ def tts_edge(text: str, path: Path):
 
 PROVIDERS = {
     "gemini": ("GEMINI_API_KEY", tts_gemini),
+    "gcloud": (None, tts_gcloud),
     "elevenlabs": ("ELEVENLABS_API_KEY", tts_elevenlabs),
     "edge": (None, tts_edge),
     "espeak": (None, tts_espeak),

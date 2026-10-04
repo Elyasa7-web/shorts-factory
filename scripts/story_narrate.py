@@ -43,7 +43,7 @@ def main():
     out.mkdir(exist_ok=True)
 
     voices, used, errors = [], None, []
-    default_order = "edge,gemini,elevenlabs,espeak" if N.LANG == "tr" else "gemini,elevenlabs,edge,espeak"   # edge is free and unlimited
+    default_order = "gemini,gcloud,elevenlabs,edge,espeak" if N.LANG == "tr" else "gemini,gcloud,elevenlabs,edge,espeak"   # most natural first, robotic last
     for name in os.environ.get("TTS_ORDER", default_order).split(","):
         env_key, fn = N.PROVIDERS[name.strip()]
         if env_key and not os.environ.get(env_key):
@@ -51,11 +51,18 @@ def main():
             continue
         try:
             voices = []
-            for k, sc in enumerate(scenes):
-                p = out / f"seg{k}.mp3"
-                fn(sc["text"], p)
-                voices.append((p, N.probe(p)))
-                print(f"  voice {sc['kind']}: {voices[-1][1]:.1f}s <- {sc['text'][:60]}")
+            if name.strip() == "gemini":
+                # the whole script in ONE request: more natural flow and 8x less quota than scene-by-scene
+                segs = N.tts_gemini_script([sc["text"] for sc in scenes], out)
+                voices = [(p, N.probe(p)) for p in segs]
+                for sc, (_, d) in zip(scenes, voices):
+                    print(f"  voice {sc['kind']}: {d:.1f}s <- {sc['text'][:60]}")
+            else:
+                for k, sc in enumerate(scenes):
+                    p = out / f"seg{k}.mp3"
+                    fn(sc["text"], p)
+                    voices.append((p, N.probe(p)))
+                    print(f"  voice {sc['kind']}: {voices[-1][1]:.1f}s <- {sc['text'][:60]}")
             spoken = sum(d for _, d in voices)
             if spoken > 150 and name.strip() != os.environ.get("TTS_ORDER", default_order).split(",")[-1].strip():
                 raise RuntimeError(f"voice too slow ({spoken:.0f}s of speech for a Short)")
