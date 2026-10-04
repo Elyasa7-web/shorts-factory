@@ -50,7 +50,7 @@ Rules, all mandatory:
 1. Facts come ONLY from the SOURCE TEXT. You may add simple, logical consequences that follow directly from the mechanics the source describes (for example: if the source says a gear has no synchronizer, you may explain that engaging it while moving grinds the gear teeth). Never invent numbers, percentages, names, dates, records, prices, model names or causes that the source does not support. If the source does not say it, leave it out.
 2. Never criticise or praise a brand. Brand names only when the source itself uses them for a fact.
 3. HOOK (the first sentence, at most 12 words): a concrete question, scenario or surprising claim about the topic that makes the viewer need the answer. Never promise something the script does not deliver.
-4. Then EXACTLY 5 beats of 12-22 words. Each beat gives one new idea. Every beat except the last ends on a small open loop that pulls the viewer to the next beat. Build to the answer.
+4. Then EXACTLY 5 beats of 12-22 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
 5. PAYOFF (at most 22 words): the useful takeaway, what a driver or rider should know.
 6. CTA (at most 14 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
 7. Spoken numbers and units: plain numbers may be digits, but write units in words ("kilometre", "derece", "bar", "devir") and never use abbreviations such as km/s, °C, rpm, hp.
@@ -126,6 +126,11 @@ function validate(s) {
   if (!Array.isArray(s.beats) || s.beats.length !== 5) problems.push("need exactly 5 beats");
   else s.beats.forEach((b, i) => { if (w(b.text) < 8 || w(b.text) > 26) problems.push(`beat ${i + 1} must be 8-26 words`); });
   if (w(s.payoff?.text) < 4 || w(s.payoff.text) > 25) problems.push("payoff must be 4-25 words");
+  // every scene is voiced as its own clip, so it must be a finished sentence (a dangling "ve…" is heard as a stutter)
+  [s.hook, ...(s.beats ?? []), s.payoff].forEach((v, i) => {
+    const t = (v?.text ?? "").trim();
+    if (!/[.?!]["”']?$/.test(t) || /(\.\.\.|…)/.test(t) || /(^|\s)(ve|ama|çünkü|ancak|fakat|ya da|veya|ki)[.?!]$/i.test(t)) problems.push(`scene ${i + 1} must be a COMPLETE sentence ending in . ? or ! (no "…", no trailing ve/çünkü)`);
+  });
   if (w(s.cta) < 3 || w(s.cta) > 16) problems.push("cta must be 3-16 words");
   const total = w(s.hook?.text) + (s.beats ?? []).reduce((a, b) => a + w(b.text), 0) + w(s.payoff?.text) + w(s.cta);
   if (total > 150) problems.push(`script too long (${total} words)`);
