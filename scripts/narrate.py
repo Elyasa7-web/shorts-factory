@@ -165,12 +165,14 @@ def tighten_speech(text: str, path: Path, label: str = "voice"):
 
 
 # ---- Gemini: the WHOLE script in one call (natural flow, 1 request instead of 8), split at the pauses ----
-def _silences(wav: Path, noise: str = "-36dB", dur: float = 0.25):
+def _silences(wav: Path, noise: str = "-36dB", dur: float = 0.12):
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", str(wav), "-af", f"silencedetect=noise={noise}:d={dur}", "-f", "null", "-"],
                        capture_output=True, text=True)
     starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", r.stderr)]
     ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]
     return [(a, b) for a, b in zip(starts, ends)]
+
+SPLIT = {"ok": True}      # False when the last split had to fall back to the estimate (an untrustworthy take)
 
 def _choose_cuts(sil, expects, lead, trail, speech):
     """Pick ONE silence per scene boundary, all boundaries together (dynamic programming, increasing order).
@@ -178,10 +180,12 @@ def _choose_cuts(sil, expects, lead, trail, speech):
     lower the further it lies from where the character count says the boundary should be. Picking each
     boundary alone let a boundary jump to the neighbouring scene's pause and cut a sentence in half."""
     need = len(expects)
+    SPLIT["ok"] = True
     cand = [((a + b) / 2, b - a) for a, b in sil if lead + 0.3 < (a + b) / 2 < trail - 0.3]
     if need == 0:
         return []
     if len(cand) < need:
+        SPLIT["ok"] = False                     # the voice did not pause between the paragraphs: boundaries are guesses
         return list(expects)
     NEG = float("-inf")
     best = [[NEG] * len(cand) for _ in range(need)]
@@ -201,6 +205,7 @@ def _choose_cuts(sil, expects, lead, trail, speech):
                     best[k][j], back[k][j] = v, i
     j = max(range(len(cand)), key=lambda x: best[need - 1][x])
     if best[need - 1][j] == NEG:
+        SPLIT["ok"] = False
         return list(expects)
     cuts = []
     for k in range(need - 1, -1, -1):
@@ -214,6 +219,7 @@ def _choose_cuts(sil, expects, lead, trail, speech):
         got, want = edges[k + 1] - edges[k], exp_edges[k + 1] - exp_edges[k]
         if got < 0.5 * want or got > 2.0 * want:
             print(f"  voice split looks wrong (scene {k}: {got:.1f}s vs ~{want:.1f}s expected); using the estimate", file=sys.stderr)
+            SPLIT["ok"] = False                 # typical cause: the model spoke something that is not the script
             return list(expects)
     return cuts
 
@@ -249,9 +255,8 @@ def split_at_pauses(wav: Path, texts: list, out_dir: Path) -> list:
 LAST_SPW = 0.0
 
 def tts_gemini_script(texts: list, out_dir: Path) -> list:
-    """The model sometimes reads the first paragraphs with a foreign accent, drawn out to half speed (seen: the
-    English instruction made it read Turkish like English for 16 s). The instruction is written IN the target
-    language, and a take whose average pace is far too slow is thrown away and generated again."""
+    """A take whose slowest scene is far too slow (the model spoke something that is not the script, or drew it out
+    with a foreign accent) is thrown away and generated again; after 3 bad takes the next voice provider is used."""
     limit = 0.85 if LANG == "tr" else 0.75                      # seconds per word of the slowest scene; healthy is 0.4-0.7
     best, last = None, None
     for attempt in range(1, 4):
@@ -260,37 +265,37 @@ def tts_gemini_script(texts: list, out_dir: Path) -> list:
         except RuntimeError as e:
             last = e
             break
-        print(f"  gemini take {attempt}: slowest scene {LAST_SPW:.2f} s/word", file=sys.stderr)
-        if LAST_SPW <= limit:
+        print(f"  gemini take {attempt}: slowest scene {LAST_SPW:.2f} s/word, split {'clean' if SPLIT['ok'] else 'UNRELIABLE'}", file=sys.stderr)
+        if LAST_SPW <= limit and SPLIT["ok"]:
             return paths
-        if best is None or LAST_SPW < best[0]:
-            best = (LAST_SPW, attempt)
+        bad = "split unreliable" if not SPLIT["ok"] else f"slowest scene {LAST_SPW:.2f} s/word"
+        best = best or bad
         for p in paths:
             p.unlink(missing_ok=True)
         time.sleep(6)
-    raise last or RuntimeError(f"gemini voice read the script too slowly/foreign in every take (best {best[0]:.2f} s/word)")
+    raise last or RuntimeError(f"gemini voice was unusable in every take ({best}); not the script / too slow / foreign")
 
 def _gemini_script_once(texts: list, out_dir: Path) -> list:
     key = os.environ["GEMINI_API_KEY"]
     voice = os.environ.get("GEMINI_VOICE", "Charon" if LANG == "tr" else "Kore")
+    # The text sent is ONLY the script, with NO instruction sentence: the model reads whatever it is given, and any
+    # "read this aloud like..." sentence (English or Turkish) was sometimes spoken in the video (seen: 16 s of the
+    # instruction, then the script). The language is set through the API's own languageCode field instead.
     script = "\n\n".join(texts)
-    if LANG == "tr":
-        prompt = ("Aşağıdaki Türkçe metni, İstanbul Türkçesiyle, sıcak ve samimi bir garaj ustası gibi, bir arkadaşına hikâye anlatır "
-                  "gibi doğal bir insan ritmiyle oku. Rahat, akıcı bir tempoda konuş; önemli kelimelerde hafif vurgu yap; paragraflar "
-                  "arasında yaklaşık bir saniyelik kısa bir es ver. Sadece metni oku, hiçbir şey ekleme:\n\n" + script)
-    else:
-        prompt = ("Read the following English script aloud like a warm, expressive, knowledgeable garage master telling a story to a friend: "
-                  "natural human rhythm, relaxed conversational pace, gentle emphasis on the key words, a short pause of about one second "
-                  f"between paragraphs. Read only the script, add nothing:\n\n{script}")
-    body = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
-    }
+
+    def make_body(with_language):
+        speech = {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}
+        if with_language:
+            speech["languageCode"] = "tr-TR" if LANG == "tr" else "en-US"
+        return {"contents": [{"parts": [{"text": script}]}],
+                "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": speech}}
+
     part, last = None, None
+    with_language = True
     for model in gemini_tts_models():
-        for attempt in range(2):
+        for attempt in range(3):
             try:
-                raw = post_json(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", body, {"x-goog-api-key": key})
+                raw = post_json(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent", make_body(with_language), {"x-goog-api-key": key})
                 part = json.loads(raw)["candidates"][0]["content"]["parts"][0]["inlineData"]
                 break
             except (KeyError, IndexError, TypeError) as e:
@@ -298,6 +303,10 @@ def _gemini_script_once(texts: list, out_dir: Path) -> list:
                 time.sleep(3)
             except RuntimeError as e:
                 last = e
+                if with_language and ("languageCode" in str(e) or "HTTP 400" in str(e)):
+                    print(f"  gemini tts: languageCode not accepted by {model}, retrying without it", file=sys.stderr)
+                    with_language = False
+                    continue
                 break
         if part:
             print(f"  gemini voice model: {model}, voice {voice}", file=sys.stderr)
