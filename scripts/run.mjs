@@ -128,7 +128,18 @@ if (process.env.DRY_RUN) {
 }
 
 const publishAt = nextFreeSlot();
-const id = await uploadToYouTube({ file: "out/final.mp4", title: made.title, description: made.description, tags: made.tags, publishAt });
+let id;
+try {
+  id = await uploadToYouTube({ file: "out/final.mp4", title: made.title, description: made.description, tags: made.tags, publishAt });
+} catch (e) {
+  // YouTube's free API quota (10,000 units/day = 6 uploads) resets daily; running out is normal, not an error:
+  // end quietly and let the next hourly trigger try again once the quota is back.
+  if (/quotaExceeded|dailyLimitExceeded|uploadLimitExceeded|rateLimitExceeded/i.test(e.message)) {
+    console.error(`::warning::YouTube upload quota reached (${e.message.slice(0, 120)}); the next trigger will retry.`);
+    process.exit(0);
+  }
+  throw e;
+}
 log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt });
 writeFileSync(SCHEDULE, JSON.stringify(log.slice(-500), null, 1));
 if (made.format === "garage") {
