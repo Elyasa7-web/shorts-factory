@@ -1,6 +1,6 @@
 // One full cycle for the "Canlı Garaj" channel: pick a vehicle topic -> script (Turkish, fact-checked) -> footage
 // -> voice -> render -> upload as a scheduled public video. The old English "ranking" format only runs with FORMAT=ranking.
-// Env: PUBLISH_HOURS_UTC="6,9,12,15,17,19"  MIN_GAP_HOURS=1  MAX_QUEUE=9  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
+// Env: PUBLISH_HOURS_UTC="6,9,12,15,17,19"  DAILY_TARGET=6  MAX_QUEUE=12  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
@@ -11,8 +11,8 @@ const SCHEDULE = "data/schedule.json";
 // none around midnight. YouTube's free API quota (10,000 units, 1,600 per upload) allows 6 uploads a day, so that
 // is the maximum. The queue length decides when a new video is made, not the trigger frequency.
 const HOURS = (process.env.PUBLISH_HOURS_UTC || "6,9,12,15,17,19").split(",").map(Number);
-const MIN_GAP_H = Number(process.env.MIN_GAP_HOURS || 1);
-const MAX_QUEUE = Number(process.env.MAX_QUEUE || 9);   // videos scheduled but not yet public (1.5 days of slots)
+const DAILY_TARGET = Number(process.env.DAILY_TARGET || 6);   // videos per YouTube quota day (6 uploads fit the free quota)
+const MAX_QUEUE = Number(process.env.MAX_QUEUE || 12);  // videos scheduled but not yet public (two days of slots)
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
 
 const sh = (cmd, args, opts = {}) => execFileSync(cmd, args, { stdio: "inherit", ...opts });
@@ -26,18 +26,27 @@ if (existsSync("data/PAUSE") && !process.env.DRY_RUN && !process.env.FORCE) {
 
 const log = existsSync(SCHEDULE) ? JSON.parse(readFileSync(SCHEDULE, "utf8")) : [];
 
-// Two triggers (GitHub cron + cron-job.org) can fire close together: upload only once per gap.
-const last = log.at(-1);
-// Self-regulating: the queue of scheduled-but-not-yet-public videos is topped up to MAX_QUEUE and no further,
-// so every trigger interval yields exactly the 6 videos/day the slots can publish (never a backlog, never a gap).
+// DAILY BATCH: every YouTube quota day (it resets at midnight Pacific time) DAILY_TARGET videos are made back to back,
+// each one uploaded as a scheduled public video into the next free slot (or saved as a manual package when YouTube
+// refuses). When the target is reached nothing more is made until the quota resets; the hourly triggers then start
+// the next batch and every finished video starts the next one itself (see "Continue the batch" in upload.yml).
+// Two triggers (GitHub cron + cron-job.org) firing together are harmless: the runs are serialized and the daily target caps them.
+const pacificDay = (ms) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Los_Angeles" }).format(new Date(ms));
+const madeToday = log.filter((l) => l.uploadedAt && pacificDay(Date.parse(l.uploadedAt)) === pacificDay(Date.now())).length;
+if (!process.env.FORCE && madeToday >= DAILY_TARGET) {
+  console.log(`Today's batch is complete (${madeToday}/${DAILY_TARGET} videos in the current quota day); next batch after the quota reset.`);
+  process.exit(0);
+}
+// Safety net: never let the schedule run more than MAX_QUEUE videos ahead.
 const queued = log.filter((l) => !l.cancelled && Date.parse(l.publishAt) > Date.now()).length;
 if (!process.env.FORCE && queued >= MAX_QUEUE) {
   console.log(`${queued} videos already scheduled (limit ${MAX_QUEUE}), nothing to make now.`);
   process.exit(0);
 }
-if (last && !process.env.FORCE && Date.now() - Date.parse(last.uploadedAt) < MIN_GAP_H * 3600_000) {
-  console.log(`Last upload was ${last.uploadedAt}; < ${MIN_GAP_H}h ago, skipping.`);
-  process.exit(0);
+// Tells the workflow to start the next run immediately while today's batch is not complete.
+function continueBatchIfNeeded() {
+  if (process.env.DRY_RUN || process.env.FORCE) return;
+  if (madeToday + 1 < DAILY_TARGET) { mkdirSync("out", { recursive: true }); writeFileSync("out/continue-batch", String(madeToday + 1)); }
 }
 
 function nextFreeSlot() {
@@ -187,7 +196,9 @@ try {
   // Whatever the reason, keep the finished video as a ready-to-upload package instead of losing it.
   const quota = /quotaExceeded|dailyLimitExceeded|uploadLimitExceeded|rateLimitExceeded/i.test(e.message);
   console.error(`::warning::upload failed (${e.message.slice(0, 160)}); saving the video for manual upload`);
-  try { saveForManualUpload(quota ? "YouTube günlük API kotası doldu" : `yükleme hatası: ${e.message.slice(0, 120)}`); } catch (err) { console.error(`manual package failed: ${err.message}`); }
+  let saved = false;
+  try { saved = saveForManualUpload(quota ? "YouTube günlük API kotası doldu" : `yükleme hatası: ${e.message.slice(0, 120)}`); } catch (err) { console.error(`manual package failed: ${err.message}`); }
+  if (saved) continueBatchIfNeeded();   // the video exists as a package: the batch goes on
   process.exit(0);
 }
 log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt });
@@ -199,4 +210,5 @@ if (made.format === "garage") {
   h.push({ key: made.key, at: new Date().toISOString() });
   writeFileSync(hp, JSON.stringify(h.slice(-2000), null, 1));
 }
-console.log(`Uploaded https://youtube.com/shorts/${id} (${made.format}) -> goes public at ${publishAt}`);
+console.log(`Uploaded https://youtube.com/shorts/${id} (${made.format}) -> goes public at ${publishAt}  [${madeToday + 1}/${DAILY_TARGET} today]`);
+continueBatchIfNeeded();
