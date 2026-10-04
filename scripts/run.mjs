@@ -156,7 +156,7 @@ function saveForManualUpload(reason) {
   const infoFile = `out/${slug}-bilgiler.txt`;
   writeFileSync(infoFile, info, "utf8");
   const notes = [
-    `**Başlık**\n\n${made.title}\n`,
+    `**Başlık** (kopyala-yapıştır)\n\n\`\`\`\n${made.title}\n\`\`\`\n`,
     `**Açıklama** (kopyala-yapıştır)\n\n\`\`\`\n${made.description}\n\`\`\`\n`,
     `**Etiketler**\n\n\`\`\`\n${made.tags.join(", ")}\n\`\`\`\n`,
     `**Önerilen yayın saati:** ${slot || "fark etmez"}\n`,
