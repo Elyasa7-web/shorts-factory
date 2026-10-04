@@ -171,6 +171,52 @@ def _silences(wav: Path, noise: str = "-36dB", dur: float = 0.25):
     ends = [float(x) for x in re.findall(r"silence_end: ([\d.]+)", r.stderr)]
     return [(a, b) for a, b in zip(starts, ends)]
 
+def _choose_cuts(sil, expects, lead, trail, speech):
+    """Pick ONE silence per scene boundary, all boundaries together (dynamic programming, increasing order).
+    A silence scores higher when it is long (the voice was asked for a ~1 s pause between paragraphs) and
+    lower the further it lies from where the character count says the boundary should be. Picking each
+    boundary alone let a boundary jump to the neighbouring scene's pause and cut a sentence in half."""
+    need = len(expects)
+    cand = [((a + b) / 2, b - a) for a, b in sil if lead + 0.3 < (a + b) / 2 < trail - 0.3]
+    if need == 0:
+        return []
+    if len(cand) < need:
+        return list(expects)
+    NEG = float("-inf")
+    best = [[NEG] * len(cand) for _ in range(need)]
+    back = [[-1] * len(cand) for _ in range(need)]
+    def score(k, j):
+        pos, ln = cand[j]
+        return min(ln, 1.2) - 6.0 * abs(pos - expects[k]) / speech
+    for j in range(len(cand)):
+        best[0][j] = score(0, j)
+    for k in range(1, need):
+        for j in range(len(cand)):
+            for i in range(j):
+                if best[k - 1][i] == NEG or cand[j][0] < cand[i][0] + 1.2:
+                    continue
+                v = best[k - 1][i] + score(k, j)
+                if v > best[k][j]:
+                    best[k][j], back[k][j] = v, i
+    j = max(range(len(cand)), key=lambda x: best[need - 1][x])
+    if best[need - 1][j] == NEG:
+        return list(expects)
+    cuts = []
+    for k in range(need - 1, -1, -1):
+        cuts.append(cand[j][0])
+        j = back[k][j]
+    cuts.reverse()
+    # sanity: no scene may be less than half or more than twice as long as the character count predicts
+    edges = [lead] + cuts + [trail]
+    exp_edges = [lead] + list(expects) + [trail]
+    for k in range(len(edges) - 1):
+        got, want = edges[k + 1] - edges[k], exp_edges[k + 1] - exp_edges[k]
+        if got < 0.5 * want or got > 2.0 * want:
+            print(f"  voice split looks wrong (scene {k}: {got:.1f}s vs ~{want:.1f}s expected); using the estimate", file=sys.stderr)
+            return list(expects)
+    return cuts
+
+
 def split_at_pauses(wav: Path, texts: list, out_dir: Path) -> list:
     """Cut one long recording into len(texts) pieces at the natural pauses nearest to where each scene should end
     (estimated from character counts). Falls back to the estimate itself when the voice did not pause."""
@@ -184,16 +230,10 @@ def split_at_pauses(wav: Path, texts: list, out_dir: Path) -> list:
     for w in weights:
         acc += w
         cum.append(acc / sum(weights))
-    cuts, prev = [], lead
-    for k in range(len(texts) - 1):
-        expect = lead + cum[k] * speech
-        window = 0.14 * speech
-        cand = [(b - a, (a + b) / 2) for a, b in sil if abs((a + b) / 2 - expect) <= window and (a + b) / 2 > prev + 0.8]
-        cut = max(cand)[1] if cand else expect       # the longest pause near the expected spot
-        cut = max(cut, prev + 0.8)
-        cuts.append(cut)
-        prev = cut
+    expects = [lead + cum[k] * speech for k in range(len(texts) - 1)]
+    cuts = _choose_cuts(sil, expects, lead, trail, speech)
     edges = [0.0] + cuts + [total]
+    print("  voice cuts: " + ", ".join(f"{c:.1f}s" for c in cuts) + "  (expected: " + ", ".join(f"{e:.1f}s" for e in expects) + ")", file=sys.stderr)
     paths = []
     for k, text in enumerate(texts):
         seg = out_dir / f"seg{k}.mp3"
