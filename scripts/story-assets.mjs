@@ -81,11 +81,8 @@ for (let i = 0; i < scenes.length; i++) {
   // up to 4 attempts: if the best candidate cannot be downloaded, its id stays in `used` and the next best is tried
   for (let attempt = 0; attempt < 4 && !done; attempt++) {
     try {
-      let v = await findVisual(queries, used, opts);
-      if (!v && KEY) { // last resort: any stock clip about the topic itself
-        v = (await pexelsVideos(story.topic, KEY)).find((x) => !used.has(x.id)) ?? null;
-        if (v) used.add(v.id);
-      }
+      // no loose guesses: a scene without a real match gets generic footage of the right vehicle kind (pool below)
+      const v = await findVisual(queries, used, opts);
       if (!v) { report.push(`${sc.kind}: none for "${sc.visual}"`); break; }
       const ext = v.type === "video" ? (/\.webm(\?|$)/i.test(v.url) ? "webm" : "mp4") : "jpg";
       const rel = `clips/story-${i}.${ext}`;

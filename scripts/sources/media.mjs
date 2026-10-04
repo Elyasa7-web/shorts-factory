@@ -360,7 +360,8 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       // What the scene says is on screen matters most; being about the topic is a bonus. A moving clip beats a still,
       // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
       const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.15 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
-      const ok = !blocked(c.hay) && scene >= 0.34 && (trusted || sameSense);
+      // at least half of the scene's words must be present: a lone "car" is no match ("rear axle shaft" once got night traffic lights)
+      const ok = !blocked(c.hay) && scene >= 0.5 && (trusted || sameSense);
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)
