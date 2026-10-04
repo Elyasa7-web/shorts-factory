@@ -20,7 +20,7 @@ on:
       test_format:
         description: "Testing only: which video to build (auto = normal alternation)"
         type: choice
-        options: [auto, story, story-fixture, ranking]
+        options: [auto, story, story-fixture, ranking, manual-test]
         default: auto
 
 permissions:
@@ -78,12 +78,14 @@ jobs:
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           PIXABAY_API_KEY: ${{ secrets.PIXABAY_API_KEY }}
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          GH_TOKEN: ${{ github.token }}   # lets run.mjs publish manual-upload packages as releases
           PUBLISH_HOURS_UTC: ${{ vars.PUBLISH_HOURS_UTC }}
           DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
           FORCE: ${{ (inputs.force || inputs.dry_run) && '1' || '' }}
           # story-fixture builds a story from a built-in script: tests visuals, voice and render without Gemini text
           FORMAT: ${{ (inputs.test_format == 'story' || inputs.test_format == 'story-fixture') && 'story' || (inputs.test_format == 'ranking' && 'ranking' || '') }}
-          STORY_FIXTURE: ${{ inputs.test_format == 'story-fixture' && '1' || '' }}
+          STORY_FIXTURE: ${{ (inputs.test_format == 'story-fixture' || inputs.test_format == 'manual-test') && '1' || '' }}
+          TEST_MANUAL: ${{ inputs.test_format == 'manual-test' && '1' || '' }}
         run: node scripts/run.mjs
 
       # Persist which topics were used and what is scheduled, even if the upload step failed.

@@ -47,15 +47,13 @@ const credits = new Set();
 const CAR_POOL = ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car steering wheel",
   "car dashboard", "garage workshop tools", "highway traffic cars", "car brake disc", "car interior driver", "engine bay open hood", "car tire road"];
 const FALLBACK = {
-  motosiklet: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet", "motorcycle exhaust"],
-  "agir-vasita": ["truck driving highway", "excavator construction", "bus city street", "heavy machinery", "tractor field", "crane construction"],
-  "diger-arac": [`${story.topic}`, `${story.topic} moving`, `${story.topic} close up`],
+  motosiklet: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet", "motorcycle exhaust", "motorcycle chain close up", "motorcycle dashboard"],
 };
 const fallbackQueries = FALLBACK[story.category] ?? CAR_POOL;
 // words that mean "wrong vehicle / not a photo" for car and motorcycle topics (trains, planes, boats, cartoons)
 const OFF_VEHICLE = "train railway railroad locomotive tram cog funicular aircraft airplane airport helicopter ship boat bicycle bike skyline";
-const extraBlock = ["motor", "aktarma", "fren-suspansiyon", "elektrik-guvenlik", "elektrikli", "motosiklet"].includes(story.category)
-  ? OFF_VEHICLE.split(" ").filter((w) => !(story.category === "motosiklet" && w === "bike")) : [];
+// every Canlı Garaj topic is a CAR or a MOTORCYCLE: trains, planes, ships, bicycles never belong in the footage
+const extraBlock = OFF_VEHICLE.split(" ").filter((w) => !(story.category === "motosiklet" && w === "bike"));
 const report = [];
 for (let i = 0; i < scenes.length; i++) {
   const sc = scenes[i];

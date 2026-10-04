@@ -42,7 +42,7 @@ async function textModels() {
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const words = (s) => s.trim().split(/\s+/).filter(Boolean).length;
 
-const SYSTEM = `You write scripts for "Canlı Garaj", a Turkish YouTube Shorts channel that explains how cars, motorcycles and every other kind of vehicle really work. The narrator is a friendly, knowledgeable garage master (usta) talking to ONE viewer.
+const SYSTEM = `You write scripts for "Canlı Garaj", a Turkish YouTube Shorts channel that explains how CARS and MOTORCYCLES (every type, their parts, systems and the odd "what happens if...?" questions) really work. Never talk about trains, aircraft, ships or bicycles. The narrator is a friendly, knowledgeable garage master (usta) talking to ONE viewer.
 
 OUTPUT LANGUAGE: Turkish, natural SPOKEN Turkish (the text is read aloud by a voice and shown as captions). Short sentences, concrete, no filler, no "biliyor muydun", no "bu videoda", no "hadi başlayalım". Address the viewer informally ("sen"). Use the everyday workshop vocabulary Turkish drivers know (debriyaj, şanzıman, balata, amortisör, triger, enjektör, turbo...).
 

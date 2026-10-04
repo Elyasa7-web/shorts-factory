@@ -294,7 +294,7 @@ export const BLOCK_WORDS = new Set((
 
 export const CATEGORY_CONTEXT = {
   // Canlı Garaj topics
-  motor: VEHICLE, aktarma: VEHICLE, "fren-suspansiyon": VEHICLE, "elektrik-guvenlik": VEHICLE, elektrikli: `${VEHICLE} electric battery charging hybrid`,
+  motor: VEHICLE, "otomobil-turleri": VEHICLE, aktarma: VEHICLE, "fren-suspansiyon": VEHICLE, "elektrik-guvenlik": VEHICLE, elektrikli: `${VEHICLE} electric battery charging hybrid`,
   motosiklet: `${VEHICLE} rider helmet scooter moped`, "agir-vasita": `${VEHICLE} ${CRAFT} heavy construction`, "diger-arac": `${CRAFT} engine vehicle racing`,
   senaryo: `${VEHICLE} ${CRAFT}`,
   // older channel categories (kept so the media layer still works for any topic)

@@ -2,7 +2,7 @@
 // -> voice -> render -> upload as a scheduled public video. The old English "ranking" format only runs with FORMAT=ranking.
 // Env: PUBLISH_HOURS_UTC="6,9,12,15,17,19"  MIN_GAP_HOURS=1  MAX_QUEUE=9  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
 
@@ -127,18 +127,68 @@ if (process.env.DRY_RUN) {
   process.exit(0);
 }
 
+// ---- manual-upload package: when YouTube refuses the upload (daily API quota, auth...), the finished video is NOT lost.
+// It is published as a GitHub Release (video + title + description + tags + suggested time) that can be opened on a phone,
+// and scripts/sync-manual.mjs mirrors it into a folder on the PC.
+const MAX_MANUAL_PER_DAY = Number(process.env.MAX_MANUAL_PER_DAY || 6);
+function saveForManualUpload(reason) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (log.filter((l) => l.manual && l.uploadedAt.startsWith(today)).length >= MAX_MANUAL_PER_DAY) {
+    console.error(`::warning::manual packages for today are at the limit (${MAX_MANUAL_PER_DAY}); video dropped`);
+    return false;
+  }
+  const stamp = new Date().toISOString().replace(/[-:T]/g, "").slice(0, 12);       // 202610041530
+  const tag = `manual-${stamp}`;
+  const slug = made.title.toLowerCase().replace(/ç/g, "c").replace(/ğ/g, "g").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ş/g, "s").replace(/ü/g, "u")
+    .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "video";
+  const video = `out/${slug}.mp4`;
+  copyFileSync("out/final.mp4", video);
+  let slot = "";
+  try { slot = new Date(Date.parse(nextFreeSlot()) + 3 * 3600_000).toISOString().slice(0, 16).replace("T", " ") + " (TSİ)"; } catch { /* no slot info */ }
+  const info = [
+    "BAŞLIK", made.title, "",
+    "AÇIKLAMA", made.description, "",
+    "ETİKETLER (virgülle ayrılmış)", made.tags.join(", "), "",
+    `ÖNERİLEN YAYIN SAATİ: ${slot || "fark etmez"}`,
+    "KATEGORİ: Otomobil ve Araçlar   DİL: Türkçe   Çocuklara özel: Hayır", "",
+    `Neden elle: ${reason}`,
+  ].join("\n");
+  const infoFile = `out/${slug}-bilgiler.txt`;
+  writeFileSync(infoFile, info, "utf8");
+  const notes = [
+    `**Başlık**\n\n${made.title}\n`,
+    `**Açıklama** (kopyala-yapıştır)\n\n\`\`\`\n${made.description}\n\`\`\`\n`,
+    `**Etiketler**\n\n\`\`\`\n${made.tags.join(", ")}\n\`\`\`\n`,
+    `**Önerilen yayın saati:** ${slot || "fark etmez"}\n`,
+    "_YouTube'a elle yüklemek için videoyu indir; kategori Otomobil ve Araçlar, dil Türkçe, çocuklara özel değil._",
+  ].join("\n");
+  const notesFile = `out/${slug}-notes.md`;
+  writeFileSync(notesFile, notes, "utf8");
+  sh("gh", ["release", "create", tag, video, infoFile, "--title", made.title, "--notes-file", notesFile]);
+  log.push({ id: tag, manual: true, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString() });
+  writeFileSync(SCHEDULE, JSON.stringify(log.slice(-500), null, 1));
+  if (made.format === "garage") {
+    const hp = "data/history.json";
+    const h = existsSync(hp) ? JSON.parse(readFileSync(hp, "utf8")) : [];
+    h.push({ key: made.key, at: new Date().toISOString() });
+    writeFileSync(hp, JSON.stringify(h.slice(-2000), null, 1));
+  }
+  console.log(`Saved for manual upload: release ${tag} (${reason})`);
+  return true;
+}
+
 const publishAt = nextFreeSlot();
 let id;
 try {
+  if (process.env.TEST_MANUAL) throw new Error("test: pretending YouTube refused the upload (quotaExceeded)");
   id = await uploadToYouTube({ file: "out/final.mp4", title: made.title, description: made.description, tags: made.tags, publishAt });
 } catch (e) {
-  // YouTube's free API quota (10,000 units/day = 6 uploads) resets daily; running out is normal, not an error:
-  // end quietly and let the next hourly trigger try again once the quota is back.
-  if (/quotaExceeded|dailyLimitExceeded|uploadLimitExceeded|rateLimitExceeded/i.test(e.message)) {
-    console.error(`::warning::YouTube upload quota reached (${e.message.slice(0, 120)}); the next trigger will retry.`);
-    process.exit(0);
-  }
-  throw e;
+  // YouTube's free API quota (10,000 units/day = 6 uploads) resets daily; running out is normal, not an error.
+  // Whatever the reason, keep the finished video as a ready-to-upload package instead of losing it.
+  const quota = /quotaExceeded|dailyLimitExceeded|uploadLimitExceeded|rateLimitExceeded/i.test(e.message);
+  console.error(`::warning::upload failed (${e.message.slice(0, 160)}); saving the video for manual upload`);
+  try { saveForManualUpload(quota ? "YouTube günlük API kotası doldu" : `yükleme hatası: ${e.message.slice(0, 120)}`); } catch (err) { console.error(`manual package failed: ${err.message}`); }
+  process.exit(0);
 }
 log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt });
 writeFileSync(SCHEDULE, JSON.stringify(log.slice(-500), null, 1));
