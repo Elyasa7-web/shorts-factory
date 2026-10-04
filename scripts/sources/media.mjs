@@ -97,7 +97,8 @@ export async function nasaImages(query) {
 }
 
 // ---- Wikimedia Commons (only licenses that allow reuse with at most attribution) ----
-const OK_LICENSE = /^(public domain|pd|cc0|cc[- ]by(?!-sa)|cc[- ]by [\d.]+)/i;
+// Only licenses that need NO attribution (the video description carries no credits): public domain and CC0.
+const OK_LICENSE = /^(public domain|pd\b|pdm|cc0)/i;
 export async function commonsImages(query) {
   const p = new URLSearchParams({
     action: "query", generator: "search", gsrnamespace: "6", gsrsearch: `${query} filetype:bitmap`, gsrlimit: "15",
@@ -150,7 +151,7 @@ export async function commonsVideos(query) {
 
 // ---- Openverse: one search over Flickr, museums, nature archives... (CC0 / public domain / CC BY only) ----
 export async function openverseImages(query) {
-  const p = new URLSearchParams({ q: query, license: "cc0,pdm,by", page_size: "20", mature: "false", category: "photograph" });
+  const p = new URLSearchParams({ q: query, license: "cc0,pdm", page_size: "20", mature: "false", category: "photograph" });
   const j = await getJson(`https://api.openverse.org/v1/images/?${p}`);
   return (j.results ?? []).filter((x) => (x.width ?? 0) >= 800 && x.url).map((x) => {
     const tags = (x.tags ?? []).map((t) => t.name).join(" ");

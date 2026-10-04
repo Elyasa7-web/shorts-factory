@@ -103,13 +103,11 @@ async function makeGarage() {
   const baseTags = ["shorts", "araba", "otomobil", "araç", "motor", "canlı garaj", "nasıl çalışır", "oto bilgi", "usta"];
   const tags = [...new Set([...baseTags, ...sc.tags.map((t) => t.trim().toLowerCase()).filter(Boolean)])].slice(0, 15);
   const tagLine = ["shorts", "araba", "otomobil", "canlıgaraj", ...sc.tags.map(hashtag).filter((t) => t && t.length > 2)].slice(0, 8);
-  const credits = JSON.parse(readFileSync("data/story-props.json", "utf8")).credits ?? [];
+  // No source / credit lines on purpose: every image, clip, sound and music track used here needs no attribution
+  // (Pexels, Pixabay, CC0, public domain), and the narration is our own wording of plain facts.
   const description = [
     sc.title, "", sc.payoff.text, "", sc.cta, "",
-    "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.", "",
-    `Kaynak: ${(story.source.urls ?? [story.source.url]).join(" , ")} (Vikipedi / Wikipedia, CC BY-SA)`,
-    "Görüntüler: Pexels, Pixabay, Wikimedia Commons, Openverse, NASA. Müzik ve ses efektleri: Freesound (CC0).",
-    ...credits.map((c) => `Görsel: ${c}`),
+    "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.",
     "", [...new Set(tagLine)].map((t) => `#${t}`).join(" "),
   ].join("\n");
   return { format: "garage", key: story.key, title: sc.title, description, tags };
