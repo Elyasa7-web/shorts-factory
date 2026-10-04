@@ -366,6 +366,11 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
     .filter((c) => c.ok)
     .sort((a, b) => b.rank - a.rank);
   if (!ranked.length) return null;
-  used.add(ranked[0].id);
-  return { ...ranked[0], score: ranked[0].rank, poolSize: cands.length };
+  // Tiers: a clip that matches at least two thirds of the scene's description beats any looser match, however
+  // pretty ("parked car in a parking lot" must not win for "car hitting a parked car's bumper" when something better exists).
+  const strong = ranked.filter((c) => c.scene >= 0.66);
+  const middle = ranked.filter((c) => c.scene >= 0.5);
+  const best = (strong.length ? strong : middle.length ? middle : ranked)[0];
+  used.add(best.id);
+  return { ...best, score: best.rank, poolSize: cands.length };
 }

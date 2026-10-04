@@ -142,7 +142,7 @@ def tighten_speech(text: str, path: Path, label: str = "voice"):
     reads ~215 words/minute, which sounds rushed on a Short."""
     tmp = path.with_name(path.stem + ".tight.mp3")
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-af",
-         "silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.4:stop_threshold=-45dB:stop_silence=0.12",
+         "silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.3:stop_threshold=-45dB:stop_silence=0.16",
          str(tmp)])
     d = probe(tmp)
     n = max(1, len(text.split()))
