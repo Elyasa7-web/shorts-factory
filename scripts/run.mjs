@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
+import { addToPlaylists } from "./playlists.mjs";
 
 const SCHEDULE = "data/schedule.json";
 // Four public slots per day, all inside the Turkish day: 12:00, 15:00, 18:00, 21:00 TRT (UTC+3), none around midnight.
@@ -110,7 +111,7 @@ async function makeGarage() {
     "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.",
     "", [...new Set(tagLine)].map((t) => `#${t}`).join(" "),
   ].join("\n");
-  return { format: "garage", key: story.key, title: sc.title, description, tags };
+  return { format: "garage", key: story.key, title: sc.title, description, tags, kind: story.vehicle ?? "car", category: story.category };
 }
 
 // Only the garage format is made (the old English ranking videos do not fit the channel any more).
@@ -208,4 +209,11 @@ if (made.format === "garage") {
   writeFileSync(hp, JSON.stringify(h.slice(-2000), null, 1));
 }
 console.log(`Uploaded https://youtube.com/shorts/${id} (${made.format}) -> goes public at ${publishAt}  [${madeToday + 1}/${DAILY_TARGET} today]`);
+// playlists by vehicle kind / topic; a failure here must never cost the upload (it is retried from data/playlist-queue.json)
+if (made.format === "garage") {
+  try {
+    const r = await addToPlaylists({ videoId: id, kind: made.kind, category: made.category });
+    console.log(`Playlists: ${r.done} done, ${r.waiting} waiting${r.blocked ? ` (${r.blocked})` : ""}`);
+  } catch (e) { console.error(`::warning::playlist step failed: ${e.message.slice(0, 200)}`); }
+}
 continueBatchIfNeeded();

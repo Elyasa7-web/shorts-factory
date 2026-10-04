@@ -5,7 +5,7 @@ import { readFileSync, statSync, createReadStream } from "node:fs";
 
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 
-async function accessToken() {
+export async function accessToken() {
   const res = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
