@@ -161,6 +161,7 @@ def tighten_speech(text: str, path: Path, label: str = "voice"):
         tmp = paced
         print(f"  {label} pace: {d:.1f}s for {n} words ({60 / max(spw, 0.01):.0f} wpm) -> x{tempo:.2f}", file=sys.stderr)
     tmp.replace(path)
+    return spw
 
 
 # ---- Gemini: the WHOLE script in one call (natural flow, 1 request instead of 8), split at the pauses ----
@@ -234,23 +235,53 @@ def split_at_pauses(wav: Path, texts: list, out_dir: Path) -> list:
     cuts = _choose_cuts(sil, expects, lead, trail, speech)
     edges = [0.0] + cuts + [total]
     print("  voice cuts: " + ", ".join(f"{c:.1f}s" for c in cuts) + "  (expected: " + ", ".join(f"{e:.1f}s" for e in expects) + ")", file=sys.stderr)
-    paths = []
+    paths, spws = [], []
     for k, text in enumerate(texts):
         seg = out_dir / f"seg{k}.mp3"
         run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(wav), "-ss", f"{edges[k]:.3f}", "-to", f"{edges[k + 1]:.3f}",
              "-c:a", "libmp3lame", "-q:a", "3", str(seg)])
-        tighten_speech(text, seg, "gemini")
+        spws.append(tighten_speech(text, seg, "gemini"))
         paths.append(seg)
+    global LAST_SPW
+    LAST_SPW = max(spws)          # the slowest scene decides: one drawn-out foreign-sounding scene ruins the video
     return paths
 
+LAST_SPW = 0.0
+
 def tts_gemini_script(texts: list, out_dir: Path) -> list:
+    """The model sometimes reads the first paragraphs with a foreign accent, drawn out to half speed (seen: the
+    English instruction made it read Turkish like English for 16 s). The instruction is written IN the target
+    language, and a take whose average pace is far too slow is thrown away and generated again."""
+    limit = 0.85 if LANG == "tr" else 0.75                      # seconds per word of the slowest scene; healthy is 0.4-0.7
+    best, last = None, None
+    for attempt in range(1, 4):
+        try:
+            paths = _gemini_script_once(texts, out_dir)
+        except RuntimeError as e:
+            last = e
+            break
+        print(f"  gemini take {attempt}: slowest scene {LAST_SPW:.2f} s/word", file=sys.stderr)
+        if LAST_SPW <= limit:
+            return paths
+        if best is None or LAST_SPW < best[0]:
+            best = (LAST_SPW, attempt)
+        for p in paths:
+            p.unlink(missing_ok=True)
+        time.sleep(6)
+    raise last or RuntimeError(f"gemini voice read the script too slowly/foreign in every take (best {best[0]:.2f} s/word)")
+
+def _gemini_script_once(texts: list, out_dir: Path) -> list:
     key = os.environ["GEMINI_API_KEY"]
     voice = os.environ.get("GEMINI_VOICE", "Charon" if LANG == "tr" else "Kore")
-    lang_name = "Turkish" if LANG == "tr" else "English"
     script = "\n\n".join(texts)
-    prompt = (f"Read the following {lang_name} script aloud like a warm, expressive, knowledgeable garage master telling a story to a friend: "
-              "natural human rhythm, relaxed conversational pace, gentle emphasis on the key words, a short pause of about one second "
-              f"between paragraphs. Read only the script, add nothing:\n\n{script}")
+    if LANG == "tr":
+        prompt = ("Aşağıdaki Türkçe metni, İstanbul Türkçesiyle, sıcak ve samimi bir garaj ustası gibi, bir arkadaşına hikâye anlatır "
+                  "gibi doğal bir insan ritmiyle oku. Rahat, akıcı bir tempoda konuş; önemli kelimelerde hafif vurgu yap; paragraflar "
+                  "arasında yaklaşık bir saniyelik kısa bir es ver. Sadece metni oku, hiçbir şey ekleme:\n\n" + script)
+    else:
+        prompt = ("Read the following English script aloud like a warm, expressive, knowledgeable garage master telling a story to a friend: "
+                  "natural human rhythm, relaxed conversational pace, gentle emphasis on the key words, a short pause of about one second "
+                  f"between paragraphs. Read only the script, add nothing:\n\n{script}")
     body = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {"prebuiltVoiceConfig": {"voiceName": voice}}}},
