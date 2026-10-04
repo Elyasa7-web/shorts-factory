@@ -282,7 +282,7 @@ export async function smithsonianImages(query) {
 const SPACE = /\b(space|galaxy|planet|star|moon|sun|solar|black hole|nebula|comet|asteroid|mars|venus|saturn|jupiter|pluto|astronaut|rocket|orbit|telescope|cosmic|universe|eclipse|aurora)\b/i;
 
 // words that tell us a candidate is about the SAME THING as the topic (not a namesake)
-const VEHICLE = "car automobile vehicle engine automotive mechanic garage workshop transmission gearbox diesel petrol gasoline exhaust suspension steering truck motorcycle bike tire tyre brake wheel";
+const VEHICLE = "car automobile vehicle engine automotive mechanic garage workshop transmission gearbox diesel petrol gasoline exhaust suspension steering truck motorcycle bike tire tyre brake wheel piston cylinder crankshaft camshaft gear gears motor turbo radiator axle differential valve valves injector carburetor muffler chassis bumper";
 const CRAFT = "aircraft airplane jet helicopter train locomotive railway ship boat submarine vessel bicycle tram tractor excavator crane bulldozer forklift";
 // A candidate whose own title/tags contain one of these is never used: people (faces, politics, celebrities),
 // and the classic namesakes of vehicle words (clutch = bag / dinosaur eggs, mouse, bat...).
@@ -320,7 +320,10 @@ export function specificMatch(visual, hay) {
   const specific = tokens(visual).filter((w) => !GENERIC_SCENE_WORDS.has(w));
   if (!specific.length) return true;
   const have = tokens(hay);
-  return specific.some((w) => have.some((h) => sameWord(w, h)));
+  // two specific words must match (one if the description has only one): "piston rings" must not match a hand with a RING,
+  // "engine cylinder burning gas" must not match a gas PUMP.
+  const hits = specific.filter((w) => have.some((h) => sameWord(w, h))).length;
+  return hits >= Math.min(2, specific.length);
 }
 
 /**
@@ -374,7 +377,7 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
       const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.15 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
       // at least half of the scene's words must be present: a lone "car" is no match ("rear axle shaft" once got night traffic lights)
-      const ok = !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (trusted || sameSense);
+      const ok = !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (strict ? sameSense : (trusted || sameSense));   // vehicle channel: EVERY source must show a vehicle word
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)
