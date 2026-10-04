@@ -1,17 +1,16 @@
 // One full cycle for the "Canlı Garaj" channel: pick a vehicle topic -> script (Turkish, fact-checked) -> footage
 // -> voice -> render -> upload as a scheduled public video. The old English "ranking" format only runs with FORMAT=ranking.
-// Env: PUBLISH_HOURS_UTC="6,9,12,15,17,19"  DAILY_TARGET=6  MAX_QUEUE=12  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
+// Env: PUBLISH_HOURS_UTC="9,12,15,18"  DAILY_TARGET=4  MAX_QUEUE=12  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
 
 const SCHEDULE = "data/schedule.json";
-// Six public slots per day, all inside the Turkish day: 09:00, 12:00, 15:00, 18:00, 20:00, 22:00 TRT (UTC+3),
-// none around midnight. YouTube's free API quota (10,000 units, 1,600 per upload) allows 6 uploads a day, so that
-// is the maximum. The queue length decides when a new video is made, not the trigger frequency.
-const HOURS = (process.env.PUBLISH_HOURS_UTC || "6,9,12,15,17,19").split(",").map(Number);
-const DAILY_TARGET = Number(process.env.DAILY_TARGET || 6);   // videos per YouTube quota day (6 uploads fit the free quota)
+// Four public slots per day, all inside the Turkish day: 12:00, 15:00, 18:00, 21:00 TRT (UTC+3), none around midnight.
+// YouTube's free API quota (10,000 units, 1,600 per upload) allows at most 6 uploads a day; 4 keeps a safe margin.
+const HOURS = (process.env.PUBLISH_HOURS_UTC || "9,12,15,18").split(",").map(Number);
+const DAILY_TARGET = Number(process.env.DAILY_TARGET || 4);   // videos per YouTube quota day (the free quota fits 6 uploads; 4 leaves a safe margin)
 const MAX_QUEUE = Number(process.env.MAX_QUEUE || 12);  // videos scheduled but not yet public (two days of slots)
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
 
