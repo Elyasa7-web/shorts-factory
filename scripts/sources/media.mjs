@@ -311,6 +311,17 @@ export const CATEGORY_CONTEXT = {
   mysteries: "mystery ancient ocean ship ruins aerial fog strange legend expedition",
 };
 
+// Words every vehicle clip has: they say nothing about WHAT the scene shows ("car transaxle mechanics" must not match a dashboard clip tagged "car").
+const GENERIC_SCENE_WORDS = new Set("car cars vehicle vehicles automobile auto driving drive driver road view shot close up footage video".split(" "));
+
+/** True when the clip mentions at least one SPECIFIC word of the scene description (or the description has none). */
+export function specificMatch(visual, hay) {
+  const specific = tokens(visual).filter((w) => !GENERIC_SCENE_WORDS.has(w));
+  if (!specific.length) return true;
+  const have = tokens(hay);
+  return specific.some((w) => have.some((h) => sameWord(w, h)));
+}
+
 /**
  * Best visual for a scene. EVERY query x EVERY library is searched, plus the topic's own Wikipedia
  * article media; all candidates go into one pool and are ranked together.
@@ -362,7 +373,7 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
       const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.15 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
       // at least half of the scene's words must be present: a lone "car" is no match ("rear axle shaft" once got night traffic lights)
-      const ok = !blocked(c.hay) && scene >= 0.5 && (trusted || sameSense);
+      const ok = !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (trusted || sameSense);
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)

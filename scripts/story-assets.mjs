@@ -49,8 +49,8 @@ const credits = new Set();
 // If nothing matches a scene's own description, search generic footage of the right KIND of vehicle instead of
 // reusing an old clip or showing an unrelated one (a rack-and-pinion topic once returned a mountain railway).
 const POOLS = {
-  car: ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car steering wheel", "car dashboard",
-    "garage workshop tools", "highway traffic cars", "car brake disc", "car interior driver", "engine bay open hood", "car tire road"],
+  car: ["car driving road", "car engine close up", "mechanic repairing car", "car wheel close up", "car brake disc",
+    "garage workshop tools", "highway traffic cars", "engine bay open hood", "car tire road", "car exhaust pipe", "car suspension wheel"],
   motorcycle: ["motorcycle riding road", "motorcycle engine close up", "motorcycle mechanic", "motorcycle wheel", "motorcycle rider helmet",
     "motorcycle exhaust", "motorcycle chain close up", "motorcycle dashboard"],
   train: ["train railway tracks", "locomotive close up", "train passing station", "railway wheels", "train interior"],
