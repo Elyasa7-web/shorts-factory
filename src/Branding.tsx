@@ -75,6 +75,14 @@ export const Avatar: React.FC = () => (
   </Backdrop>
 );
 
+// Video watermark (YouTube Studio > Customization > Branding): the tachometer on a TRANSPARENT background.
+// It sits in the corner of the video player at about 40 px, so no text: just the dial, high contrast on any footage.
+export const Watermark: React.FC = () => (
+  <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", background: "transparent" }}>
+    <Mark size={600} />
+  </AbsoluteFill>
+);
+
 // Hazard-stripe band, a garage-floor detail used on the banner edges.
 const Stripes: React.FC<{ side: "left" | "right" }> = ({ side }) => (
   <div
