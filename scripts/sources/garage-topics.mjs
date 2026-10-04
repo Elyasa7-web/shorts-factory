@@ -17,7 +17,7 @@ export const KIND_WEIGHT = { car: 70, motorcycle: 20, train: 2, aircraft: 2, shi
 
 const P = (category, rows) => rows.map(([wiki, tr]) => ({ kind: "part", category, wiki, tr, vehicle: KIND_OF_CATEGORY[category] }));
 
-export const PARTS = [
+const BASE_PARTS = [
   ...P("motor", [
     ["Internal combustion engine", "içten yanmalı motor"], ["Four-stroke engine", "dört zamanlı motor"],
     ["Two-stroke engine", "iki zamanlı motor"], ["Diesel engine", "dizel motor"], ["Wankel engine", "Wankel (döner) motor"],
@@ -108,6 +108,14 @@ export const PARTS = [
   ]),
 ];
 
+
+// ---- the extended bank (scripts/sources/garage-topics-more.json): ~300 more parts and ~60 more questions ----
+import { readFileSync } from "node:fs";
+const MORE = JSON.parse(readFileSync(new URL("./garage-topics-more.json", import.meta.url), "utf8"));
+const morePartRows = Object.entries(MORE.parts).flatMap(([category, rows]) => P(category, rows));
+// one Wikipedia article is one topic, whichever list it appears in (no duplicate videos)
+export const PARTS = [...new Map([...BASE_PARTS, ...morePartRows].map((p) => [p.wiki.toLowerCase(), p])).values()];
+
 // angles rotate so one part gives several different videos
 export const ANGLES = [
   { id: "purpose", brief: "what this is and what it is FOR in the vehicle: its job, explained so a complete beginner gets it" },
@@ -117,15 +125,16 @@ export const ANGLES = [
 ];
 
 const inferVehicle = (q, wiki) =>
-  /motosiklet|motor(?:lar)?ı? zincir|virajda neden yatar/i.test(q) ? "motorcycle"
-  : /uçak|jet motoru|helikopter/i.test(q) ? "aircraft"
-  : /denizaltı|gemi/i.test(q) ? "ship"
-  : /tren|raylar/i.test(q) ? "train"
-  : /ekskavatör|vinç|dozer|forklift|iş makine/i.test(q) ? "machine"
+  /motosiklet|motor(?:lar)?ı? zincir|virajda neden yatar|wheelie/i.test(q) ? "motorcycle"
+  : /denizaltı|gemi|buzkıran|çapa/i.test(q) ? "ship"
+  : /uçak|jet motoru|helikopter|pilot/i.test(q) ? "aircraft"
+  : /tren|raylar|ray(?:ların|ı)|maglev|lokomotif|metro/i.test(q) ? "train"
+  : /ekskavatör|vinç|dozer|forklift|iş makine|traktör|biçerdöver|beton|tünel açma/i.test(q) ? "machine"
+  : /kamyon|otobüs|(?:^|\s)tırlar|(?:^|\s)tır(?:\s|[?,.])|itfaiye|ambulans|çekici|takograf|dorse/i.test(q) ? "truck"
   : "car";
 const S = (q, wiki) => ({ kind: "scenario", category: "senaryo", q, wiki: wiki[0], extra: wiki.slice(1), vehicle: inferVehicle(q, wiki) });
 
-export const SCENARIOS = [
+const BASE_SCENARIOS = [
   S("Araç 70 km/s hızla giderken birden R (geri) vitesine takarsan ne olur?", ["Manual transmission", "Synchromesh"]),
   S("Otomatik araç giderken P (park) konumuna alırsan ne olur?", ["Automatic transmission", "Parking pawl"]),
   S("Motor yağı biterse motora ne olur?", ["Motor oil", "Internal combustion engine"]),
@@ -209,5 +218,8 @@ export const SCENARIOS = [
   S("Tren raylardan neden çıkmaz?", ["Rail transport", "Flange"]),
   S("Ekskavatör kolunu hidrolikle nasıl hareket ettirir?", ["Excavator", "Hydraulics"]),
 ];
+
+const moreScenarios = MORE.scenarios.map((x) => S(x.q, x.wiki));
+export const SCENARIOS = [...new Map([...BASE_SCENARIOS, ...moreScenarios].map((x) => [x.q, x])).values()];
 
 export const GARAGE_TOPICS = [...PARTS, ...SCENARIOS];

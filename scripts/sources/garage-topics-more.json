@@ -1,0 +1,1920 @@
+{
+ "parts": {
+  "tren": [
+   [
+    "Locomotive",
+    "lokomotif"
+   ],
+   [
+    "Electric locomotive",
+    "elektrikli lokomotif"
+   ],
+   [
+    "Shinkansen",
+    "Shinkansen (Japon hızlı treni)"
+   ],
+   [
+    "TGV",
+    "TGV (Fransız hızlı treni)"
+   ],
+   [
+    "Rack railway",
+    "dişli raylı tren"
+   ],
+   [
+    "Funicular",
+    "füniküler"
+   ],
+   [
+    "Monorail",
+    "monoray"
+   ],
+   [
+    "Railway signalling",
+    "demiryolu sinyalizasyonu"
+   ],
+   [
+    "Railroad switch",
+    "makas (ray değiştirme)"
+   ],
+   [
+    "Track gauge",
+    "ray aralığı"
+   ],
+   [
+    "Bogie",
+    "boji (tren tekerlek takımı)"
+   ],
+   [
+    "Pantograph (rail)",
+    "pantograf"
+   ],
+   [
+    "Third rail",
+    "üçüncü ray"
+   ],
+   [
+    "Overhead line",
+    "katener hattı"
+   ],
+   [
+    "Light rail",
+    "hafif raylı sistem"
+   ],
+   [
+    "Commuter rail",
+    "banliyö treni"
+   ],
+   [
+    "Sleeper train",
+    "yataklı tren"
+   ],
+   [
+    "Diesel multiple unit",
+    "dizel tren seti"
+   ],
+   [
+    "Electric multiple unit",
+    "elektrikli tren seti"
+   ],
+   [
+    "Tilting train",
+    "yatan tren"
+   ],
+   [
+    "Regenerative brake",
+    "rejeneratif fren"
+   ],
+   [
+    "Hyperloop",
+    "Hyperloop"
+   ],
+   [
+    "Orient Express",
+    "Orient Express"
+   ],
+   [
+    "Trans-Siberian Railway",
+    "Trans-Sibirya Demiryolu"
+   ],
+   [
+    "Level crossing",
+    "hemzemin geçit"
+   ],
+   [
+    "Train station",
+    "tren istasyonu"
+   ],
+   [
+    "Railroad car",
+    "tren vagonu"
+   ],
+   [
+    "Railway electrification system",
+    "demiryolu elektrifikasyonu"
+   ],
+   [
+    "Standard-gauge railway",
+    "standart ray genişliği"
+   ],
+   [
+    "Narrow-gauge railway",
+    "dar hat demiryolu"
+   ],
+   [
+    "Railway track",
+    "demiryolu hattı"
+   ],
+   [
+    "Track ballast",
+    "ray balastı"
+   ],
+   [
+    "Railroad tie",
+    "travers (ray traversi)"
+   ],
+   [
+    "Rapid transit",
+    "metro sistemi"
+   ]
+  ],
+  "ucak": [
+   [
+    "Wing",
+    "kanat"
+   ],
+   [
+    "Aileron",
+    "kanatçık (aileron)"
+   ],
+   [
+    "Flap (aeronautics)",
+    "flap"
+   ],
+   [
+    "Rudder",
+    "dümen"
+   ],
+   [
+    "Elevator (aeronautics)",
+    "irtifa dümeni"
+   ],
+   [
+    "Landing gear",
+    "iniş takımı"
+   ],
+   [
+    "Cockpit",
+    "kokpit"
+   ],
+   [
+    "Autopilot",
+    "otopilot"
+   ],
+   [
+    "Flight recorder",
+    "kara kutu"
+   ],
+   [
+    "Turboprop",
+    "turboprop motor"
+   ],
+   [
+    "Turbojet",
+    "turbojet motor"
+   ],
+   [
+    "Ramjet",
+    "ramjet"
+   ],
+   [
+    "Propeller (aeronautics)",
+    "pervane"
+   ],
+   [
+    "Glider (aircraft)",
+    "planör"
+   ],
+   [
+    "Seaplane",
+    "deniz uçağı"
+   ],
+   [
+    "Biplane",
+    "çift kanatlı uçak"
+   ],
+   [
+    "Airship",
+    "zeplin (hava gemisi)"
+   ],
+   [
+    "Sonic boom",
+    "ses patlaması"
+   ],
+   [
+    "Concorde",
+    "Concorde"
+   ],
+   [
+    "Boeing 747",
+    "Boeing 747"
+   ],
+   [
+    "Airbus A380",
+    "Airbus A380"
+   ],
+   [
+    "Boeing 737",
+    "Boeing 737"
+   ],
+   [
+    "Cessna 172",
+    "Cessna 172"
+   ],
+   [
+    "Air traffic control",
+    "hava trafik kontrolü"
+   ],
+   [
+    "Runway",
+    "pist"
+   ],
+   [
+    "Airport",
+    "havalimanı"
+   ],
+   [
+    "Ejection seat",
+    "fırlatma koltuğu"
+   ],
+   [
+    "Parachute",
+    "paraşüt"
+   ],
+   [
+    "Fly-by-wire",
+    "fly-by-wire (elektronik uçuş kontrolü)"
+   ],
+   [
+    "Winglet",
+    "kanat ucu (winglet)"
+   ],
+   [
+    "Stall (fluid dynamics)",
+    "stall (kanat tutunma kaybı)"
+   ],
+   [
+    "Lift (force)",
+    "kaldırma kuvveti"
+   ],
+   [
+    "Helicopter rotor",
+    "helikopter rotoru"
+   ],
+   [
+    "Tiltrotor",
+    "tiltrotor"
+   ],
+   [
+    "Unmanned aerial vehicle",
+    "insansız hava aracı (İHA)"
+   ],
+   [
+    "Fighter aircraft",
+    "savaş uçağı"
+   ],
+   [
+    "Cabin pressurization",
+    "kabin basınçlandırma"
+   ],
+   [
+    "Contrail",
+    "uçak izi (kondensasyon izi)"
+   ],
+   [
+    "Wake turbulence",
+    "uçak türbülansı"
+   ],
+   [
+    "Jet aircraft",
+    "jet uçağı"
+   ],
+   [
+    "Aircraft pilot",
+    "pilot"
+   ]
+  ],
+  "gemi": [
+   [
+    "Propeller",
+    "gemi pervanesi"
+   ],
+   [
+    "Anchor",
+    "çapa"
+   ],
+   [
+    "Aircraft carrier",
+    "uçak gemisi"
+   ],
+   [
+    "Icebreaker",
+    "buzkıran"
+   ],
+   [
+    "Oil tanker",
+    "petrol tankeri"
+   ],
+   [
+    "Cruise ship",
+    "yolcu gemisi (kruvaziyer)"
+   ],
+   [
+    "Ferry",
+    "feribot"
+   ],
+   [
+    "Tugboat",
+    "römorkör"
+   ],
+   [
+    "Sailing ship",
+    "yelkenli gemi"
+   ],
+   [
+    "Catamaran",
+    "katamaran"
+   ],
+   [
+    "Hydrofoil",
+    "hidrofoil"
+   ],
+   [
+    "Steamship",
+    "buharlı gemi"
+   ],
+   [
+    "Nuclear submarine",
+    "nükleer denizaltı"
+   ],
+   [
+    "Sonar",
+    "sonar"
+   ],
+   [
+    "Ballast tank",
+    "balast tankı"
+   ],
+   [
+    "Bulbous bow",
+    "gemi burun yumrusu"
+   ],
+   [
+    "RMS Titanic",
+    "Titanic"
+   ],
+   [
+    "Keel",
+    "omurga (karina)"
+   ],
+   [
+    "Sail",
+    "yelken"
+   ],
+   [
+    "Personal watercraft",
+    "jet ski"
+   ],
+   [
+    "Outboard motor",
+    "deniz motoru (takma motor)"
+   ],
+   [
+    "Bulk carrier",
+    "dökme yük gemisi"
+   ],
+   [
+    "Battleship",
+    "zırhlı savaş gemisi"
+   ],
+   [
+    "Yacht",
+    "yat"
+   ],
+   [
+    "Lock (water transport)",
+    "gemi ev (kanal havuzu)"
+   ],
+   [
+    "Suez Canal",
+    "Süveyş Kanalı"
+   ],
+   [
+    "Panama Canal",
+    "Panama Kanalı"
+   ],
+   [
+    "Lifeboat (rescue)",
+    "can kurtaran botu"
+   ],
+   [
+    "Submarine",
+    "denizaltı"
+   ],
+   [
+    "Marine propulsion",
+    "gemi tahrik sistemleri"
+   ],
+   [
+    "Ship stability",
+    "gemi dengesi (stabilite)"
+   ],
+   [
+    "Pressure hull",
+    "denizaltı gövdesi"
+   ]
+  ],
+  "is-makinesi": [
+   [
+    "Backhoe loader",
+    "kazıcı yükleyici (JCB)"
+   ],
+   [
+    "Loader (equipment)",
+    "yükleyici (loder)"
+   ],
+   [
+    "Motor grader",
+    "greyder"
+   ],
+   [
+    "Asphalt paver",
+    "asfalt finişeri"
+   ],
+   [
+    "Road roller",
+    "yol silindiri"
+   ],
+   [
+    "Tower crane",
+    "kule vinç"
+   ],
+   [
+    "Mobile crane",
+    "mobil vinç"
+   ],
+   [
+    "Crawler crane",
+    "paletli vinç"
+   ],
+   [
+    "Telescopic handler",
+    "teleskopik yükleyici"
+   ],
+   [
+    "Aerial work platform",
+    "sepetli platform"
+   ],
+   [
+    "Jackhammer",
+    "kırıcı (hilti)"
+   ],
+   [
+    "Pile driver",
+    "kazık çakma makinesi"
+   ],
+   [
+    "Tunnel boring machine",
+    "tünel açma makinesi"
+   ],
+   [
+    "Combine harvester",
+    "biçerdöver"
+   ],
+   [
+    "Dragline excavator",
+    "dragline ekskavatör"
+   ],
+   [
+    "Bucket-wheel excavator",
+    "kepçe çarklı ekskavatör"
+   ],
+   [
+    "Concrete pump",
+    "beton pompası"
+   ],
+   [
+    "Heavy equipment",
+    "ağır iş makineleri"
+   ],
+   [
+    "Compact excavator",
+    "mini ekskavatör"
+   ],
+   [
+    "Haul truck",
+    "maden kamyonu"
+   ],
+   [
+    "Skid-steer loader",
+    "mini yükleyici (bobcat)"
+   ],
+   [
+    "Hydraulic machinery",
+    "hidrolik makineler"
+   ],
+   [
+    "Continuous track",
+    "palet (tırtıl)"
+   ],
+   [
+    "Plough",
+    "pulluk"
+   ],
+   [
+    "Seed drill",
+    "ekim makinesi"
+   ],
+   [
+    "Baler",
+    "balya makinesi"
+   ]
+  ],
+  "kamyon-otobus": [
+   [
+    "Garbage truck",
+    "çöp kamyonu"
+   ],
+   [
+    "Tank truck",
+    "tanker"
+   ],
+   [
+    "Flatbed truck",
+    "açık kasa kamyon"
+   ],
+   [
+    "Box truck",
+    "kapalı kasa kamyon"
+   ],
+   [
+    "Refrigerator truck",
+    "frigorifik kamyon"
+   ],
+   [
+    "School bus",
+    "okul servisi"
+   ],
+   [
+    "Double-decker bus",
+    "çift katlı otobüs"
+   ],
+   [
+    "Articulated bus",
+    "körüklü otobüs"
+   ],
+   [
+    "Trolleybus",
+    "troleybüs"
+   ],
+   [
+    "Minibus",
+    "minibüs"
+   ],
+   [
+    "Coach (bus)",
+    "şehirlerarası otobüs"
+   ],
+   [
+    "Tachograph",
+    "takograf"
+   ],
+   [
+    "Fifth-wheel coupling",
+    "eyer (tır bağlantı noktası)"
+   ],
+   [
+    "Engine braking",
+    "motor freni"
+   ],
+   [
+    "Air brake (road vehicle)",
+    "hava frenli sistem"
+   ],
+   [
+    "Road train",
+    "kara treni (çoklu römork)"
+   ],
+   [
+    "Monster truck",
+    "monster truck"
+   ],
+   [
+    "Camper van",
+    "karavan (kamper)"
+   ],
+   [
+    "Food truck",
+    "yemek aracı (food truck)"
+   ],
+   [
+    "Ice cream van",
+    "dondurma aracı"
+   ],
+   [
+    "Intermodal container",
+    "konteyner"
+   ],
+   [
+    "Trailer (vehicle)",
+    "römork"
+   ],
+   [
+    "Bus rapid transit",
+    "metrobüs sistemi"
+   ],
+   [
+    "Truck driver",
+    "tır şoförü"
+   ],
+   [
+    "Armored car (valuables)",
+    "zırhlı para aracı"
+   ]
+  ],
+  "motosiklet": [
+   [
+    "Harley-Davidson",
+    "Harley-Davidson"
+   ],
+   [
+    "Honda Super Cub",
+    "Honda Super Cub"
+   ],
+   [
+    "Vespa",
+    "Vespa"
+   ],
+   [
+    "Ducati",
+    "Ducati"
+   ],
+   [
+    "Royal Enfield",
+    "Royal Enfield"
+   ],
+   [
+    "Sidecar",
+    "sepetli motosiklet (sidecar)"
+   ],
+   [
+    "Electric motorcycles and scooters",
+    "elektrikli motosiklet"
+   ],
+   [
+    "Motorcycle racing",
+    "motosiklet yarışları"
+   ],
+   [
+    "MotoGP",
+    "MotoGP"
+   ],
+   [
+    "Motocross",
+    "motokros"
+   ],
+   [
+    "Enduro",
+    "enduro"
+   ],
+   [
+    "Shaft drive",
+    "kardanlı çekiş"
+   ],
+   [
+    "Bobber (motorcycle)",
+    "bobber"
+   ],
+   [
+    "Scrambler (motorcycle)",
+    "scrambler"
+   ],
+   [
+    "Swingarm",
+    "salıncak (arka kol)"
+   ],
+   [
+    "Kickstand",
+    "yan ayak"
+   ],
+   [
+    "Bicycle and motorcycle dynamics",
+    "motosiklet denge dinamiği"
+   ],
+   [
+    "Motorcycle fairing",
+    "motosiklet kaporta (fairing)"
+   ],
+   [
+    "Motorcycle personal protective equipment",
+    "motosiklet koruyucu ekipmanları"
+   ],
+   [
+    "Land speed record",
+    "kara hız rekoru"
+   ],
+   [
+    "Motorcycle frame",
+    "motosiklet şasisi"
+   ],
+   [
+    "Rotary engine",
+    "döner motor"
+   ],
+   [
+    "Honda Gold Wing",
+    "Honda Gold Wing"
+   ],
+   [
+    "BMW Motorrad",
+    "BMW Motorrad"
+   ],
+   [
+    "Yamaha YZF-R1",
+    "Yamaha R1"
+   ]
+  ],
+  "motor": [
+   [
+    "Poppet valve",
+    "supap"
+   ],
+   [
+    "Variable valve timing",
+    "değişken supap zamanlaması"
+   ],
+   [
+    "Fuel pump",
+    "yakıt pompası"
+   ],
+   [
+    "Water pump",
+    "su pompası"
+   ],
+   [
+    "Air filter",
+    "hava filtresi"
+   ],
+   [
+    "Oil filter",
+    "yağ filtresi"
+   ],
+   [
+    "Engine knocking",
+    "motor vuruntusu"
+   ],
+   [
+    "Compression ratio",
+    "sıkıştırma oranı"
+   ],
+   [
+    "Engine displacement",
+    "motor hacmi (silindir hacmi)"
+   ],
+   [
+    "Horsepower",
+    "beygir gücü"
+   ],
+   [
+    "Torque",
+    "tork"
+   ],
+   [
+    "Flywheel",
+    "volan"
+   ],
+   [
+    "Alternator",
+    "alternatör"
+   ],
+   [
+    "Starter (engine)",
+    "marş motoru"
+   ],
+   [
+    "Ignition system",
+    "ateşleme sistemi"
+   ],
+   [
+    "Ignition coil",
+    "bobin"
+   ],
+   [
+    "Engine control unit",
+    "motor beyni (ECU)"
+   ],
+   [
+    "Throttle",
+    "gaz kelebeği"
+   ],
+   [
+    "Intake manifold",
+    "emme manifoldu"
+   ],
+   [
+    "Exhaust manifold",
+    "egzoz manifoldu"
+   ],
+   [
+    "Lambda sensor",
+    "oksijen sensörü (lambda)"
+   ],
+   [
+    "Engine tuning",
+    "motor ayarı (chip tuning)"
+   ],
+   [
+    "Cylinder deactivation",
+    "silindir devre dışı bırakma"
+   ],
+   [
+    "Wastegate",
+    "wastegate (turbo valfi)"
+   ],
+   [
+    "Crankcase",
+    "karter"
+   ],
+   [
+    "Piston ring",
+    "piston segmanı"
+   ],
+   [
+    "Engine block",
+    "motor bloğu"
+   ],
+   [
+    "Coolant",
+    "soğutma sıvısı"
+   ],
+   [
+    "Valve train",
+    "supap mekanizması"
+   ],
+   [
+    "Hydraulic tappet",
+    "hidrolik külbütör"
+   ],
+   [
+    "Gasoline direct injection",
+    "benzinli direkt püskürtme"
+   ],
+   [
+    "Common rail",
+    "common rail (dizel enjeksiyon)"
+   ],
+   [
+    "Glow plug",
+    "kızdırma bujisi"
+   ],
+   [
+    "Engine balance",
+    "motor dengesi"
+   ],
+   [
+    "Firing order",
+    "ateşleme sırası"
+   ],
+   [
+    "Crossplane",
+    "cross-plane krank mili"
+   ],
+   [
+    "Compression ignition",
+    "sıkıştırmalı ateşleme"
+   ]
+  ],
+  "aktarma": [
+   [
+    "Transaxle",
+    "transaks (şanzıman+aks)"
+   ],
+   [
+    "Limited-slip differential",
+    "kendinden kilitli diferansiyel"
+   ],
+   [
+    "Differential (mechanical device)",
+    "diferansiyel"
+   ],
+   [
+    "Drive shaft",
+    "kardan mili"
+   ],
+   [
+    "Constant-velocity joint",
+    "homokinetik mafsal (aks başı)"
+   ],
+   [
+    "Universal joint",
+    "kardan mafsalı"
+   ],
+   [
+    "Four-wheel drive",
+    "dört çeker (4x4)"
+   ],
+   [
+    "All-wheel drive",
+    "dört tekerden çekiş (AWD)"
+   ],
+   [
+    "Front-wheel drive",
+    "önden çekiş"
+   ],
+   [
+    "Rear-wheel drive",
+    "arkadan itiş"
+   ],
+   [
+    "Continuously variable transmission",
+    "CVT şanzıman"
+   ],
+   [
+    "Dual-clutch transmission",
+    "çift kavramalı şanzıman (DSG)"
+   ],
+   [
+    "Automated manual transmission",
+    "yarı otomatik şanzıman"
+   ],
+   [
+    "Gear ratio",
+    "dişli oranı"
+   ],
+   [
+    "Overdrive (mechanics)",
+    "overdrive vites"
+   ],
+   [
+    "Transfer case",
+    "transfer kutusu"
+   ],
+   [
+    "Torque converter",
+    "tork konvertörü"
+   ],
+   [
+    "Synchromesh",
+    "senkromeç"
+   ],
+   [
+    "Clutch",
+    "debriyaj"
+   ],
+   [
+    "Dual-mass flywheel",
+    "çift kütleli volan"
+   ],
+   [
+    "Hydraulic clutch",
+    "hidrolik debriyaj"
+   ],
+   [
+    "Differential lock",
+    "diferansiyel kilidi"
+   ],
+   [
+    "Axle",
+    "aks"
+   ],
+   [
+    "Final drive",
+    "son tahrik (differansiyel dişlisi)"
+   ],
+   [
+    "Hypoid gear",
+    "hipoid dişli"
+   ],
+   [
+    "Planetary gear",
+    "planet dişli"
+   ]
+  ],
+  "fren-suspansiyon": [
+   [
+    "Anti-lock braking system",
+    "ABS"
+   ],
+   [
+    "Electronic brakeforce distribution",
+    "EBD"
+   ],
+   [
+    "Brake fluid",
+    "fren hidroliği"
+   ],
+   [
+    "Brake pad",
+    "fren balatası"
+   ],
+   [
+    "Drum brake",
+    "kampanalı fren"
+   ],
+   [
+    "Disc brake",
+    "diskli fren"
+   ],
+   [
+    "Shock absorber",
+    "amortisör"
+   ],
+   [
+    "MacPherson strut",
+    "MacPherson süspansiyon"
+   ],
+   [
+    "Leaf spring",
+    "yaprak yay"
+   ],
+   [
+    "Coil spring",
+    "helezon yay"
+   ],
+   [
+    "Anti-roll bar",
+    "stabilizer bar"
+   ],
+   [
+    "Power steering",
+    "hidrolik direksiyon"
+   ],
+   [
+    "Rack and pinion",
+    "dişli kremayer direksiyon"
+   ],
+   [
+    "Steering wheel",
+    "direksiyon simidi"
+   ],
+   [
+    "Tire",
+    "lastik"
+   ],
+   [
+    "Tire-pressure monitoring system",
+    "lastik basınç sensörü (TPMS)"
+   ],
+   [
+    "Run-flat tire",
+    "run-flat lastik"
+   ],
+   [
+    "Air suspension",
+    "hava süspansiyonu"
+   ],
+   [
+    "Active suspension",
+    "aktif süspansiyon"
+   ],
+   [
+    "Double wishbone suspension",
+    "çift salıncaklı süspansiyon"
+   ],
+   [
+    "Multi-link suspension",
+    "çok bağlantılı süspansiyon"
+   ],
+   [
+    "Camber angle",
+    "kamber açısı"
+   ],
+   [
+    "Caster angle",
+    "kaster açısı"
+   ],
+   [
+    "Aquaplaning",
+    "hidroplaning (suda kayma)"
+   ],
+   [
+    "Parking brake",
+    "el freni"
+   ],
+   [
+    "Regenerative brake",
+    "rejeneratif fren"
+   ],
+   [
+    "Brake lining",
+    "fren balatası malzemesi"
+   ],
+   [
+    "Master cylinder",
+    "fren ana merkezi"
+   ],
+   [
+    "Hydraulic brake",
+    "hidrolik fren"
+   ],
+   [
+    "Winter tyre",
+    "kış lastiği"
+   ],
+   [
+    "Tire code",
+    "lastik ölçü kodu"
+   ],
+   [
+    "Torsion bar suspension",
+    "torsiyon çubuğu süspansiyonu"
+   ]
+  ],
+  "elektrik-guvenlik": [
+   [
+    "Automotive battery",
+    "akü"
+   ],
+   [
+    "Lead–acid battery",
+    "kurşun-asit akü"
+   ],
+   [
+    "Airbag",
+    "hava yastığı"
+   ],
+   [
+    "Seat belt",
+    "emniyet kemeri"
+   ],
+   [
+    "Crumple zone",
+    "çarpışma bölgesi"
+   ],
+   [
+    "Electronic stability control",
+    "ESP (elektronik denge kontrolü)"
+   ],
+   [
+    "Traction control system",
+    "çekiş kontrol sistemi"
+   ],
+   [
+    "Cruise control",
+    "hız sabitleyici"
+   ],
+   [
+    "Adaptive cruise control",
+    "adaptif hız sabitleyici"
+   ],
+   [
+    "Lane departure warning system",
+    "şerit takip sistemi"
+   ],
+   [
+    "Headlamp",
+    "far"
+   ],
+   [
+    "Turn signal",
+    "sinyal"
+   ],
+   [
+    "Windscreen wiper",
+    "silecek"
+   ],
+   [
+    "Windshield",
+    "ön cam"
+   ],
+   [
+    "Rear-view mirror",
+    "dikiz aynası"
+   ],
+   [
+    "Fuse (electrical)",
+    "sigorta"
+   ],
+   [
+    "On-board diagnostics",
+    "OBD (arıza teşhis sistemi)"
+   ],
+   [
+    "Immobiliser",
+    "immobilizer (çalıştırma engelleme)"
+   ],
+   [
+    "Remote keyless system",
+    "uzaktan kumandalı anahtar"
+   ],
+   [
+    "Car alarm",
+    "araç alarmı"
+   ],
+   [
+    "Daytime running lamp",
+    "gündüz farı (DRL)"
+   ],
+   [
+    "Automotive lighting",
+    "araç aydınlatması"
+   ],
+   [
+    "Head-up display",
+    "head-up display (HUD)"
+   ],
+   [
+    "Automobile air conditioning",
+    "araç kliması"
+   ],
+   [
+    "Backup camera",
+    "geri görüş kamerası"
+   ],
+   [
+    "Blind spot monitor",
+    "kör nokta uyarısı"
+   ],
+   [
+    "Collision avoidance system",
+    "çarpışma önleme sistemi"
+   ],
+   [
+    "Advanced emergency braking system",
+    "otomatik acil fren"
+   ],
+   [
+    "Parking sensor",
+    "park sensörü"
+   ],
+   [
+    "Child safety seat",
+    "çocuk koltuğu"
+   ],
+   [
+    "Roll cage",
+    "roll-bar (güvenlik kafesi)"
+   ],
+   [
+    "Xenon",
+    "xenon far"
+   ],
+   [
+    "LED lamp",
+    "LED far"
+   ],
+   [
+    "Brake light",
+    "stop lambası"
+   ],
+   [
+    "Horn (acoustic)",
+    "korna"
+   ],
+   [
+    "Spark plug",
+    "buji"
+   ]
+  ],
+  "elektrikli": [
+   [
+    "Electric car",
+    "elektrikli otomobil"
+   ],
+   [
+    "Hybrid electric vehicle",
+    "hibrit araç"
+   ],
+   [
+    "Plug-in hybrid",
+    "şarjlı hibrit (plug-in)"
+   ],
+   [
+    "Lithium-ion battery",
+    "lityum-iyon batarya"
+   ],
+   [
+    "Electric vehicle battery",
+    "elektrikli araç bataryası"
+   ],
+   [
+    "Charging station",
+    "şarj istasyonu"
+   ],
+   [
+    "Fuel cell vehicle",
+    "yakıt hücreli araç"
+   ],
+   [
+    "Hydrogen vehicle",
+    "hidrojenli araç"
+   ],
+   [
+    "Electric motor",
+    "elektrik motoru"
+   ],
+   [
+    "Induction motor",
+    "asenkron motor"
+   ],
+   [
+    "Brushless DC electric motor",
+    "fırçasız motor"
+   ],
+   [
+    "Battery electric vehicle",
+    "tam elektrikli araç"
+   ],
+   [
+    "Vehicle-to-grid",
+    "araçtan şebekeye enerji (V2G)"
+   ],
+   [
+    "Solar car",
+    "güneş enerjili araç"
+   ],
+   [
+    "Range anxiety",
+    "menzil kaygısı"
+   ],
+   [
+    "Tesla Model S",
+    "Tesla Model S"
+   ],
+   [
+    "Nissan Leaf",
+    "Nissan Leaf"
+   ],
+   [
+    "Toyota Prius",
+    "Toyota Prius"
+   ],
+   [
+    "Regenerative braking",
+    "rejeneratif frenleme"
+   ],
+   [
+    "Battery management system",
+    "batarya yönetim sistemi"
+   ],
+   [
+    "Inverter (electrical)",
+    "invertör"
+   ],
+   [
+    "Wireless power transfer",
+    "kablosuz şarj"
+   ],
+   [
+    "Electric vehicle charging",
+    "elektrikli araç şarjı"
+   ]
+  ],
+  "otomobil-turleri": [
+   [
+    "Pony car",
+    "pony car"
+   ],
+   [
+    "Van",
+    "van"
+   ],
+   [
+    "Volkswagen Type 2",
+    "Volkswagen Transporter (Minibüs)"
+   ],
+   [
+    "Jeep",
+    "Jeep"
+   ],
+   [
+    "Land Rover Defender",
+    "Land Rover Defender"
+   ],
+   [
+    "Mini (marque)",
+    "Mini"
+   ],
+   [
+    "Porsche 911",
+    "Porsche 911"
+   ],
+   [
+    "Ferrari",
+    "Ferrari"
+   ],
+   [
+    "Lamborghini",
+    "Lamborghini"
+   ],
+   [
+    "Formula One car",
+    "Formula 1 aracı"
+   ],
+   [
+    "Rally car",
+    "ralli aracı"
+   ],
+   [
+    "Drifting (motorsport)",
+    "drift"
+   ],
+   [
+    "Go-kart",
+    "go-kart"
+   ],
+   [
+    "Lowrider",
+    "lowrider"
+   ],
+   [
+    "Hot rod",
+    "hot rod"
+   ],
+   [
+    "Hearse",
+    "cenaze aracı"
+   ],
+   [
+    "Golf cart",
+    "golf arabası"
+   ],
+   [
+    "Auto rickshaw",
+    "tuk-tuk"
+   ],
+   [
+    "All-terrain vehicle",
+    "ATV (dört tekerlekli arazi aracı)"
+   ],
+   [
+    "Snowmobile",
+    "kar motosikleti"
+   ],
+   [
+    "Citroën 2CV",
+    "Citroën 2CV"
+   ],
+   [
+    "Mercedes-Benz S-Class",
+    "Mercedes S-Serisi"
+   ],
+   [
+    "Toyota Corolla",
+    "Toyota Corolla"
+   ],
+   [
+    "Honda Civic",
+    "Honda Civic"
+   ],
+   [
+    "Ford Mustang",
+    "Ford Mustang"
+   ],
+   [
+    "Chevrolet Corvette",
+    "Chevrolet Corvette"
+   ],
+   [
+    "Bugatti Veyron",
+    "Bugatti Veyron"
+   ],
+   [
+    "Rolls-Royce Motor Cars",
+    "Rolls-Royce"
+   ],
+   [
+    "Tofaş Şahin",
+    "Tofaş Şahin"
+   ],
+   [
+    "Anadol",
+    "Anadol"
+   ],
+   [
+    "Togg",
+    "Togg"
+   ],
+   [
+    "Fiat 124",
+    "Fiat 124 (Murat 124)"
+   ],
+   [
+    "Station wagon",
+    "steyşın"
+   ],
+   [
+    "Armoured car (military)",
+    "zırhlı araç"
+   ],
+   [
+    "Bumper car",
+    "çarpışan araba"
+   ]
+  ]
+ },
+ "scenarios": [
+  {
+   "q": "Araç giderken kontağı kapatırsan ne olur?",
+   "wiki": [
+    "Power steering"
+   ]
+  },
+  {
+   "q": "Lastik havası çok düşükken araç kullanırsan ne olur?",
+   "wiki": [
+    "Tire",
+    "Tire-pressure monitoring system"
+   ]
+  },
+  {
+   "q": "Dizel araca AdBlue koymazsan ne olur?",
+   "wiki": [
+    "Diesel exhaust fluid",
+    "Selective catalytic reduction"
+   ]
+  },
+  {
+   "q": "Hava yastığı neden bazı çarpışmalarda açılmaz?",
+   "wiki": [
+    "Airbag"
+   ]
+  },
+  {
+   "q": "Turbolu motoru soğukken zorlarsan ne olur?",
+   "wiki": [
+    "Turbocharger"
+   ]
+  },
+  {
+   "q": "ABS fren yaparken fren pedalı neden titrer?",
+   "wiki": [
+    "Anti-lock braking system"
+   ]
+  },
+  {
+   "q": "Araç yağmurda neden suyun üstünde kayar? (hidroplaning)",
+   "wiki": [
+    "Aquaplaning",
+    "Tire"
+   ]
+  },
+  {
+   "q": "Aküyü ters bağlarsan ne olur?",
+   "wiki": [
+    "Automotive battery",
+    "Fuse (electrical)"
+   ]
+  },
+  {
+   "q": "Fren hidroliği biterse ne olur?",
+   "wiki": [
+    "Brake fluid",
+    "Hydraulic brake"
+   ]
+  },
+  {
+   "q": "Motor sıcakken radyatör kapağını açarsan ne olur?",
+   "wiki": [
+    "Radiator (engine cooling)",
+    "Coolant"
+   ]
+  },
+  {
+   "q": "Soğuk havada araç neden zor çalışır?",
+   "wiki": [
+    "Motor oil",
+    "Automotive battery"
+   ]
+  },
+  {
+   "q": "Direksiyon hidroliği biterse araç nasıl kontrol edilir?",
+   "wiki": [
+    "Power steering"
+   ]
+  },
+  {
+   "q": "Amortisörler bozulursa araç yolda nasıl davranır?",
+   "wiki": [
+    "Shock absorber"
+   ]
+  },
+  {
+   "q": "Egzoz borusunu tıkarsan motora ne olur?",
+   "wiki": [
+    "Exhaust system",
+    "Internal combustion engine"
+   ]
+  },
+  {
+   "q": "Silindir kapak contası yanarsa ne olur?",
+   "wiki": [
+    "Head gasket",
+    "Coolant"
+   ]
+  },
+  {
+   "q": "Araç neden bazen yokuşta geri kayar ve el freni bunu nasıl önler?",
+   "wiki": [
+    "Parking brake",
+    "Hill-start assist"
+   ]
+  },
+  {
+   "q": "Motosiklette ön freni tek başına sıkarsan ne olur?",
+   "wiki": [
+    "Disc brake",
+    "Motorcycle"
+   ]
+  },
+  {
+   "q": "Motosiklet iki tekerlekte neden devrilmeden dengede kalır?",
+   "wiki": [
+    "Bicycle and motorcycle dynamics",
+    "Countersteering"
+   ]
+  },
+  {
+   "q": "Motosiklette wheelie nasıl olur ve neden tehlikelidir?",
+   "wiki": [
+    "Wheelie"
+   ]
+  },
+  {
+   "q": "Motosiklet zinciri yağsız kalırsa ne olur?",
+   "wiki": [
+    "Chain drive",
+    "Motorcycle"
+   ]
+  },
+  {
+   "q": "Motosiklet kaskı olmadan çarpışmada ne olur?",
+   "wiki": [
+    "Motorcycle helmet"
+   ]
+  },
+  {
+   "q": "Motosiklet motoru neden araba motorundan daha yüksek devirlere çıkar?",
+   "wiki": [
+    "Motorcycle engine",
+    "Internal combustion engine"
+   ]
+  },
+  {
+   "q": "Motosiklet yan ayak açıkken neden çalışmaz?",
+   "wiki": [
+    "Kickstand",
+    "Motorcycle"
+   ]
+  },
+  {
+   "q": "Motosiklette ABS ne işe yarar?",
+   "wiki": [
+    "Anti-lock braking system",
+    "Motorcycle"
+   ]
+  },
+  {
+   "q": "Tren frenine bastığında neden bu kadar uzun mesafede durur?",
+   "wiki": [
+    "Railway brake",
+    "Train"
+   ]
+  },
+  {
+   "q": "Tren virajlarda devrilmeden nasıl döner?",
+   "wiki": [
+    "Tilting train",
+    "Bogie"
+   ]
+  },
+  {
+   "q": "Tren raylarının altında neden taş (balast) vardır?",
+   "wiki": [
+    "Track ballast",
+    "Railroad tie"
+   ]
+  },
+  {
+   "q": "Elektrikli trenler enerjiyi nasıl alır?",
+   "wiki": [
+    "Pantograph (rail)",
+    "Overhead line"
+   ]
+  },
+  {
+   "q": "Hızlı tren nasıl bu kadar hızlı gider?",
+   "wiki": [
+    "High-speed rail",
+    "Shinkansen"
+   ]
+  },
+  {
+   "q": "Maglev tren raya değmeden nasıl ilerler?",
+   "wiki": [
+    "Maglev"
+   ]
+  },
+  {
+   "q": "Tren raylarda neden makasla yön değiştirir?",
+   "wiki": [
+    "Railroad switch"
+   ]
+  },
+  {
+   "q": "Uçak kalkış için neden belli bir hıza ulaşmak zorundadır?",
+   "wiki": [
+    "Takeoff",
+    "Lift (force)"
+   ]
+  },
+  {
+   "q": "Uçakta kabin basıncı neden önemlidir?",
+   "wiki": [
+    "Cabin pressurization"
+   ]
+  },
+  {
+   "q": "Uçağın iniş takımı nasıl çalışır?",
+   "wiki": [
+    "Landing gear"
+   ]
+  },
+  {
+   "q": "Helikopter pervanesi helikopteri havada nasıl tutar?",
+   "wiki": [
+    "Helicopter rotor",
+    "Helicopter"
+   ]
+  },
+  {
+   "q": "Uçaklar neden bu kadar yüksekte uçar?",
+   "wiki": [
+    "Cruise (aeronautics)",
+    "Airliner"
+   ]
+  },
+  {
+   "q": "Uçak motoru çalışmayı bırakırsa uçak nasıl iner?",
+   "wiki": [
+    "Glider (aircraft)",
+    "Airliner"
+   ]
+  },
+  {
+   "q": "Uçak yıldırım çarparsa ne olur?",
+   "wiki": [
+    "Lightning",
+    "Airliner"
+   ]
+  },
+  {
+   "q": "Uçaktaki kara kutu ne kaydeder ve neden dayanıklıdır?",
+   "wiki": [
+    "Flight recorder"
+   ]
+  },
+  {
+   "q": "Dev gemiler neden batmaz?",
+   "wiki": [
+    "Buoyancy",
+    "Ship"
+   ]
+  },
+  {
+   "q": "Gemi çapası gemiyi suyun içinde nasıl yerinde tutar?",
+   "wiki": [
+    "Anchor"
+   ]
+  },
+  {
+   "q": "Buzkıran gemi buzu nasıl kırar?",
+   "wiki": [
+    "Icebreaker"
+   ]
+  },
+  {
+   "q": "Denizaltı derinlerde su basıncına nasıl dayanır?",
+   "wiki": [
+    "Submarine",
+    "Pressure hull"
+   ]
+  },
+  {
+   "q": "Gemiler dalgalarda neden devrilmez?",
+   "wiki": [
+    "Ship stability",
+    "Keel"
+   ]
+  },
+  {
+   "q": "Uçak gemisinde uçaklar kısacık pistten nasıl kalkar?",
+   "wiki": [
+    "Aircraft carrier",
+    "Catapult"
+   ]
+  },
+  {
+   "q": "Titanic gemisi neden battı?",
+   "wiki": [
+    "RMS Titanic"
+   ]
+  },
+  {
+   "q": "Süveyş Kanalı'ndan geçen gemiler neden bu kadar önemlidir?",
+   "wiki": [
+    "Suez Canal",
+    "Container ship"
+   ]
+  },
+  {
+   "q": "Vinç kendinden ağır yükü devrilmeden nasıl kaldırır?",
+   "wiki": [
+    "Crane (machine)",
+    "Counterweight"
+   ]
+  },
+  {
+   "q": "Dozer paletleri çamurda neden batmaz?",
+   "wiki": [
+    "Bulldozer",
+    "Continuous track"
+   ]
+  },
+  {
+   "q": "Traktörün arka tekerlekleri neden bu kadar büyüktür?",
+   "wiki": [
+    "Tractor"
+   ]
+  },
+  {
+   "q": "Tünel açma makinesi dağı nasıl deler?",
+   "wiki": [
+    "Tunnel boring machine"
+   ]
+  },
+  {
+   "q": "Forklift neden arkadan dönerek ilerler ve neden devrilebilir?",
+   "wiki": [
+    "Forklift"
+   ]
+  },
+  {
+   "q": "Biçerdöver tarlada nasıl çalışır?",
+   "wiki": [
+    "Combine harvester"
+   ]
+  },
+  {
+   "q": "Beton mikseri betonu neden sürekli döndürür?",
+   "wiki": [
+    "Concrete mixer"
+   ]
+  },
+  {
+   "q": "Tırların fren sistemi neden otomobillerden farklıdır?",
+   "wiki": [
+    "Air brake (road vehicle)",
+    "Semi-trailer truck"
+   ]
+  },
+  {
+   "q": "Çift katlı otobüs virajlarda neden devrilmez?",
+   "wiki": [
+    "Double-decker bus"
+   ]
+  },
+  {
+   "q": "Çöp kamyonu çöpü nasıl sıkıştırır?",
+   "wiki": [
+    "Garbage truck"
+   ]
+  },
+  {
+   "q": "İtfaiye aracının merdiveni nasıl yükselir?",
+   "wiki": [
+    "Fire engine",
+    "Aerial work platform"
+   ]
+  },
+  {
+   "q": "Tır dorsesi yolda neden bazen katlanır? (jackknife)",
+   "wiki": [
+    "Semi-trailer truck"
+   ]
+  },
+  {
+   "q": "Kamyonlardaki takograf ne işe yarar?",
+   "wiki": [
+    "Tachograph"
+   ]
+  },
+  {
+   "q": "Otobüsler neden bu kadar uzun fren mesafesine sahiptir?",
+   "wiki": [
+    "Bus",
+    "Air brake (road vehicle)"
+   ]
+  }
+ ]
+}
