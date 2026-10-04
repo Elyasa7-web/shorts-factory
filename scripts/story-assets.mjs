@@ -3,7 +3,8 @@
 // and data/story-props.json. A scene without a visual falls back to a moving gradient;
 // this step never fails the build.
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
-import { findVisual, pexelsVideos, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
+import { findVisual, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
+import { trimBlackLead } from "./clip-utils.mjs";
 
 const story = JSON.parse(readFileSync("data/story.json", "utf8"));
 const KEY = process.env.PEXELS_API_KEY;
@@ -18,6 +19,9 @@ async function download(url, file, min = 0) {
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.length < min) throw new Error("file too small");
   writeFileSync(file, buf);
+  if (/\.(mp4|webm)$/i.test(file)) {
+    try { const cut = trimBlackLead(file); if (cut) console.log(`  trimmed ${cut.toFixed(1)}s of black from the start of ${file}`); } catch { /* keep the clip as downloaded */ }
+  }
 }
 
 const s = story.script;

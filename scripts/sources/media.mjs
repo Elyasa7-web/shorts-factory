@@ -165,7 +165,7 @@ export async function openverseImages(query) {
 // ---- Pixabay (optional: set PIXABAY_API_KEY; license needs no attribution) ----
 export async function pixabayVideos(query, key) {
   if (!key) return [];
-  const j = await getJson(`https://pixabay.com/api/videos/?${new URLSearchParams({ key, q: query, per_page: "15", safesearch: "true" })}`);
+  const j = await getJson(`https://pixabay.com/api/videos/?${new URLSearchParams({ key, q: query, video_type: "film", per_page: "15", safesearch: "true" })}`);   // film = real footage, never animation
   return (j.hits ?? []).filter((h) => h.duration >= 4).map((h) => {
     const f = h.videos?.medium?.url ? h.videos.medium : h.videos?.small;
     return f?.url ? {
@@ -289,7 +289,8 @@ export const BLOCK_WORDS = new Set((
   "president king queen minister politician senator trump biden obama putin celebrity actor actress singer model fashion bride wedding portrait " +
   "dinosaur egg eggs nest fossil bag handbag purse dress football soccer baseball basketball wrestling boxing concert band guitar " +
   "nude naked sexy bikini lingerie cat dog horse cow pig sheep " +
-  "dollar money cash coin finance business clipart cartoon vector illustration icon logo emoji sticker drawing sketch"
+  "dollar money cash coin finance business clipart cartoon vector illustration icon logo emoji sticker drawing sketch " +
+  "animation animated animations cgi render rendering 3d infographic isometric"
 ).split(" "));
 
 export const CATEGORY_CONTEXT = {
