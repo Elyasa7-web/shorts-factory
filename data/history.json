@@ -190,5 +190,9 @@
  {
   "key": "garage|Aileron|purpose",
   "at": "2026-10-11T07:30:02.742Z"
+ },
+ {
+  "key": "garage|Loader (equipment)|failure",
+  "at": "2026-10-11T07:37:57.976Z"
  }
 ]
