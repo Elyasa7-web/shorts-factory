@@ -234,5 +234,9 @@
  {
   "key": "garage|Flatbed truck|failure",
   "at": "2026-10-15T03:18:27.801Z"
+ },
+ {
+  "key": "garage|q|Kilometre saati gerçek hızı neden her zaman doğru göstermez?",
+  "at": "2026-10-15T04:16:01.337Z"
  }
 ]
