@@ -230,5 +230,9 @@
  {
   "key": "garage|BMW Motorrad|purpose",
   "at": "2026-10-14T20:14:43.383Z"
+ },
+ {
+  "key": "garage|Flatbed truck|failure",
+  "at": "2026-10-15T03:18:27.801Z"
  }
 ]
