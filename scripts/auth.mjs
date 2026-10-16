@@ -19,8 +19,8 @@ const authUrl =
     client_id,
     redirect_uri: redirect,
     response_type: "code",
-    // "youtube" = upload + playlists + edit videos + read the channel (youtube.upload alone cannot touch playlists)
-    scope: "https://www.googleapis.com/auth/youtube",
+    // "youtube" = upload + playlists + edit videos + read the channel; "yt-analytics.readonly" = retention / watch-time reports
+    scope: "https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/yt-analytics.readonly",
     access_type: "offline",
     prompt: "consent",
     login_hint: process.env.LOGIN_HINT ?? "",

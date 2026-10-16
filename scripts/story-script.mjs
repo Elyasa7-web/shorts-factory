@@ -49,13 +49,13 @@ OUTPUT LANGUAGE: Turkish, natural SPOKEN Turkish (the text is read aloud by a vo
 Rules, all mandatory:
 1. Facts come ONLY from the SOURCE TEXT. You may add simple, logical consequences that follow directly from the mechanics the source describes (for example: if the source says a gear has no synchronizer, you may explain that engaging it while moving grinds the gear teeth). Never invent numbers, percentages, names, dates, records, prices, model names or causes that the source does not support. If the source does not say it, leave it out.
 2. Never criticise or praise a brand. Brand names only when the source itself uses them for a fact.
-3. HOOK (the first sentence, at most 12 words): a concrete question, scenario or surprising claim about the topic that makes the viewer need the answer. Never promise something the script does not deliver.
-4. Then EXACTLY 5 beats of 12-22 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
+3. HOOK (the first sentence, at most 10 words): open with a concrete everyday SCENARIO or question with stakes that the viewer feels in their own car or bike ("Giderken vitesi boşa alırsan ne olur?", "Çift katlı otobüs virajda neden devrilmez?", "Hava yastığı ne kadar hızlı şişer?"). Never open with a definition ("X nedir?", "X bir parçadır"). Never promise something the script does not deliver.
+4. Then EXACTLY 5 beats. BEAT 1 is the most important one: it must be SHORT (8-14 words) and must IMMEDIATELY deliver the most surprising concrete fact or the first half of the answer to the hook, because most viewers decide to leave in the first 5-10 seconds. No definitions, no background, no "X, ... olan bir parçadır" in beat 1. The other four beats are 12-22 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
 5. PAYOFF (at most 22 words): the useful takeaway, what a driver or rider should know.
 6. CTA (at most 14 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
 7. Spoken numbers and units: plain numbers may be digits, but write units in words ("kilometre", "derece", "bar", "devir") and never use abbreviations such as km/s, °C, rpm, hp.
 8. For the hook, every beat and the payoff give "visual": 3-5 ENGLISH words for a stock-footage search that returns REAL FILMED footage of that exact moment. ALWAYS name the vehicle or part in it ("car steering wheel turning", "mechanic checking car engine", "motorcycle chain close up", "truck driving highway", "car brake disc spinning"). Never abstract ideas, diagrams, money, cartoons or people's names. Never a brand. Every scene must have a DIFFERENT visual, and each visual must show EXACTLY what THAT scene's sentence is about (the part, the action or the situation named in the sentence, not just "car"): a sentence about the handbrake lever gets "car handbrake lever pulled", a sentence about a worn clutch disc gets "worn clutch disc close up", a sentence about the car rolling downhill gets "car rolling downhill street". Prefer common, easy-to-find footage (cars driving, wheels, engines, mechanics, dashboards, roads) over rare close-ups of exotic parts.
-9. "title": Turkish, at most 70 characters, curiosity-driven but truthful, contains the topic, no emoji.
+9. "title": Turkish, at most 60 characters, no emoji, truthful. Use the curiosity patterns that performed best on this channel: "... Neden ...?", "... Ne Olur?", "... Ne Kadar Hızlı/Güçlü ...?" with a CONCRETE object and a surprising consequence (for example "Çift Katlı Otobüsler Virajlarda Neden Devrilmez?", "Hava Yastığı Çarpışmada Ne Kadar Hızlı Şişer?"). NEVER use the weak patterns "... Nasıl Çalışır ve ...", "... Hakkında Bilmeniz Gereken ...", "... Nedir ve Ne İşe Yarar", "... Aslında Nedir?".
 10. "tags": 6-10 short keywords, mixing Turkish and English.
 11. Safety: never encourage dangerous driving, stunts, speeding, tampering with safety or emission systems, or risky do-it-yourself repair. When a failure can be dangerous, tell the viewer to go to a service ("servise git").`;
 
@@ -160,7 +160,7 @@ function loadHistory() {
 }
 
 // ---- what to make next -------------------------------------------------------------------------------------
-// ~40 % "what happens if...?" scenarios (the viewer's own questions), the rest parts told from a rotating angle.
+// ~55 % "what happens if...?" scenarios (they keep viewers longest: 54 % average view vs ~48 % for parts) (the viewer's own questions), the rest parts told from a rotating angle.
 export const KIND_ORDER = (process.env.KIND_ORDER || "car,train,aircraft,machine,ship,motorcycle,truck").split(",");
 export function nextTopic(history, forced) {
   const done = new Set(history.map((h) => h.key));
@@ -186,7 +186,7 @@ export function nextTopic(history, forced) {
   // 2) a "what happens if...?" question (40 %) or a part told from a fresh angle
   const scen = pool.filter((t) => t.kind === "scenario");
   const parts = pool.filter((t) => t.kind === "part");
-  return scen.length && (!parts.length || Math.random() < 0.4) ? pick(scen) : pick(parts);
+  return scen.length && (!parts.length || Math.random() < 0.55) ? pick(scen) : pick(parts);
 }
 
 async function loadSource(t) {
