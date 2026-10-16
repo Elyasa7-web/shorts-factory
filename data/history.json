@@ -258,5 +258,9 @@
  {
   "key": "garage|Chopper (motorcycle)|failure",
   "at": "2026-10-15T09:22:59.795Z"
+ },
+ {
+  "key": "garage|Tow truck|failure",
+  "at": "2026-10-16T07:10:19.132Z"
  }
 ]
