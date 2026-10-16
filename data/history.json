@@ -88,10 +88,6 @@
   "at": "2026-10-05T07:15:55.201Z"
  },
  {
-  "key": "garage|Landing gear|how",
-  "at": "2026-10-05T07:23:19.933Z"
- },
- {
   "key": "garage|Pressure hull|purpose",
   "at": "2026-10-05T07:38:18.251Z"
  },
@@ -154,38 +150,6 @@
  {
   "key": "garage|q|Hava yastığı çarpışmada saniyenin kaçta biri içinde şişer?",
   "at": "2026-10-09T07:24:26.307Z"
- },
- {
-  "key": "garage|Bogie|purpose",
-  "at": "2026-10-09T07:31:59.526Z"
- },
- {
-  "key": "garage|q|Uçakta kabin basıncı neden önemlidir?",
-  "at": "2026-10-09T07:39:16.223Z"
- },
- {
-  "key": "garage|Motor grader|purpose",
-  "at": "2026-10-10T07:19:00.346Z"
- },
- {
-  "key": "garage|q|Buzkıran gemi buzu nasıl kırar?",
-  "at": "2026-10-10T07:27:29.844Z"
- },
- {
-  "key": "garage|q|Motosiklette ön frene aniden asılırsan ne olur?",
-  "at": "2026-10-10T07:36:38.457Z"
- },
- {
-  "key": "garage|q|Tırların fren sistemi neden otomobillerden farklıdır?",
-  "at": "2026-10-10T07:49:14.609Z"
- },
- {
-  "key": "garage|q|Otomatik araçta giderken N (boş) konuma alırsan ne olur?",
-  "at": "2026-10-11T07:17:19.945Z"
- },
- {
-  "key": "garage|Railroad tie|surprise",
-  "at": "2026-10-11T07:22:57.881Z"
  },
  {
   "key": "garage|Aileron|purpose",

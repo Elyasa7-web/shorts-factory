@@ -138,7 +138,9 @@
   "key": "garage|Landing gear|how",
   "title": "Uçak İniş Takımı Nasıl Çalışır?",
   "uploadedAt": "2026-10-05T07:23:19.933Z",
-  "publishAt": "2026-10-05T18:00:00.000Z"
+  "publishAt": "2026-10-05T18:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "S69GRlpe4ps",
@@ -274,7 +276,9 @@
   "key": "garage|Bogie|purpose",
   "title": "Trenlerin Gizli Kahramani Boji Nedir ve Ne Ise Yarar",
   "uploadedAt": "2026-10-09T07:31:59.525Z",
-  "publishAt": "2026-10-10T09:00:00.000Z"
+  "publishAt": "2026-10-10T09:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "OJfxcpMjEAI",
@@ -282,7 +286,9 @@
   "key": "garage|q|Uçakta kabin basıncı neden önemlidir?",
   "title": "Uçaklardaki Kabin Basıncı Sistemi Nasıl Geliştirildi?",
   "uploadedAt": "2026-10-09T07:39:16.222Z",
-  "publishAt": "2026-10-10T12:00:00.000Z"
+  "publishAt": "2026-10-10T12:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "PmC5Qo8OQNc",
@@ -290,7 +296,9 @@
   "key": "garage|Motor grader|purpose",
   "title": "Greyder Nasıl Çalışır ve Yolları Nasıl Düzler?",
   "uploadedAt": "2026-10-10T07:19:00.346Z",
-  "publishAt": "2026-10-10T15:00:00.000Z"
+  "publishAt": "2026-10-10T15:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "CUwSuI5IUVs",
@@ -298,7 +306,9 @@
   "key": "garage|q|Buzkıran gemi buzu nasıl kırar?",
   "title": "Buzkıran Gemiler Buzu Gerçekten Nasıl Kırar?",
   "uploadedAt": "2026-10-10T07:27:29.843Z",
-  "publishAt": "2026-10-10T18:00:00.000Z"
+  "publishAt": "2026-10-10T18:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "49eCcLrHqJU",
@@ -306,7 +316,9 @@
   "key": "garage|q|Motosiklette ön frene aniden asılırsan ne olur?",
   "title": "Motosiklette Ön Frene Aniden Asılırsan Ne Olur?",
   "uploadedAt": "2026-10-10T07:36:38.457Z",
-  "publishAt": "2026-10-11T09:00:00.000Z"
+  "publishAt": "2026-10-11T09:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "KA41bF5pbaE",
@@ -314,7 +326,9 @@
   "key": "garage|q|Tırların fren sistemi neden otomobillerden farklıdır?",
   "title": "Tırların Fren Sistemi Otomobillerden Neden Farklıdır?",
   "uploadedAt": "2026-10-10T07:49:14.609Z",
-  "publishAt": "2026-10-11T12:00:00.000Z"
+  "publishAt": "2026-10-11T12:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "3BUu4ma3SRQ",
@@ -322,7 +336,9 @@
   "key": "garage|q|Otomatik araçta giderken N (boş) konuma alırsan ne olur?",
   "title": "Otomatik Araç Giderken Boşa Alınır mı?",
   "uploadedAt": "2026-10-11T07:17:19.945Z",
-  "publishAt": "2026-10-11T15:00:00.000Z"
+  "publishAt": "2026-10-11T15:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "zYFlcdMUySE",
@@ -330,7 +346,9 @@
   "key": "garage|Railroad tie|surprise",
   "title": "Rayların Altındaki Gizli Güç: Tren Traversleri Nasıl Çalışır?",
   "uploadedAt": "2026-10-11T07:22:57.880Z",
-  "publishAt": "2026-10-11T18:00:00.000Z"
+  "publishAt": "2026-10-11T18:00:00.000Z",
+  "cancelled": true,
+  "deleted": true
  },
  {
   "id": "uJrW84JWCWk",

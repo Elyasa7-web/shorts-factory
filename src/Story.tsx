@@ -20,6 +20,7 @@ export const storySchema = z.object({
   credits: z.array(z.string()).optional(),
   lang: z.string().optional(),       // "tr": captions are upper-cased with Turkish rules (i -> İ)
   ctaLabel: z.string().optional(),
+  subLabel: z.string().optional(),   // second end-card button, e.g. "ABONE OL 🔔"
   brand: z.string().optional(),
   accent: z.string().optional(),
   totalSeconds: z.number().optional(),
@@ -155,7 +156,7 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: str
   );
 };
 
-const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; brand?: string }> = ({ scene, index, total, accent, lang, ctaLabel, brand }) => {
+const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; brand?: string }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, brand }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const chunks = chunkWords(scene.words);
@@ -180,7 +181,13 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
       ) : null}
       <Captions scene={scene} accent={accent} big={scene.kind === "hook" || isPayoff} lang={lang} />
       {scene.kind === "cta" ? (
-        <div lang={lang} style={{ position: "absolute", top: 1330, width: "100%", display: "flex", justifyContent: "center" }}>
+        <div lang={lang} style={{ position: "absolute", top: 1180, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 26 }}>
+          {subLabel ? (
+            // the subscribe button pulses gently so the eye lands on it
+            <div style={{ fontFamily, fontWeight: 900, fontSize: 60, padding: "24px 56px", borderRadius: 70, background: "#ff0033", color: "#fff", border: "6px solid #fff", boxShadow: "0 10px 40px rgba(0,0,0,.55)", transform: `scale(${1 + 0.035 * Math.sin(frame / 4)})` }}>
+              {subLabel}
+            </div>
+          ) : null}
           <div style={{ fontFamily, fontWeight: 900, fontSize: 54, padding: "20px 48px", borderRadius: 60, background: accent, color: "#111" }}>
             {ctaLabel}
           </div>
@@ -196,7 +203,7 @@ const FadeIn: React.FC<{ frames: number; children: React.ReactNode }> = ({ frame
   return <AbsoluteFill style={{ opacity: interpolate(frame, [0, frames], [0, 1], { extrapolateRight: "clamp" }) }}>{children}</AbsoluteFill>;
 };
 
-export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang = "en", ctaLabel = "COMMENT YOUR ANSWER 👇", brand }) => {
+export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang = "en", ctaLabel = "COMMENT YOUR ANSWER 👇", subLabel, brand }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const lens = scenes.map((s) => Math.max(1, Math.round(s.seconds * fps)));
@@ -207,13 +214,13 @@ export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang =
     <AbsoluteFill style={{ background: "#000" }}>
       {scenes.map((sc, i) => (
         <Sequence key={i} from={starts[i]} durationInFrames={lens[i]}>
-          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} brand={brand} />
+          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} brand={brand} />
         </Sequence>
       ))}
       {/* seamless loop: the Short's last frames fade into its first frame */}
       <Sequence from={starts[last] + lens[last] - LOOP} durationInFrames={LOOP}>
         <FadeIn frames={LOOP - 3}>
-          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} brand={brand} />
+          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} brand={brand} />
         </FadeIn>
       </Sequence>
       <div style={{ position: "absolute", top: 0, left: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: accent }} />
