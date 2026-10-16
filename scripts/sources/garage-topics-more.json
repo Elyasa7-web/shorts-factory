@@ -440,10 +440,6 @@
     "kazıcı yükleyici (JCB)"
    ],
    [
-    "Loader (equipment)",
-    "yükleyici (loder)"
-   ],
-   [
     "Motor grader",
     "greyder"
    ],
@@ -466,14 +462,6 @@
    [
     "Crawler crane",
     "paletli vinç"
-   ],
-   [
-    "Telescopic handler",
-    "teleskopik yükleyici"
-   ],
-   [
-    "Aerial work platform",
-    "sepetli platform"
    ],
    [
     "Jackhammer",
@@ -504,40 +492,100 @@
     "beton pompası"
    ],
    [
-    "Heavy equipment",
-    "ağır iş makineleri"
-   ],
-   [
-    "Compact excavator",
-    "mini ekskavatör"
-   ],
-   [
     "Haul truck",
     "maden kamyonu"
-   ],
-   [
-    "Skid-steer loader",
-    "mini yükleyici (bobcat)"
-   ],
-   [
-    "Hydraulic machinery",
-    "hidrolik makineler"
    ],
    [
     "Continuous track",
     "palet (tırtıl)"
    ],
    [
-    "Plough",
-    "pulluk"
+    "Bagger 288",
+    "Bagger 288 (dünyanın en büyük kara taşıtlarından)"
    ],
    [
-    "Seed drill",
-    "ekim makinesi"
+    "Bagger 293",
+    "Bagger 293"
    ],
    [
-    "Baler",
-    "balya makinesi"
+    "BelAZ 75710",
+    "BelAZ 75710 (dev maden kamyonu)"
+   ],
+   [
+    "Caterpillar 797",
+    "Caterpillar 797 maden kamyonu"
+   ],
+   [
+    "Big Muskie",
+    "Big Muskie (dev dragline)"
+   ],
+   [
+    "Komatsu 930E",
+    "Komatsu 930E maden kamyonu"
+   ],
+   [
+    "Crawler-transporter",
+    "NASA paletli taşıyıcı (Crawler-transporter)"
+   ],
+   [
+    "Power shovel",
+    "dev kepçe (power shovel)"
+   ],
+   [
+    "Gantry crane",
+    "portal vinç"
+   ],
+   [
+    "Container crane",
+    "liman vinci (konteyner vinci)"
+   ],
+   [
+    "Caterpillar D9",
+    "Caterpillar D9 dozer"
+   ],
+   [
+    "Wrecking ball",
+    "yıkım topu"
+   ],
+   [
+    "Steam shovel",
+    "buharlı kepçe"
+   ],
+   [
+    "Steamroller",
+    "buharlı yol silindiri"
+   ],
+   [
+    "Terex Titan",
+    "Terex Titan maden kamyonu"
+   ],
+   [
+    "Dredger",
+    "dragaj makinesi"
+   ],
+   [
+    "Snowplow",
+    "kar küreme aracı"
+   ],
+   [
+    "Street sweeper",
+    "yol süpürme aracı"
+   ],
+   [
+    "Ice resurfacer",
+    "Zamboni (buz düzeltme makinesi)"
+   ],
+   [
+    "Caterpillar Inc.",
+    "Caterpillar iş makineleri"
+   ],
+   [
+    "Demolition",
+    "yıkım makineleri"
+   ],
+   [
+    "Mining",
+    "maden makineleri"
    ]
   ],
   "kamyon-otobus": [
@@ -1914,6 +1962,84 @@
    "wiki": [
     "Bus",
     "Air brake (road vehicle)"
+   ]
+  },
+  {
+   "q": "Dünyanın en büyük kara aracı hangisi ve nasıl hareket eder?",
+   "wiki": [
+    "Bagger 288",
+    "Bagger 293"
+   ]
+  },
+  {
+   "q": "Dev maden kamyonlarının tekerleği ne kadar büyük?",
+   "wiki": [
+    "BelAZ 75710",
+    "Caterpillar 797",
+    "Haul truck"
+   ]
+  },
+  {
+   "q": "Yıkım topu koca binayı nasıl yıkar?",
+   "wiki": [
+    "Wrecking ball"
+   ]
+  },
+  {
+   "q": "Kule vinç kendini nasıl yükseltir?",
+   "wiki": [
+    "Tower crane"
+   ]
+  },
+  {
+   "q": "Roketi fırlatma rampasına taşıyan dev paletli taşıyıcı nasıl çalışır?",
+   "wiki": [
+    "Crawler-transporter"
+   ]
+  },
+  {
+   "q": "Liman vinçleri dev konteynerleri nasıl taşır?",
+   "wiki": [
+    "Container crane",
+    "Gantry crane"
+   ]
+  },
+  {
+   "q": "Dev kepçeli ekskavatör bir günde ne kadar toprak kazar?",
+   "wiki": [
+    "Bucket-wheel excavator",
+    "Power shovel"
+   ]
+  },
+  {
+   "q": "Zamboni buz pistini nasıl pürüzsüz yapar?",
+   "wiki": [
+    "Ice resurfacer"
+   ]
+  },
+  {
+   "q": "Kar küreme aracı yolu karlı havada nasıl açık tutar?",
+   "wiki": [
+    "Snowplow"
+   ]
+  },
+  {
+   "q": "Hidrolik kırıcı sert kayayı nasıl parçalar?",
+   "wiki": [
+    "Jackhammer"
+   ]
+  },
+  {
+   "q": "Beton pompası betonu yüzlerce metre yüksekliğe nasıl çıkarır?",
+   "wiki": [
+    "Concrete pump"
+   ]
+  },
+  {
+   "q": "Dev maden dragline'ı bir kepçede ne kadar toprak taşır?",
+   "wiki": [
+    "Big Muskie",
+    "Dragline excavator"
    ]
   }
  ]

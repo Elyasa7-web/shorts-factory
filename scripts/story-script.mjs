@@ -7,7 +7,7 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 import { fetchSource } from "./sources/wiki.mjs";
-import { PARTS, SCENARIOS, ANGLES } from "./sources/garage-topics.mjs";
+import { PARTS, SCENARIOS, anglesFor } from "./sources/garage-topics.mjs";
 
 const HISTORY = "data/history.json";
 const OUT = "data/story.json";
@@ -161,12 +161,13 @@ function loadHistory() {
 
 // ---- what to make next -------------------------------------------------------------------------------------
 // ~55 % "what happens if...?" scenarios (they keep viewers longest: 54 % average view vs ~48 % for parts) (the viewer's own questions), the rest parts told from a rotating angle.
+export const KIND_SHARE = { motorcycle: 2 };
 export const KIND_ORDER = (process.env.KIND_ORDER || "car,train,aircraft,machine,ship,motorcycle,truck").split(",");
 export function nextTopic(history, forced) {
   const done = new Set(history.map((h) => h.key));
   const all = [
     ...SCENARIOS.map((s) => ({ ...s, key: `garage|q|${s.q}` })),
-    ...PARTS.flatMap((p) => ANGLES.map((a) => ({ ...p, angle: a, key: `garage|${p.wiki}|${a.id}` }))),
+    ...PARTS.flatMap((p) => anglesFor(p).map((a) => ({ ...p, angle: a, key: `garage|${p.wiki}|${a.id}` }))),
   ];
   if (forced) {
     const f = all.filter((t) => t.wiki.toLowerCase() === forced.toLowerCase());
@@ -181,7 +182,13 @@ export function nextTopic(history, forced) {
   const made = {};
   for (const t of all) if (done.has(t.key)) made[t.vehicle] = (made[t.vehicle] ?? 0) + 1;
   const order = (k) => (KIND_ORDER.includes(k) ? KIND_ORDER.indexOf(k) : 99);
-  const kind = [...kinds].sort((a, b) => (made[a] ?? 0) - (made[b] ?? 0) || order(a) - order(b))[0];
+  // motorcycle viewers subscribe ~5x more often than car viewers (1.1 vs 0.2 subscribers per 1,000 views): they get a double share
+  const score = (k) => (made[k] ?? 0) / (KIND_SHARE[k] ?? 1);
+  // never two videos of the same kind in a row (catching up after a gap must not produce a streak)
+  const byKey = new Map(all.map((x) => [x.key, x.vehicle]));
+  const lastKind = [...history].reverse().map((h) => byKey.get(h.key)).find(Boolean);
+  const candidates = kinds.length > 1 ? kinds.filter((k) => k !== lastKind) : kinds;
+  const kind = [...candidates].sort((a, b) => score(a) - score(b) || order(a) - order(b))[0];
   const pool = fresh.filter((t) => t.vehicle === kind);
   // 2) a "what happens if...?" question (40 %) or a part told from a fresh angle
   const scen = pool.filter((t) => t.kind === "scenario");

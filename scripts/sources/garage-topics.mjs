@@ -124,12 +124,17 @@ export const ANGLES = [
   { id: "surprise", brief: "the most surprising, little-known facts and history about it (only facts from the source)" },
 ];
 
+// Construction machines: viewers do not care how a seed drill breaks, they want the SPECTACLE (retention data: 'failure' 32 %,
+// concrete pump / forklift 47-56 %). So machines swap the 'failure' angle for 'wow': the biggest, strongest, heaviest facts.
+export const ANGLE_WOW = { id: "wow", brief: "the BIGGEST, strongest, heaviest or most impressive facts about this machine (sizes, loads, power, records that appear in the source), told so the viewer says 'wow'; NOT how it breaks" };
+export const anglesFor = (p) => (p.vehicle === "machine" ? [ANGLES[0], ANGLES[1], ANGLES[3], ANGLE_WOW] : ANGLES);
+
 const inferVehicle = (q, wiki) =>
   /motosiklet|motor(?:lar)?ı? zincir|virajda neden yatar|wheelie/i.test(q) ? "motorcycle"
   : /denizaltı|gemi|buzkıran|çapa/i.test(q) ? "ship"
   : /uçak|jet motoru|helikopter|pilot/i.test(q) ? "aircraft"
   : /tren|raylar|ray(?:ların|ı)|maglev|lokomotif|metro/i.test(q) ? "train"
-  : /ekskavatör|vinç|dozer|forklift|iş makine|traktör|biçerdöver|beton|tünel açma/i.test(q) ? "machine"
+  : /ekskavatör|vinç|dozer|forklift|iş makine|traktör|biçerdöver|beton|tünel açma|maden|yıkım|paletli|zamboni|kar küreme|hidrolik kırıcı|en büyük kara|dragline/i.test(q) ? "machine"
   : /kamyon|otobüs|(?:^|\s)tırlar|(?:^|\s)tır(?:\s|[?,.])|itfaiye|ambulans|çekici|takograf|dorse/i.test(q) ? "truck"
   : "car";
 const S = (q, wiki) => ({ kind: "scenario", category: "senaryo", q, wiki: wiki[0], extra: wiki.slice(1), vehicle: inferVehicle(q, wiki) });
