@@ -5,6 +5,7 @@
 // Quota: playlists.insert / playlistItems.insert cost 50 units each, a list call 1.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { accessToken } from "./upload.mjs";
+import { PARTS, SCENARIOS } from "./sources/garage-topics.mjs";
 
 const CACHE = "data/playlists.json";        // { "<playlist title>": "<playlist id>" }
 const QUEUE = "data/playlist-queue.json";   // [{ videoId, kind, category }] waiting for a token with the right scope
@@ -119,4 +120,48 @@ export async function addToPlaylists({ videoId, kind, category }) {
   const rest = [...left, ...queue.slice(12)];
   writeJson(QUEUE, rest);
   return { done: queue.length - rest.length, waiting: rest.length, blocked };
+}
+
+// ---- self-healing: compare what SHOULD be in the playlists (from the upload log) with what IS there ----
+const topicOfKey = (key) => {
+  if (key.startsWith("garage|q|")) { const q = key.slice(9); const s = SCENARIOS.find((x) => x.q === q); return s && { kind: s.vehicle, category: "senaryo" }; }
+  const wiki = key.slice(7).replace(/\|[^|]+$/, "");
+  const t = PARTS.find((x) => x.wiki === wiki);
+  return t && { kind: t.vehicle, category: t.category };
+};
+
+async function playlistItemIds(playlistId) {
+  const ids = new Set(); let pageToken = "";
+  do {
+    const j = await api(`playlistItems?part=contentDetails&playlistId=${playlistId}&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`);
+    for (const i of j.items ?? []) ids.add(i.contentDetails.videoId);
+    pageToken = j.nextPageToken ?? "";
+  } while (pageToken);
+  return ids;
+}
+
+/** Adds every video of the last `last` uploads to the playlists it belongs to but is missing from (max `maxAdds` per run, 50 quota units each). */
+export async function reconcilePlaylists(log, { last = 80, maxAdds = 6 } = {}) {
+  const cache = readJson(CACHE, {});
+  const mine = {};                                   // title -> id of the channel's existing playlists
+  let pageToken = "";
+  do {
+    const j = await api(`playlists?part=snippet&mine=true&maxResults=50${pageToken ? `&pageToken=${pageToken}` : ""}`);
+    for (const p of j.items ?? []) mine[p.snippet.title] = p.id;
+    pageToken = j.nextPageToken ?? "";
+  } while (pageToken);
+  Object.assign(cache, mine);
+  const wanted = [];                                  // [videoId, [title, description]]
+  for (const e of log.filter((l) => l.format === "garage" && l.id && !l.manual && !l.cancelled).slice(-last)) {
+    const t = topicOfKey(e.key ?? "");
+    if (t) for (const def of playlistsFor(t)) wanted.push([e.id, def]);
+  }
+  const items = {};
+  for (const [, def] of wanted) if (mine[def[0]] && !items[def[0]]) items[def[0]] = await playlistItemIds(mine[def[0]]);
+  const missing = wanted.filter(([id, def]) => !items[def[0]]?.has(id));
+  let added = 0;
+  for (const [id, def] of missing.slice(0, maxAdds)) { await addOne(id, def, cache); added++; }
+  writeJson(CACHE, cache);
+  if (missing.length) console.log(`Playlists reconciled: ${added} added, ${Math.max(0, missing.length - added)} still missing`);
+  return { added, missing: missing.length - added };
 }

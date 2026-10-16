@@ -1,16 +1,18 @@
 // One full cycle for the "Canlı Garaj" channel: pick a vehicle topic -> script (Turkish, fact-checked) -> footage
 // -> voice -> render -> upload as a scheduled public video. The old English "ranking" format only runs with FORMAT=ranking.
-// Env: PUBLISH_HOURS_UTC="9,12,15,18"  DAILY_TARGET=4  MAX_QUEUE=12  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
+// Env: PUBLISH_HOURS_UTC="9,12,15,17"  DAILY_TARGET=4  MAX_QUEUE=12  DRY_RUN=1  FORCE=1  FORMAT=garage|ranking  STORY_FIXTURE=1
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube } from "./upload.mjs";
-import { addToPlaylists } from "./playlists.mjs";
+import { addToPlaylists, reconcilePlaylists } from "./playlists.mjs";
+import { snapshotStats } from "./stats.mjs";
 
 const SCHEDULE = "data/schedule.json";
-// Four public slots per day, all inside the Turkish day: 12:00, 15:00, 18:00, 21:00 TRT (UTC+3), none around midnight.
+// Four public slots per day, all inside the Turkish day: 12:00, 15:00, 18:00, 20:00 TRT (UTC+3), none around midnight.
+// Chosen from 13 days of data: 18:00 and 15:00 performed best, 21:00 worst (it also had the most "dead" videos).
 // YouTube's free API quota (10,000 units, 1,600 per upload) allows at most 6 uploads a day; 4 keeps a safe margin.
-const HOURS = (process.env.PUBLISH_HOURS_UTC || "9,12,15,18").split(",").map(Number);
+const HOURS = (process.env.PUBLISH_HOURS_UTC || "9,12,15,17").split(",").map(Number);
 const DAILY_TARGET = Number(process.env.DAILY_TARGET || 4);   // videos per YouTube quota day (the free quota fits 6 uploads; 4 leaves a safe margin)
 const MAX_QUEUE = Number(process.env.MAX_QUEUE || 12);  // videos scheduled but not yet public (two days of slots)
 const LEAD_MS = 45 * 60 * 1000; // YouTube needs publishAt comfortably in the future
@@ -25,6 +27,12 @@ if (existsSync("data/PAUSE") && !process.env.DRY_RUN && !process.env.FORCE) {
 }
 
 const log = existsSync(SCHEDULE) ? JSON.parse(readFileSync(SCHEDULE, "utf8")) : [];
+
+// Housekeeping on every trigger (a few quota units): heal the playlists, take the daily stats snapshot.
+if (!process.env.DRY_RUN && process.env.YT_REFRESH_TOKEN) {
+  try { await reconcilePlaylists(log); } catch (e) { console.error(`::warning::playlist check failed: ${String(e.message).slice(0, 200)}`); }
+  try { await snapshotStats(log); } catch (e) { console.error(`::warning::stats snapshot failed: ${String(e.message).slice(0, 200)}`); }
+}
 
 // DAILY BATCH: every YouTube quota day (it resets at midnight Pacific time) DAILY_TARGET videos are made back to back,
 // each one uploaded as a scheduled public video into the next free slot (or saved as a manual package when YouTube
