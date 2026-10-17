@@ -533,5 +533,13 @@
   "key": "garage|Motorcycle|purpose",
   "title": "Motosikletler Yollarda Neden Otomobiller Kadar Yaygın?",
   "uploadedAt": "2026-10-17T07:15:56.558Z"
+ },
+ {
+  "id": "manual-202610170723",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Dev kepçeli ekskavatör bir günde ne kadar toprak kazar?",
+  "title": "Dev Kepçeli Ekskavatör Bir Günde Ne Kadar Kazar?",
+  "uploadedAt": "2026-10-17T07:24:03.279Z"
  }
 ]
