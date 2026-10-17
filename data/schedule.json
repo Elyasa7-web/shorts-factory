@@ -525,5 +525,13 @@
   "title": "Uçak Kanatlarındaki Flaplar Ne İşe Yarar?",
   "uploadedAt": "2026-10-16T07:32:51.470Z",
   "publishAt": "2026-10-17T18:00:00.000Z"
+ },
+ {
+  "id": "manual-202610170715",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Motorcycle|purpose",
+  "title": "Motosikletler Yollarda Neden Otomobiller Kadar Yaygın?",
+  "uploadedAt": "2026-10-17T07:15:56.558Z"
  }
 ]
