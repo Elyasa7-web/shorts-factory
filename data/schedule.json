@@ -565,5 +565,13 @@
   "key": "garage|q|Motosiklet iki tekerlekle devrilmeden nasıl dengede kalır?",
   "title": "Motosiklet İki Tekerlekle Giderken Neden Devrilmez?",
   "uploadedAt": "2026-10-18T07:16:02.790Z"
+ },
+ {
+  "id": "manual-202610180723",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Tren raylarının altında neden taş (balast) vardır?",
+  "title": "Tren Raylarının Altına Neden Taş Dökülür?",
+  "uploadedAt": "2026-10-18T07:23:48.406Z"
  }
 ]
