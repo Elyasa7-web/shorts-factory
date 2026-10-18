@@ -581,5 +581,13 @@
   "key": "garage|Motorcycle engine|failure",
   "title": "Motosiklet Motoru Gücü Neden Arka Tekerleğe Verir?",
   "uploadedAt": "2026-10-18T07:31:09.856Z"
+ },
+ {
+  "id": "manual-202610180738",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Propeller (aeronautics)|purpose",
+  "title": "Uçak Pervanesi Dönerek Nasıl İtiş Üretir?",
+  "uploadedAt": "2026-10-18T07:38:32.183Z"
  }
 ]
