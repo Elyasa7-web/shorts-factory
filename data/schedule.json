@@ -613,5 +613,13 @@
   "key": "garage|Harley-Davidson|purpose",
   "title": "Ağır Kruvazör Motosikletler Neden Birer Simgeye Dönüştü?",
   "uploadedAt": "2026-10-19T07:46:14.212Z"
+ },
+ {
+  "id": "manual-202610190753",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Catamaran|how",
+  "title": "Katamaranlar Dalgalı Denizde Neden Devrilmez?",
+  "uploadedAt": "2026-10-19T07:53:51.419Z"
  }
 ]
