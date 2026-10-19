@@ -605,5 +605,13 @@
   "key": "garage|q|Zamboni buz pistini nasıl pürüzsüz yapar?",
   "title": "Zamboni Bozuk Buz Pistini Neden Suyla Yeniler?",
   "uploadedAt": "2026-10-19T07:38:11.072Z"
+ },
+ {
+  "id": "manual-202610190746",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Harley-Davidson|purpose",
+  "title": "Ağır Kruvazör Motosikletler Neden Birer Simgeye Dönüştü?",
+  "uploadedAt": "2026-10-19T07:46:14.212Z"
  }
 ]
