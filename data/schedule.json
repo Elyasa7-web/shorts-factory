@@ -597,5 +597,13 @@
   "key": "garage|Scrambler (motorcycle)|failure",
   "title": "Her Motosiklet Türü Trafiğe Neden Çıkamaz?",
   "uploadedAt": "2026-10-19T07:29:24.576Z"
+ },
+ {
+  "id": "manual-202610190738",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Zamboni buz pistini nasıl pürüzsüz yapar?",
+  "title": "Zamboni Bozuk Buz Pistini Neden Suyla Yeniler?",
+  "uploadedAt": "2026-10-19T07:38:11.072Z"
  }
 ]
