@@ -629,5 +629,13 @@
   "key": "garage|Inline-four engine|purpose",
   "title": "Dört Silindirli Motosiklet Sesi Neden Pürüzsüzdür?",
   "uploadedAt": "2026-10-21T10:09:56.682Z"
+ },
+ {
+  "id": "manual-202610211021",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Kamyonlardaki takograf ne işe yarar?",
+  "title": "Kamyon Takografı Sürücü Durunca Neden Mod Değiştirir?",
+  "uploadedAt": "2026-10-21T10:21:56.770Z"
  }
 ]
