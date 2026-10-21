@@ -645,5 +645,13 @@
   "key": "garage|q|Motosiklet zinciri yağsız kalırsa ne olur?",
   "title": "Motosiklet Zinciri Yağsız Kalırsa Ne Olur?",
   "uploadedAt": "2026-10-21T10:29:10.664Z"
+ },
+ {
+  "id": "manual-202610211036",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Manual transmission|purpose",
+  "title": "Manuel Şanzımanda Neden Debriyaj Kullanmak Zorundasın?",
+  "uploadedAt": "2026-10-21T10:36:10.206Z"
  }
 ]
