@@ -637,5 +637,13 @@
   "key": "garage|q|Kamyonlardaki takograf ne işe yarar?",
   "title": "Kamyon Takografı Sürücü Durunca Neden Mod Değiştirir?",
   "uploadedAt": "2026-10-21T10:21:56.770Z"
+ },
+ {
+  "id": "manual-202610211029",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Motosiklet zinciri yağsız kalırsa ne olur?",
+  "title": "Motosiklet Zinciri Yağsız Kalırsa Ne Olur?",
+  "uploadedAt": "2026-10-21T10:29:10.664Z"
  }
 ]
