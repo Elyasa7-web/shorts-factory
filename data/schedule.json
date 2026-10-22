@@ -677,5 +677,13 @@
   "key": "garage|Haul truck|surprise",
   "title": "Dev Maden Kamyonları Neden Normal Yollara Çıkamaz?",
   "uploadedAt": "2026-10-22T07:32:44.968Z"
+ },
+ {
+  "id": "manual-202610220747",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Cruise ship|purpose",
+  "title": "Kruvaziyer Gemileri Neden Yolcu Taşımaz?",
+  "uploadedAt": "2026-10-22T07:47:29.775Z"
  }
 ]
