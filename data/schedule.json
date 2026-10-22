@@ -669,5 +669,13 @@
   "key": "garage|q|Uçak koca gövdesiyle havada nasıl kalır?",
   "title": "Tonlarca Ağırlıktaki Uçak Gökyüzünde Neden Düşmez?",
   "uploadedAt": "2026-10-22T07:24:09.633Z"
+ },
+ {
+  "id": "manual-202610220732",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Haul truck|surprise",
+  "title": "Dev Maden Kamyonları Neden Normal Yollara Çıkamaz?",
+  "uploadedAt": "2026-10-22T07:32:44.968Z"
  }
 ]
