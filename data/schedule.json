@@ -661,5 +661,13 @@
   "key": "garage|Maglev|surprise",
   "title": "Maglev Treni Raylara Dokunmadan Ne Kadar Hızlı Gider?",
   "uploadedAt": "2026-10-22T07:16:00.592Z"
+ },
+ {
+  "id": "manual-202610220724",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|q|Uçak koca gövdesiyle havada nasıl kalır?",
+  "title": "Tonlarca Ağırlıktaki Uçak Gökyüzünde Neden Düşmez?",
+  "uploadedAt": "2026-10-22T07:24:09.633Z"
  }
 ]
