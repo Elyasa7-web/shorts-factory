@@ -1,7 +1,7 @@
 // Daily snapshot of every uploaded video's public numbers (data/stats-history.json) so the channel can be analysed over
 // time, plus an early warning when a video that has been public for 36 h+ is still stuck under 100 views.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { accessToken } from "./upload.mjs";
+import { accessToken, ytFetch } from "./upload.mjs";
 
 const FILE = "data/stats-history.json";
 
@@ -12,7 +12,7 @@ export async function snapshotStats(log) {
   const token = await accessToken();
   const v = {};
   for (let i = 0; i < ids.length; i += 50) {
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.slice(i, i + 50).join(",")}`, { headers: { Authorization: `Bearer ${token}` } });
+    const res = await ytFetch(`https://www.googleapis.com/youtube/v3/videos?part=statistics&id=${ids.slice(i, i + 50).join(",")}`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`videos.list ${res.status}`);
     for (const x of (await res.json()).items ?? []) v[x.id] = [+x.statistics.viewCount || 0, +x.statistics.likeCount || 0, +x.statistics.commentCount || 0];
   }

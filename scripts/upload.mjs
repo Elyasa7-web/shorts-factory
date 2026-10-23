@@ -5,8 +5,28 @@ import { readFileSync, statSync, createReadStream } from "node:fs";
 
 const { YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN } = process.env;
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const why = (e) => `${e.message}${e.cause ? ` [${e.cause.code ?? ""} ${e.cause.message ?? e.cause}]` : ""}`;
+
+/**
+ * fetch that survives dead keep-alive sockets. The run talks to Google at its start (playlist check, stats) and again
+ * ~10 minutes later when the video is ready; Google closes the idle connection meanwhile, and Node then reuses the dead
+ * socket for the upload POST and fails with a bare "fetch failed" (POSTs are never retried by Node). Retrying opens a
+ * fresh connection. This broke EVERY upload from 2026-10-17 to 2026-10-23.
+ */
+export async function ytFetch(url, opts = {}, tries = 4) {
+  for (let i = 1; ; i++) {
+    try { return await fetch(url, opts); }
+    catch (e) {
+      if (i >= tries) throw new Error(`${why(e)} (after ${tries} tries)`, { cause: e });
+      console.error(`network error talking to Google (${why(e)}), retry ${i}/${tries - 1}`);
+      await sleep(1500 * i);
+    }
+  }
+}
+
 export async function accessToken() {
-  const res = await fetch("https://oauth2.googleapis.com/token", {
+  const res = await ytFetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -50,7 +70,7 @@ export async function uploadToYouTube(v) {
     },
   };
 
-  const init = await fetch(
+  const init = await ytFetch(
     "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
     {
       method: "POST",
@@ -68,9 +88,6 @@ export async function uploadToYouTube(v) {
 
   return putVideo(location, v.file, size);
 }
-
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const why = (e) => `${e.message}${e.cause ? ` [${e.cause.code ?? ""} ${e.cause.message ?? e.cause}]` : ""}`;
 
 /**
  * One PUT of the whole file (a resumable session accepts it again if the connection died). Node's fetch reports every

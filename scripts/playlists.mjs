@@ -4,7 +4,7 @@
 // kept in data/playlist-queue.json and are done automatically once a token with the scope is installed.
 // Quota: playlists.insert / playlistItems.insert cost 50 units each, a list call 1.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { accessToken } from "./upload.mjs";
+import { accessToken, ytFetch } from "./upload.mjs";
 import { PARTS, SCENARIOS } from "./sources/garage-topics.mjs";
 
 const CACHE = "data/playlists.json";        // { "<playlist title>": "<playlist id>" }
@@ -34,7 +34,7 @@ const writeJson = (f, v) => writeFileSync(f, JSON.stringify(v, null, 1));
 
 const api = async (path, { method = "GET", body } = {}) => {
   const token = await accessToken();
-  const res = await fetch(`https://www.googleapis.com/youtube/v3/${path}`, {
+  const res = await ytFetch(`https://www.googleapis.com/youtube/v3/${path}`, {
     method,
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
