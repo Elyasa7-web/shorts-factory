@@ -4,7 +4,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
-import { uploadToYouTube } from "./upload.mjs";
+import { uploadToYouTube, accessToken, ytFetch } from "./upload.mjs";
+import { takeBacklogVideo, markBacklogDone } from "./backlog.mjs";
 import { addToPlaylists, reconcilePlaylists } from "./playlists.mjs";
 import { snapshotStats } from "./stats.mjs";
 
@@ -126,15 +127,21 @@ async function makeGarage() {
 // A failed attempt must never turn into an off-topic upload: the queue check at the top retries on the next trigger.
 const wanted = process.env.FORMAT === "ranking" ? "ranking" : "garage";
 rmSync("out/narration.m4a", { force: true });
-let made;
-try {
-  made = wanted === "ranking" ? await makeRanking() : await makeGarage();
-} catch (e) {
-  console.error(`::warning::no video made this cycle: ${e.message}`);
-  process.exit(process.env.DRY_RUN ? 1 : 0); // a normal cycle ends quietly (next trigger retries); a test run must show the failure
+let made = null, fromBacklog = false;
+// Finished videos that could not be uploaded (they wait as manual packages) go to YouTube BEFORE new ones are made.
+if (!process.env.DRY_RUN && !process.env.TEST_MANUAL && process.env.YT_REFRESH_TOKEN && process.env.FORMAT !== "ranking") {
+  try { made = await takeBacklogVideo(log); fromBacklog = !!made; } catch (e) { console.error(`::warning::backlog check failed: ${String(e.message).slice(0, 200)}`); }
+}
+if (!made) {
+  try {
+    made = wanted === "ranking" ? await makeRanking() : await makeGarage();
+  } catch (e) {
+    console.error(`::warning::no video made this cycle: ${e.message}`);
+    process.exit(process.env.DRY_RUN ? 1 : 0); // a normal cycle ends quietly (next trigger retries); a test run must show the failure
+  }
 }
 
-sh("ffmpeg", ["-y", "-loglevel", "error", "-i", "out/video.mp4", "-i", "out/narration.m4a",
+if (!fromBacklog) sh("ffmpeg", ["-y", "-loglevel", "error", "-i", "out/video.mp4", "-i", "out/narration.m4a",
   "-c:v", "copy", "-c:a", "aac", "-shortest", "out/final.mp4"]);
 
 if (process.env.DRY_RUN) {
@@ -200,6 +207,10 @@ try {
 } catch (e) {
   // YouTube's free API quota (10,000 units/day = 6 uploads) resets daily; running out is normal, not an error.
   // Whatever the reason, keep the finished video as a ready-to-upload package instead of losing it.
+  if (fromBacklog) {
+    console.error(`::warning::backlog video "${made.title}" could not be uploaded (${String(e.message).slice(0, 160)}); it stays in the backlog for the next run`);
+    process.exit(0);
+  }
   const quota = /quotaExceeded|dailyLimitExceeded|uploadLimitExceeded|rateLimitExceeded/i.test(e.message);
   console.error(`::warning::upload failed (${e.message.slice(0, 160)}); saving the video for manual upload`);
   let saved = false;
@@ -217,6 +228,13 @@ if (made.format === "garage") {
   writeFileSync(hp, JSON.stringify(h.slice(-2000), null, 1));
 }
 console.log(`Uploaded https://youtube.com/shorts/${id} (${made.format}) -> goes public at ${publishAt}  [${madeToday + 1}/${DAILY_TARGET} today]`);
+if (fromBacklog) markBacklogDone(made.backlogTag, id);
+// proof that the video really sits on OUR channel (1 quota unit)
+try {
+  const t = await accessToken();
+  const v = (await (await ytFetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,status&id=${id}`, { headers: { Authorization: `Bearer ${t}` } })).json()).items?.[0];
+  console.log(v ? `Verified on YouTube: "${v.snippet.title}" | channel "${v.snippet.channelTitle}" | ${v.status.privacyStatus}${v.status.publishAt ? `, public at ${v.status.publishAt}` : ""}` : `::warning::video ${id} not found right after the upload`);
+} catch (e) { console.error(`::warning::could not verify the upload: ${String(e.message).slice(0, 120)}`); }
 // playlists by vehicle kind / topic; a failure here must never cost the upload (it is retried from data/playlist-queue.json)
 if (made.format === "garage") {
   try {
