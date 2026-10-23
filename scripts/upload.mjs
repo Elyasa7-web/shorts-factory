@@ -66,15 +66,39 @@ export async function uploadToYouTube(v) {
   if (!init.ok) throw new Error(`upload init failed ${init.status}: ${await init.text()}`);
   const location = init.headers.get("location");
 
-  // Files are ~2 MB, so a single PUT is fine.
-  const put = await fetch(location, {
-    method: "PUT",
-    headers: { "Content-Length": String(size), "Content-Type": "video/mp4" },
-    body: readFileSync(v.file),
-  });
-  const body = await put.json();
-  if (!put.ok) throw new Error(`upload failed ${put.status}: ${JSON.stringify(body)}`);
-  return body.id;
+  return putVideo(location, v.file, size);
+}
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const why = (e) => `${e.message}${e.cause ? ` [${e.cause.code ?? ""} ${e.cause.message ?? e.cause}]` : ""}`;
+
+/**
+ * One PUT of the whole file (a resumable session accepts it again if the connection died). Node's fetch reports every
+ * dropped connection as the useless "fetch failed" (YouTube may even have answered with an error and closed the
+ * socket), so the real cause and the session's own opinion are logged and the upload is retried up to 3 times.
+ */
+async function putVideo(location, file, size) {
+  const body = readFileSync(file);
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const put = await fetch(location, { method: "PUT", headers: { "Content-Length": String(size), "Content-Type": "video/mp4" }, body, signal: AbortSignal.timeout(600_000) });
+      const text = await put.text();
+      if (!put.ok) throw Object.assign(new Error(`upload failed ${put.status}: ${text.slice(0, 300)}`), { answered: true });
+      return JSON.parse(text).id;
+    } catch (e) {
+      if (e.answered) throw e;                                   // YouTube answered with an error: retrying will not help
+      console.error(`upload attempt ${attempt}/3 failed: ${why(e)}`);
+      try {                                                      // what does the upload session say about it?
+        const s = await fetch(location, { method: "PUT", headers: { "Content-Length": "0", "Content-Range": `bytes */${size}` }, signal: AbortSignal.timeout(30_000) });
+        const t = await s.text();
+        console.error(`upload session says: HTTP ${s.status} ${t.slice(0, 300)}`);
+        if (s.status === 200 || s.status === 201) return JSON.parse(t).id;   // it had actually completed
+        if (s.status >= 400 && s.status !== 404) throw Object.assign(new Error(`upload failed ${s.status}: ${t.slice(0, 300)}`), { answered: true });
+      } catch (e2) { if (e2.answered) throw e2; }
+      if (attempt >= 3) throw new Error(`upload failed after 3 network errors: ${why(e)}`);
+      await sleep(5000 * attempt);
+    }
+  }
 }
 
 if (process.argv[1]?.endsWith("upload.mjs")) {

@@ -50,9 +50,18 @@ jobs:
       # ffmpeg comes as a prebuilt static binary: apt-installing it pulled ~100 packages and
       # sometimes stalled for minutes on the Ubuntu mirror, which is unacceptable unattended.
       - name: ffmpeg (static build)
+        id: ffstatic
+        continue-on-error: true       # the action reads a version file from johnvansickle.com, which is sometimes down
         uses: FedericoCarboni/setup-ffmpeg@v3
         with:
           ffmpeg-version: release
+
+      - name: ffmpeg (apt fallback)
+        if: ${{ steps.ffstatic.outcome == 'failure' }}
+        run: |
+          echo "::warning::static ffmpeg download failed, installing ffmpeg with apt"
+          sudo apt-get -o Acquire::Retries=5 update
+          sudo apt-get -o Acquire::Retries=5 install -y --no-install-recommends ffmpeg
 
       - name: System packages (offline voice, Chrome libs, emoji font)
         run: |
