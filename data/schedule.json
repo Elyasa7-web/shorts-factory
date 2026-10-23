@@ -693,5 +693,13 @@
   "key": "garage|Moped|how",
   "title": "Motosiklette Neden Bisiklet Pedalı Olur?",
   "uploadedAt": "2026-10-23T08:28:42.902Z"
+ },
+ {
+  "id": "kpAu3-sPiU8",
+  "format": "garage",
+  "key": "garage|Refrigerator truck|failure",
+  "title": "Frigorifik Kamyonlar Yükü Nasıl Soğuk Tutar?",
+  "uploadedAt": "2026-10-23T08:45:29.083Z",
+  "publishAt": "2026-10-23T12:00:00.000Z"
  }
 ]

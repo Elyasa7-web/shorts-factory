@@ -322,5 +322,9 @@
  {
   "key": "garage|Moped|how",
   "at": "2026-10-23T08:28:42.902Z"
+ },
+ {
+  "key": "garage|Refrigerator truck|failure",
+  "at": "2026-10-23T08:45:29.083Z"
  }
 ]
