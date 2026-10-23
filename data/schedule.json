@@ -685,5 +685,13 @@
   "key": "garage|Cruise ship|purpose",
   "title": "Kruvaziyer Gemileri Neden Yolcu Taşımaz?",
   "uploadedAt": "2026-10-22T07:47:29.775Z"
+ },
+ {
+  "id": "manual-202610230828",
+  "manual": true,
+  "format": "garage",
+  "key": "garage|Moped|how",
+  "title": "Motosiklette Neden Bisiklet Pedalı Olur?",
+  "uploadedAt": "2026-10-23T08:28:42.902Z"
  }
 ]
