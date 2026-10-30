@@ -6,6 +6,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSyn
 import { generateTopic } from "./generate-topic.mjs";
 import { uploadToYouTube, accessToken, ytFetch } from "./upload.mjs";
 import { takeBacklogVideo, markBacklogDone } from "./backlog.mjs";
+import { publishInstagramPack, pruneInstagramPacks } from "./instagram.mjs";
 import { addToPlaylists, reconcilePlaylists } from "./playlists.mjs";
 import { snapshotStats } from "./stats.mjs";
 
@@ -241,5 +242,13 @@ if (made.format === "garage") {
     const r = await addToPlaylists({ videoId: id, kind: made.kind, category: made.category });
     console.log(`Playlists: ${r.done} done, ${r.waiting} waiting${r.blocked ? ` (${r.blocked})` : ""}`);
   } catch (e) { console.error(`::warning::playlist step failed: ${e.message.slice(0, 200)}`); }
+}
+// Instagram Reels pack (mp4 + ready caption as a GitHub Release); a failure here never costs the upload
+if (process.env.GH_TOKEN && made.format === "garage") {
+  try {
+    const tag = publishInstagramPack({ title: made.title, description: made.description, kind: made.kind, file: "out/final.mp4" });
+    const pruned = pruneInstagramPacks();
+    console.log(`Instagram pack: https://github.com/${process.env.GITHUB_REPOSITORY ?? "Elyasa7-web/shorts-factory"}/releases/tag/${tag}${pruned ? ` (${pruned} old pack(s) removed)` : ""}`);
+  } catch (e) { console.error(`::warning::Instagram pack failed: ${String(e.message).slice(0, 160)}`); }
 }
 continueBatchIfNeeded();

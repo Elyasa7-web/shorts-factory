@@ -1,0 +1,735 @@
+{
+ "scenarios": [
+  {
+   "q": "Araba soğuk sabahlarda neden zor çalışır?",
+   "wiki": [
+    "Motor oil",
+    "Automotive battery",
+    "Glow plug"
+   ]
+  },
+  {
+   "q": "Motor yağı değişimini bir yıl geciktirirsen motora ne olur?",
+   "wiki": [
+    "Motor oil",
+    "Oil filter"
+   ]
+  },
+  {
+   "q": "Lastik havası fazla olursa araç yolda nasıl davranır?",
+   "wiki": [
+    "Tire",
+    "Tire-pressure monitoring system"
+   ]
+  },
+  {
+   "q": "Araç neden hararet yapar ve motora ne olur?",
+   "wiki": [
+    "Radiator (engine cooling)",
+    "Thermostat",
+    "Coolant"
+   ]
+  },
+  {
+   "q": "Egzozdan beyaz duman çıkarsa araçta ne bozulmuştur?",
+   "wiki": [
+    "Exhaust gas",
+    "Head gasket"
+   ]
+  },
+  {
+   "q": "Dizel araç neden siyah duman atar?",
+   "wiki": [
+    "Diesel engine",
+    "Fuel injection"
+   ]
+  },
+  {
+   "q": "Fren yaparken direksiyon neden titrer?",
+   "wiki": [
+    "Disc brake",
+    "Brake pad"
+   ]
+  },
+  {
+   "q": "Fren pedalı neden sünger gibi yumuşar?",
+   "wiki": [
+    "Brake fluid",
+    "Hydraulic brake"
+   ]
+  },
+  {
+   "q": "Giderken lastik patlarsa direksiyon nasıl tutulur?",
+   "wiki": [
+    "Tire",
+    "Run-flat tire"
+   ]
+  },
+  {
+   "q": "Araç kliması neden kötü kokar?",
+   "wiki": [
+    "Automobile air conditioning"
+   ]
+  },
+  {
+   "q": "Klima açıkken araç neden daha çok yakıt harcar?",
+   "wiki": [
+    "Automobile air conditioning",
+    "Fuel efficiency"
+   ]
+  },
+  {
+   "q": "Turbolu motor çalıştırır çalıştırmaz neden zorlanmamalı?",
+   "wiki": [
+    "Turbocharger",
+    "Motor oil"
+   ]
+  },
+  {
+   "q": "Araç rölantide beklerken motora ne olur?",
+   "wiki": [
+    "Idle (engine)",
+    "Internal combustion engine"
+   ]
+  },
+  {
+   "q": "Depo neredeyse boşken sürmek yakıt pompasına zarar verir mi?",
+   "wiki": [
+    "Fuel pump",
+    "Fuel tank"
+   ]
+  },
+  {
+   "q": "Katalitik konvertör sökülürse ne olur?",
+   "wiki": [
+    "Catalytic converter",
+    "Exhaust gas"
+   ]
+  },
+  {
+   "q": "Akü neden bir anda biter?",
+   "wiki": [
+    "Automotive battery",
+    "Alternator"
+   ]
+  },
+  {
+   "q": "Akü takviye kablosu ters bağlanırsa ne olur?",
+   "wiki": [
+    "Jump start",
+    "Automotive battery"
+   ]
+  },
+  {
+   "q": "Otomatik araçta giderken N'ye almak neden tehlikelidir?",
+   "wiki": [
+    "Automatic transmission",
+    "Engine braking"
+   ]
+  },
+  {
+   "q": "Vitesi geç artırınca motor neden zorlanır?",
+   "wiki": [
+    "Gear ratio",
+    "Engine knocking"
+   ]
+  },
+  {
+   "q": "Debriyaj yanarsa araç neden kötü kokar?",
+   "wiki": [
+    "Clutch"
+   ]
+  },
+  {
+   "q": "İnişte motor freni ne işe yarar?",
+   "wiki": [
+    "Engine braking",
+    "Brake fade"
+   ]
+  },
+  {
+   "q": "ESP lambası neden yanar?",
+   "wiki": [
+    "Electronic stability control",
+    "Traction control system"
+   ]
+  },
+  {
+   "q": "Motor arıza lambası yanınca ne yapmalı?",
+   "wiki": [
+    "On-board diagnostics"
+   ]
+  },
+  {
+   "q": "Hava yastığı lambası yanarsa çarpışmada ne olur?",
+   "wiki": [
+    "Airbag",
+    "Seat belt"
+   ]
+  },
+  {
+   "q": "Emniyet kemeri çarpışmada vücuda ne yapar?",
+   "wiki": [
+    "Seat belt",
+    "Crumple zone"
+   ]
+  },
+  {
+   "q": "Kış lastiği ile yaz lastiği arasındaki fark nedir?",
+   "wiki": [
+    "Winter tyre",
+    "Tire"
+   ]
+  },
+  {
+   "q": "Araç neden sağa ya da sola çeker?",
+   "wiki": [
+    "Camber angle"
+   ]
+  },
+  {
+   "q": "Şanzıman yağı hiç değişmezse ne olur?",
+   "wiki": [
+    "Automatic transmission",
+    "Manual transmission"
+   ]
+  },
+  {
+   "q": "Amortisör bozulunca fren mesafesi neden uzar?",
+   "wiki": [
+    "Shock absorber",
+    "Brake pad"
+   ]
+  },
+  {
+   "q": "Direksiyon aniden ağırlaşırsa sebebi nedir?",
+   "wiki": [
+    "Power steering",
+    "Rack and pinion"
+   ]
+  },
+  {
+   "q": "Sis farı ne zaman kullanılır ve neden her zaman yakılmaz?",
+   "wiki": [
+    "Fog lamp",
+    "Headlamp"
+   ]
+  },
+  {
+   "q": "LED far ile halojen far arasındaki fark nedir?",
+   "wiki": [
+    "Headlamp",
+    "LED lamp"
+   ]
+  },
+  {
+   "q": "Egzoz susturucusu delinirse ne olur?",
+   "wiki": [
+    "Muffler",
+    "Exhaust gas"
+   ]
+  },
+  {
+   "q": "Büyük jant takmak aracı nasıl etkiler?",
+   "wiki": [
+    "Wheel",
+    "Tire"
+   ]
+  },
+  {
+   "q": "Araca fazla yük koyarsan fren ve süspansiyon ne olur?",
+   "wiki": [
+    "Suspension (vehicle)",
+    "Axle"
+   ]
+  },
+  {
+   "q": "Hız sabitleyici yakıt tüketimini nasıl etkiler?",
+   "wiki": [
+    "Cruise control",
+    "Fuel efficiency"
+   ]
+  },
+  {
+   "q": "Hibrit araç kendi kendine nasıl şarj olur?",
+   "wiki": [
+    "Hybrid electric vehicle",
+    "Regenerative brake"
+   ]
+  },
+  {
+   "q": "Elektrikli araç şarj olurken neden ısınır?",
+   "wiki": [
+    "Lithium-ion battery",
+    "Charging station"
+   ]
+  },
+  {
+   "q": "Elektrikli arabalar neden çok sessizdir?",
+   "wiki": [
+    "Electric car",
+    "Electric motor"
+   ]
+  },
+  {
+   "q": "Dizel motor neden daha çok tork üretir?",
+   "wiki": [
+    "Diesel engine",
+    "Torque"
+   ]
+  },
+  {
+   "q": "Dört çeker araç karda neden daha iyi ilerler?",
+   "wiki": [
+    "Four-wheel drive",
+    "Differential (mechanical device)"
+   ]
+  },
+  {
+   "q": "Kar zinciri ne işe yarar ve hangi hızda takılmalı?",
+   "wiki": [
+    "Snow chains",
+    "Tire"
+   ]
+  },
+  {
+   "q": "Lastik diş derinliği azalınca yağmurda ne olur?",
+   "wiki": [
+    "Tire",
+    "Aquaplaning"
+   ]
+  },
+  {
+   "q": "Silecek lastiği eskirse ön cam neden iz bırakır?",
+   "wiki": [
+    "Windscreen wiper",
+    "Windshield"
+   ]
+  },
+  {
+   "q": "Ön cam çatlağı neden büyür?",
+   "wiki": [
+    "Windshield",
+    "Laminated glass"
+   ]
+  },
+  {
+   "q": "Araç neden yokuşta güç kaybeder?",
+   "wiki": [
+    "Internal combustion engine",
+    "Torque"
+   ]
+  },
+  {
+   "q": "Hava filtresi kirlenince yakıt tüketimi neden artar?",
+   "wiki": [
+    "Air filter",
+    "Fuel efficiency"
+   ]
+  },
+  {
+   "q": "Buji bozulursa motor neden tekler?",
+   "wiki": [
+    "Spark plug",
+    "Ignition system"
+   ]
+  },
+  {
+   "q": "Zincirli triger ile kayışlı triger arasındaki fark nedir?",
+   "wiki": [
+    "Timing belt (camshaft)",
+    "Camshaft"
+   ]
+  },
+  {
+   "q": "Turbo arızalanırsa araç nasıl davranır?",
+   "wiki": [
+    "Turbocharger",
+    "Wastegate"
+   ]
+  },
+  {
+   "q": "Intercooler neden turbo motorlarda vazgeçilmezdir?",
+   "wiki": [
+    "Intercooler",
+    "Turbocharger"
+   ]
+  },
+  {
+   "q": "Akülü aracın 12 voltluk aküsü neden yine de gereklidir?",
+   "wiki": [
+    "Automotive battery",
+    "Electric vehicle battery"
+   ]
+  },
+  {
+   "q": "Rejeneratif fren elektrikli araçta menzili nasıl uzatır?",
+   "wiki": [
+    "Regenerative brake",
+    "Electric car"
+   ]
+  },
+  {
+   "q": "Jantlar neden alüminyumdan yapılır?",
+   "wiki": [
+    "Alloy wheel",
+    "Wheel"
+   ]
+  },
+  {
+   "q": "Dönüşlerde araç neden dışarı doğru savrulur?",
+   "wiki": [
+    "Understeer",
+    "Oversteer"
+   ]
+  },
+  {
+   "q": "Öne ve arkaya savrulma arasındaki fark nedir? (understeer ve oversteer)",
+   "wiki": [
+    "Understeer",
+    "Oversteer"
+   ]
+  },
+  {
+   "q": "Drift atarken lastik ne kadar yıpranır?",
+   "wiki": [
+    "Drifting (motorsport)",
+    "Tire"
+   ]
+  },
+  {
+   "q": "Aracın ağırlık merkezi virajda neden önemlidir?",
+   "wiki": [
+    "Center of mass",
+    "Suspension (vehicle)"
+   ]
+  },
+  {
+   "q": "Araba neden yan yatarak virajı alır?",
+   "wiki": [
+    "Anti-roll bar",
+    "Suspension (vehicle)"
+   ]
+  },
+  {
+   "q": "Çarpışma testinde manken ne ölçer?",
+   "wiki": [
+    "Crash test dummy",
+    "Euro NCAP"
+   ]
+  },
+  {
+   "q": "Otomobil neden bu kadar sürtünmeyle yakıt harcar? (aerodinamik direnç)",
+   "wiki": [
+    "Automobile drag coefficient",
+    "Drag (physics)"
+   ]
+  },
+  {
+   "q": "Spoiler arabaya ne kazandırır?",
+   "wiki": [
+    "Spoiler (car)",
+    "Downforce"
+   ]
+  },
+  {
+   "q": "Yarış arabasında neden ters kanat vardır?",
+   "wiki": [
+    "Downforce",
+    "Formula One car"
+   ]
+  },
+  {
+   "q": "F1 aracı neden bu kadar hızlı virajı alır?",
+   "wiki": [
+    "Formula One car",
+    "Downforce"
+   ]
+  },
+  {
+   "q": "Rallide neden co-driver (yardımcı pilot) vardır?",
+   "wiki": [
+    "Rally car"
+   ]
+  },
+  {
+   "q": "Yarış aracında neden roll-bar bulunur?",
+   "wiki": [
+    "Roll cage",
+    "Rally car"
+   ]
+  },
+  {
+   "q": "Motosiklette neden iki frenin de kullanılması gerekir?",
+   "wiki": [
+    "Motorcycle",
+    "Disc brake"
+   ]
+  },
+  {
+   "q": "Motosiklet virajda yatarken lastiğin ne kadarı yola temas eder?",
+   "wiki": [
+    "Motorcycle tire",
+    "Countersteering"
+   ]
+  },
+  {
+   "q": "Motosiklet zinciri gerginliği bozulursa ne olur?",
+   "wiki": [
+    "Chain drive",
+    "Motorcycle"
+   ]
+  },
+  {
+   "q": "Motosiklette neden kask ve eldiven şarttır?",
+   "wiki": [
+    "Motorcycle helmet",
+    "Motorcycle personal protective equipment"
+   ]
+  },
+  {
+   "q": "Motosiklet kaydığında sürücü ne yapmalıdır?",
+   "wiki": [
+    "Motorcycle",
+    "Countersteering"
+   ]
+  },
+  {
+   "q": "İki zamanlı motosiklet neden mavi duman çıkarır?",
+   "wiki": [
+    "Two-stroke engine",
+    "Motor oil"
+   ]
+  },
+  {
+   "q": "Scooter varyatör sistemi nasıl çalışır?",
+   "wiki": [
+    "Motor scooter",
+    "Continuously variable transmission"
+   ]
+  },
+  {
+   "q": "Motosiklette V-twin motorun karakteristik sesi nereden gelir?",
+   "wiki": [
+    "V-twin engine",
+    "Firing order"
+   ]
+  },
+  {
+   "q": "Elektrikli motosiklet benzinli motosiklete göre ne kazandırır?",
+   "wiki": [
+    "Electric motorcycles and scooters",
+    "Electric motor"
+   ]
+  },
+  {
+   "q": "Tırlar neden uzun yolda iki şoförle gider?",
+   "wiki": [
+    "Tachograph",
+    "Semi-trailer truck"
+   ]
+  },
+  {
+   "q": "Kamyon lastiği neden bu kadar çok tekerlekle çalışır?",
+   "wiki": [
+    "Truck",
+    "Axle"
+   ]
+  },
+  {
+   "q": "Otobüsün arka tekerlekleri neden çiftli takılır?",
+   "wiki": [
+    "Bus",
+    "Axle"
+   ]
+  },
+  {
+   "q": "Tırların yan aynası neden kör noktayı tamamen göstermez?",
+   "wiki": [
+    "Semi-trailer truck",
+    "Blind spot monitor"
+   ]
+  },
+  {
+   "q": "Kamyonda çekici ile dorse nasıl birleşir?",
+   "wiki": [
+    "Fifth-wheel coupling",
+    "Semi-trailer truck"
+   ]
+  },
+  {
+   "q": "İtfaiye aracı neden bu kadar su basabilir?",
+   "wiki": [
+    "Fire engine",
+    "Pump"
+   ]
+  },
+  {
+   "q": "Ambulansta neden özel bir siren sesi kullanılır?",
+   "wiki": [
+    "Ambulance",
+    "Siren (alarm)"
+   ]
+  },
+  {
+   "q": "Tren frenlerken neden bu kadar ses çıkarır?",
+   "wiki": [
+    "Railway brake",
+    "Rail transport"
+   ]
+  },
+  {
+   "q": "Tren neden düz raylarda bile sallanır?",
+   "wiki": [
+    "Bogie",
+    "Track gauge"
+   ]
+  },
+  {
+   "q": "Metro nasıl yeraltında ilerler ve havalandırılır?",
+   "wiki": [
+    "Rapid transit",
+    "Tunnel boring machine"
+   ]
+  },
+  {
+   "q": "Tramvay neden elektrik hattından beslenir?",
+   "wiki": [
+    "Tram",
+    "Pantograph (rail)"
+   ]
+  },
+  {
+   "q": "Uçak inişte neden sert iner?",
+   "wiki": [
+    "Landing gear",
+    "Runway"
+   ]
+  },
+  {
+   "q": "Uçakta yolcular neden kalkış ve inişte pencereyi açık tutar?",
+   "wiki": [
+    "Airliner",
+    "Cabin pressurization"
+   ]
+  },
+  {
+   "q": "Uçak nasıl yıldırımdan korunur?",
+   "wiki": [
+    "Airliner",
+    "Faraday cage"
+   ]
+  },
+  {
+   "q": "Pilot kokpitte neden iki kişidir?",
+   "wiki": [
+    "Cockpit",
+    "Aircraft pilot"
+   ]
+  },
+  {
+   "q": "Helikopter arka pervanesi ne işe yarar?",
+   "wiki": [
+    "Helicopter",
+    "Helicopter rotor"
+   ]
+  },
+  {
+   "q": "Gemi nasıl yönünü bulur ve nasıl döner?",
+   "wiki": [
+    "Rudder",
+    "Ship"
+   ]
+  },
+  {
+   "q": "Yelkenli rüzgara karşı nasıl ilerler?",
+   "wiki": [
+    "Sailboat",
+    "Sail"
+   ]
+  },
+  {
+   "q": "Dev konteyner gemisi limana nasıl yanaşır?",
+   "wiki": [
+    "Container ship",
+    "Tugboat"
+   ]
+  },
+  {
+   "q": "Denizaltı nasıl nefes alır ve oksijen üretir?",
+   "wiki": [
+    "Submarine",
+    "Nuclear submarine"
+   ]
+  },
+  {
+   "q": "Gemi motoru neden bu kadar büyüktür?",
+   "wiki": [
+    "Marine propulsion",
+    "Ship"
+   ]
+  },
+  {
+   "q": "Vinç kolu neden kırılmaz?",
+   "wiki": [
+    "Crane (machine)",
+    "Tower crane"
+   ]
+  },
+  {
+   "q": "Ekskavatör paletleri taşa neden dayanır?",
+   "wiki": [
+    "Excavator",
+    "Continuous track"
+   ]
+  },
+  {
+   "q": "Dozer bıçağı toprağı nasıl iter?",
+   "wiki": [
+    "Bulldozer",
+    "Continuous track"
+   ]
+  },
+  {
+   "q": "Beton mikserinin içindeki beton neden donmaz?",
+   "wiki": [
+    "Concrete mixer",
+    "Concrete pump"
+   ]
+  },
+  {
+   "q": "Forklift ağır yükte neden öne devrilmez?",
+   "wiki": [
+    "Forklift",
+    "Center of mass"
+   ]
+  },
+  {
+   "q": "Traktör çamurda neden saplanmaz?",
+   "wiki": [
+    "Tractor",
+    "Four-wheel drive"
+   ]
+  },
+  {
+   "q": "Biçerdöver tek geçişte tarlayı nasıl hasat eder?",
+   "wiki": [
+    "Combine harvester"
+   ]
+  },
+  {
+   "q": "Asfalt finişeri yolu nasıl düz serer?",
+   "wiki": [
+    "Asphalt paver",
+    "Road roller"
+   ]
+  },
+  {
+   "q": "Yol silindiri asfaltı nasıl sıkıştırır?",
+   "wiki": [
+    "Road roller",
+    "Asphalt paver"
+   ]
+  }
+ ]
+}
