@@ -26,3 +26,21 @@ export function trimBlackLead(file) {
   renameSync(tmp, file);
   return cut;
 }
+
+/**
+ * Average brightness (0-255) of the first ~6 s of a clip / of a still. Retention data (30 Oct 2026): the video that lost
+ * viewers fastest showed a dark, empty workshop in seconds 4-10 (brightness 52); the best ones were >= 73.
+ */
+export function averageLuma(file) {
+  const still = /\.(jpe?g|png)$/i.test(file);         // a single frame: the fps filter would drop it
+  const vf = `${still ? "" : "fps=1,"}signalstats,metadata=print:key=lavfi.signalstats.YAVG:file=-`;
+  const r = ff(["-t", "6", "-i", file, "-vf", vf, "-an", "-f", "null", "-"]);
+  const vals = [...(r.stdout ?? "").matchAll(/YAVG=([\d.]+)/g)].map((m) => Number(m[1]));
+  return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : NaN;
+}
+
+/** true when the footage is too dark to be worth showing (unknown = keep). */
+export function isTooDark(file, min = 65) {
+  const y = averageLuma(file);
+  return Number.isFinite(y) && y < min;
+}

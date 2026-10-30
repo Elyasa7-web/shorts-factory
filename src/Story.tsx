@@ -113,6 +113,15 @@ const Shade: React.FC = () => (
   />
 );
 
+// width of a text in "em" for the caption font (Poppins Black), measured with a canvas
+let measureCtx: CanvasRenderingContext2D | null = null;
+const textEm = (text: string): number => {
+  measureCtx ??= document.createElement("canvas").getContext("2d");
+  if (!measureCtx) return text.length * 0.8;
+  measureCtx.font = `900 100px ${fontFamily}`;
+  return measureCtx.measureText(text).width / 100;
+};
+
 const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: string }> = ({ scene, accent, big, lang }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -125,7 +134,12 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: str
   if (!chunk) return null;
   const since = (t - chunk[0].s) * fps;
   const pop = spring({ frame: Math.max(0, since), fps, config: { damping: 12, stiffness: 220 } });
-  const size = big ? 118 : 100;
+  // Smaller than before (118/100 px were too big) AND fitted: the longest word of the chunk is measured in the real font
+  // so a word like "MOTOSİKLETİNDE" never runs off the screen (the caption box is 920 px wide).
+  const base = big ? 96 : 82;
+  const AVAIL = 920 - 2 * 18 - 24;             // box width - word margins - outline
+  const longest = Math.max(...chunk.map((w) => textEm(w.w.toLocaleUpperCase(lang === "tr" ? "tr-TR" : "en-US"))));
+  const size = Math.max(52, Math.min(base, Math.floor(AVAIL / (longest * 1.05))));
   return (
     <div
       lang={lang}

@@ -118,16 +118,16 @@ export const PARTS = [...new Map([...BASE_PARTS, ...morePartRows].map((p) => [p.
 
 // angles rotate so one part gives several different videos
 export const ANGLES = [
-  { id: "purpose", brief: "what this is and what it is FOR in the vehicle: its job, explained so a complete beginner gets it" },
-  { id: "how", brief: "HOW it works step by step: what moves, what pushes what, why it is built this way" },
   { id: "failure", brief: "what happens when it wears out or fails: the symptoms a driver notices and why it matters" },
   { id: "surprise", brief: "the most surprising, little-known facts and history about it (only facts from the source)" },
+  // retention data (30 Oct 2026): 'purpose' and 'how' kept the fewest viewers, "what happens if you..." mistakes kept the most
+  { id: "mistake", brief: "a common real-life MISTAKE or bad habit of drivers/riders involving this part and exactly what it does to the vehicle (damage, cost, danger), framed as 'what happens if you...'; the viewer should think 'I do that!'" },
+  { id: "wow", brief: "the BIGGEST, strongest, heaviest, fastest or most extreme facts about it (sizes, loads, power, records that appear in the source), told so the viewer says 'wow'; NOT how it breaks" },
 ];
 
-// Construction machines: viewers do not care how a seed drill breaks, they want the SPECTACLE (retention data: 'failure' 32 %,
-// concrete pump / forklift 47-56 %). So machines swap the 'failure' angle for 'wow': the biggest, strongest, heaviest facts.
-export const ANGLE_WOW = { id: "wow", brief: "the BIGGEST, strongest, heaviest or most impressive facts about this machine (sizes, loads, power, records that appear in the source), told so the viewer says 'wow'; NOT how it breaks" };
-export const anglesFor = (p) => (p.vehicle === "machine" ? [ANGLES[0], ANGLES[1], ANGLES[3], ANGLE_WOW] : ANGLES);
+// Machines skip the 'failure' angle (retention 32 %): nobody cares how a seed drill breaks, they want the spectacle.
+export const ANGLE_WOW = ANGLES[3];
+export const anglesFor = (p) => (p.vehicle === "machine" ? ANGLES.filter((a) => a.id !== "failure") : ANGLES);
 
 const inferVehicle = (q, wiki) =>
   /motosiklet|motor(?:lar)?ı? zincir|virajda neden yatar|wheelie/i.test(q) ? "motorcycle"

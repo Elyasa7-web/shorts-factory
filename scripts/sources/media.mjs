@@ -291,7 +291,8 @@ export const BLOCK_WORDS = new Set((
   "dinosaur egg eggs nest fossil bag handbag purse dress football soccer baseball basketball wrestling boxing concert band guitar " +
   "nude naked sexy bikini lingerie cat dog horse cow pig sheep " +
   "dollar money cash coin finance business clipart cartoon vector illustration icon logo emoji sticker drawing sketch " +
-  "animation animated animations cgi render rendering 3d infographic isometric"
+  "animation animated animations cgi render rendering 3d infographic isometric " +
+  "talking conversation customer customers showroom dealership dealer salesman salesperson handshake meeting interview office businessman businesswoman couple selfie"
 ).split(" "));
 
 export const CATEGORY_CONTEXT = {

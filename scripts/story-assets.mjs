@@ -2,9 +2,9 @@
 // (see sources/media.mjs). Reads data/story.json, writes public/clips/story-<n>.(mp4|jpg)
 // and data/story-props.json. A scene without a visual falls back to a moving gradient;
 // this step never fails the build.
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { findVisual, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
-import { trimBlackLead } from "./clip-utils.mjs";
+import { trimBlackLead, isTooDark } from "./clip-utils.mjs";
 
 const story = JSON.parse(readFileSync("data/story.json", "utf8"));
 const KEY = process.env.PEXELS_API_KEY;
@@ -21,6 +21,11 @@ async function download(url, file, min = 0) {
   writeFileSync(file, buf);
   if (/\.(mp4|webm)$/i.test(file)) {
     try { const cut = trimBlackLead(file); if (cut) console.log(`  trimmed ${cut.toFixed(1)}s of black from the start of ${file}`); } catch { /* keep the clip as downloaded */ }
+  }
+  if (/\.(mp4|webm|jpe?g|png)$/i.test(file)) {
+    let dark = false;
+    try { dark = isTooDark(file); } catch { /* unknown brightness: keep */ }
+    if (dark) { rmSync(file, { force: true }); throw new Error("too dark"); }       // the caller moves on to the next candidate
   }
 }
 
