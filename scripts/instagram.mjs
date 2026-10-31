@@ -14,7 +14,8 @@ const KIND_TAGS = {
   machine: ["#işmakinesi", "#ekskavatör", "#vinç", "#inşaat"],
   truck: ["#tır", "#kamyon", "#otobüs", "#şoför"],
 };
-const COMMON_TAGS = ["#canlıgaraj", "#nasılçalışır", "#reels", "#teknoloji", "#bilgi"];
+// 5 focused hashtags (3 by kind + brand + #reels): the caption carries the search keywords, hashtags help only a little
+const COMMON_TAGS = ["#canlıgaraj", "#reels"];
 const slugify = (t) => t.toLowerCase().replace(/ç/g, "c").replace(/ğ/g, "g").replace(/ı/g, "i").replace(/ö/g, "o").replace(/ş/g, "s").replace(/ü/g, "u")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 50) || "video";
 
@@ -23,8 +24,10 @@ export function igCaption({ title, description = "", kind = "car" }) {
   const parts = description.split("\n\n").map((x) => x.trim()).filter(Boolean);
   const payoff = parts[1] ?? "";
   const question = parts[2] ?? "";
-  const tags = [...(KIND_TAGS[kind] ?? KIND_TAGS.car), ...COMMON_TAGS].join(" ");
-  return [title, payoff, question, "▶️ Her gün yeni video: YouTube'da \"Canlı Garaj\" (@canli-garaj)\n👆 Takip et, kaçırma!", tags].filter(Boolean).join("\n\n");
+  const tags = [...(KIND_TAGS[kind] ?? KIND_TAGS.car).slice(0, 3), ...COMMON_TAGS].join(" ");
+  // "sends per reach" is one of the top ranking signals: ask for the DM share explicitly
+  const send = "📩 Merak eden bir arkadaşına gönder!";
+  return [title, payoff, question, send, "▶️ Her gün yeni video: YouTube'da \"Canlı Garaj\" (@canli-garaj)\n👆 Takip et, kaçırma!", tags].filter(Boolean).join("\n\n");
 }
 
 export function packNotes(caption) {

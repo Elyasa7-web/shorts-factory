@@ -132,7 +132,7 @@ export const anglesFor = (p) => (p.vehicle === "machine" ? ANGLES.filter((a) => 
 const inferVehicle = (q, wiki) =>
   /motosiklet|scooter|skuter|motor(?:lar)?ı? zincir|virajda neden yatar|wheelie/i.test(q) ? "motorcycle"
   : /denizaltı|gemi|buzkıran|çapa|yelkenli/i.test(q) ? "ship"
-  : /uçak|jet motoru|helikopter|pilot/i.test(q) ? "aircraft"
+  : /uçak|jet motoru|helikopter|(?<!yardımcı )pilot/i.test(q) ? "aircraft"
   : /tren|raylar|ray(?:ların|ı)|maglev|lokomotif|metro|tramvay/i.test(q) ? "train"
   : /ekskavatör|vinç|dozer|forklift|iş makine|traktör|biçerdöver|beton|tünel açma|maden|yıkım|paletli|zamboni|kar küreme|hidrolik kırıcı|en büyük kara|dragline|asfalt|finişer|yol silindiri/i.test(q) ? "machine"
   : /kamyon|otobüs|(?:^|\s)tırlar|(?:^|\s)tır(?:\s|[?,.])|itfaiye|ambulans|çekici|takograf|dorse/i.test(q) ? "truck"
