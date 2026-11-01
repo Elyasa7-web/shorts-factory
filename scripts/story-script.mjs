@@ -170,7 +170,9 @@ export function nextTopic(history, forced) {
     ...PARTS.flatMap((p) => anglesFor(p).map((a) => ({ ...p, angle: a, key: `garage|${p.wiki}|${a.id}` }))),
   ];
   if (forced) {
-    const f = all.filter((t) => t.wiki.toLowerCase() === forced.toLowerCase());
+    // a topic is forced by its question text ("Rallide neden co-driver ... vardır?"), its history key or its Wikipedia title
+    const want = forced.toLowerCase();
+    const f = all.filter((t) => t.key.toLowerCase() === want || t.q?.toLowerCase() === want || String(t.wiki).toLowerCase() === want);
     if (f.length) return pick(f);
   }
   let fresh = all.filter((t) => !done.has(t.key));

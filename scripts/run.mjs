@@ -104,7 +104,7 @@ async function makeRanking() {
 const hashtag = (t) => t.toLowerCase().replace(/[^a-z0-9çğıöşü]/g, "");
 
 async function makeGarage() {
-  sh(node, ["scripts/story-script.mjs", ...(process.env.STORY_FIXTURE ? ["--fixture"] : [])]);
+  sh(node, ["scripts/story-script.mjs", ...(process.env.STORY_FIXTURE ? ["--fixture"] : []), ...(process.env.TOPIC ? ["--topic", process.env.TOPIC] : [])]);
   const story = JSON.parse(readFileSync("data/story.json", "utf8"));
   const sc = story.script;
   console.log(`Garage: ${story.topic} -> ${sc.title}`);

@@ -17,6 +17,10 @@ on:
         description: "Upload even if a video was uploaded recently (testing)"
         type: boolean
         default: false
+      topic:
+        description: "Optional: build this exact topic (its question text, history key or Wikipedia title) instead of the next one in rotation"
+        type: string
+        default: ""
       test_format:
         description: "Testing only: which video to build (auto = normal alternation)"
         type: choice
@@ -96,6 +100,7 @@ jobs:
           FORMAT: ${{ (inputs.test_format == 'story' || inputs.test_format == 'story-fixture') && 'story' || (inputs.test_format == 'ranking' && 'ranking' || '') }}
           STORY_FIXTURE: ${{ (inputs.test_format == 'story-fixture' || inputs.test_format == 'manual-test') && '1' || '' }}
           TEST_MANUAL: ${{ inputs.test_format == 'manual-test' && '1' || '' }}
+          TOPIC: ${{ inputs.topic }}
         run: node scripts/run.mjs
 
       # Persist which topics were used and what is scheduled, even if the upload step failed.
