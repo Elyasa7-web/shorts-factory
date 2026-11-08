@@ -26,8 +26,8 @@ async function visionModels() {
   if (!modelList?.length) modelList = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
   return modelList;
 }
-const MIN_GAP_MS = 6500;        // the free tier allows roughly 10 requests per minute
-const MAX_CALLS = Number(process.env.VISION_MAX_CALLS || 16);
+const MIN_GAP_MS = 4500;        // the free tier allows roughly 10 requests per minute
+const MAX_CALLS = Number(process.env.VISION_MAX_CALLS || 24);
 const MAX_FAILURES = 3;         // consecutive infrastructure failures before the check switches itself off
 const MIN_MATCH = Number(process.env.VISION_MIN_MATCH || 6);
 const BAD = new Set(["text_overlay", "cartoon", "wrong_vehicle", "dark", "people_only", "blurry"]);
@@ -113,4 +113,87 @@ Answer as JSON:
   failures++;
   console.error(`  vision: every model failed (${lastError}); the candidate is accepted unchecked`);
   return pass(`all models failed: ${lastError}`);
+}
+
+export function visionAvailable() {
+  return Boolean(process.env.GEMINI_API_KEY) && !process.env.VISION_OFF && calls < MAX_CALLS && failures < MAX_FAILURES;
+}
+
+const PICK_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    items: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: { index: { type: "INTEGER" }, match: { type: "INTEGER" }, striking: { type: "INTEGER" }, problem: { type: "STRING" }, seen: { type: "STRING" } },
+        required: ["index", "match", "striking", "problem", "seen"],
+      },
+    },
+  },
+  required: ["items"],
+};
+
+/**
+ * Looks at the preview frames of several candidates in ONE Gemini request and rates each against the sentence.
+ * Returns { skipped, why, ranked, rejected }: `ranked` = the acceptable candidates, best first (each { c, match, striking, problem, seen });
+ * `rejected` = the rest with their verdict. When Gemini cannot be used (no key, quota, errors) the answer is { skipped: true } and
+ * `ranked` is the unchecked input order, so the caller keeps working exactly as before.
+ */
+export async function pickBest(cands, { sentence, visual, vehicle = "car", hook = false }) {
+  const unchecked = (why) => ({ skipped: true, why, ranked: cands.map((c) => ({ c })), rejected: [] });
+  if (!cands.length) return { skipped: false, ranked: [], rejected: [] };
+  if (!visionAvailable()) return unchecked("vision unavailable");
+
+  const loaded = (await Promise.all(cands.map((c) => fetchImage(c.preview).then((image) => ({ c, image })).catch(() => null)))).filter(Boolean);
+  if (!loaded.length) return unchecked("previews unavailable");
+
+  const wait = lastCall + MIN_GAP_MS - Date.now();
+  if (wait > 0) await sleep(wait);
+  lastCall = Date.now();
+  calls++;
+
+  const prompt = `You pick background footage for a vertical YouTube Short about ${vehicle}s. The narrator says (Turkish): "${sentence}"
+We searched stock footage for: "${visual}". Below are ${loaded.length} numbered preview frames of candidate clips.
+Rate EVERY image (index = its number):
+- match (0-10): how clearly the frame shows what the sentence is about (the named part, action or situation, on the right kind of vehicle). 0 = unrelated or the wrong vehicle, 10 = exactly it.
+- striking (0-10): would a thumb-scrolling viewer stop for it? Bright, sharp, close, clear subject or motion = high. Dark, empty, flat, cluttered = low.${hook ? " This is the OPENING shot of the video: be strict." : ""}
+- problem: one of none, text_overlay (visible text, logos, watermarks), cartoon (drawing, diagram or 3D render), wrong_vehicle (not a ${vehicle}), dark, people_only (a person or crowd with no vehicle subject), blurry.
+- seen: at most 8 English words saying what the frame shows.`;
+  const parts = [{ text: prompt }];
+  loaded.forEach(({ image }, k) => parts.push({ text: `Image ${k + 1}:` }, { inlineData: image }));
+
+  let lastError = "";
+  for (const model of await visionModels()) {
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts }],
+          generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: PICK_SCHEMA },
+        }),
+        signal: AbortSignal.timeout(60_000),
+      });
+      if (!res.ok) { lastError = `${model} HTTP ${res.status}`; if (/^(404|429|5\d\d)$/.test(String(res.status))) continue; throw new Error(lastError); }
+      const { items = [] } = JSON.parse((await res.json()).candidates[0].content.parts[0].text);
+      failures = 0;
+      const verdicts = new Map(items.map((it) => [Number(it.index), it]));
+      const ranked = [], rejected = [];
+      loaded.forEach(({ c }, k) => {
+        const v = verdicts.get(k + 1);
+        if (!v) { rejected.push({ c, match: 0, striking: 0, problem: "unrated", seen: "" }); return; }
+        const row = { c, match: Number(v.match) || 0, striking: Number(v.striking) || 0, problem: String(v.problem || "none"), seen: String(v.seen || "").slice(0, 80), model };
+        const ok = row.match >= MIN_MATCH && !BAD.has(row.problem) && row.striking >= (hook ? 5 : 3);
+        (ok ? ranked : rejected).push(row);
+      });
+      ranked.sort((a, b) => b.match * 2 + b.striking - (a.match * 2 + a.striking));
+      return { skipped: false, ranked, rejected };
+    } catch (e) {
+      lastError = `${model}: ${String(e.message).slice(0, 80)}`;
+    }
+  }
+  failures++;
+  console.error(`  vision: every model failed (${lastError}); candidates are used unchecked`);
+  return unchecked(`all models failed: ${lastError}`);
 }

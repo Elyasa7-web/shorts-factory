@@ -379,7 +379,7 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
       const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.3 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
       // at least half of the scene's words must be present: a lone "car" is no match ("rear axle shaft" once got night traffic lights)
-      const ok = !(videoOnly && c.type !== "video") && !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (strict ? sameSense : (trusted || sameSense));   // vehicle channel: EVERY source must show a vehicle word
+      const ok = !(videoOnly && c.type !== "video") && !(c.type === "image" && !["Pexels", "Pixabay"].includes(c.source)) && !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (strict ? sameSense : (trusted || sameSense));   // vehicle channel: EVERY source must show a vehicle word
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)
@@ -392,4 +392,36 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
   const best = (strong.length ? strong : middle.length ? middle : ranked)[0];
   used.add(best.id);
   return { ...best, score: best.rank, poolSize: cands.length };
+}
+
+/**
+ * A BROAD pool of Pexels / Pixabay candidates for the vision picker (scripts/vision.mjs). The strict text filter in
+ * findVisual() throws away almost everything for specific scenes ("car clutch pedal"), because stock libraries tag clips
+ * loosely. Here the libraries' own search ranking is trusted, only blocked words are filtered, and Gemini looks at the
+ * preview frames to decide what really shows the sentence. Videos only, unless `photos` is set (last-resort round).
+ * Returns up to `limit` candidates that all carry a `preview` image URL.
+ */
+export async function candidatePool(queries, used, { pexelsKey, pixabayKey, extraBlock = [], visual = "", limit = 8, photos = false }) {
+  const safe = async (fn) => { try { return await fn(); } catch { return []; } };
+  const jobs = [];
+  for (const q of queries) {
+    jobs.push(safe(() => pexelsVideos(q, pexelsKey)), safe(() => pixabayVideos(q, pixabayKey)));
+    if (photos) jobs.push(safe(() => pexelsPhotos(q, pexelsKey)), safe(() => pixabayPhotos(q, pixabayKey)));
+  }
+  const extra = new Set(extraBlock);
+  const seen = new Set();
+  const pool = (await Promise.all(jobs)).flat().filter((c) => {
+    if (!c.preview || used.has(c.id) || seen.has(c.id)) return false;
+    seen.add(c.id);
+    return !tokens(c.hay).some((w) => BLOCK_WORDS.has(w) || extra.has(w));
+  });
+  // light ordering only (the vision call makes the real decision): clips whose tags share words with the scene, portrait first,
+  // videos before photos; Pexels and Pixabay results are interleaved so one library cannot fill the whole pool
+  const score = (c) => (visual ? relevance(visual, c.hay) : 0) + (c.portrait ? 0.15 : 0) + (c.type === "video" ? 0.3 : 0);
+  const bySource = new Map();
+  for (const c of pool.sort((x, y) => score(y) - score(x))) bySource.set(c.source, [...(bySource.get(c.source) ?? []), c]);
+  const lists = [...bySource.values()];
+  const out = [];
+  for (let k = 0; out.length < limit && lists.some((l) => k < l.length); k++) for (const l of lists) if (k < l.length && out.length < limit) out.push(l[k]);
+  return out;
 }

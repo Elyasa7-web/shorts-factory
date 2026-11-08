@@ -3,9 +3,9 @@
 // and data/story-props.json. A scene without a visual falls back to a moving gradient;
 // this step never fails the build.
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
-import { findVisual, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
+import { findVisual, candidatePool, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
 import { trimBlackLead, isTooDark } from "./clip-utils.mjs";
-import { checkVisual } from "./vision.mjs";
+import { checkVisual, pickBest } from "./vision.mjs";
 
 const story = JSON.parse(readFileSync("data/story.json", "utf8"));
 const KEY = process.env.PEXELS_API_KEY;
@@ -125,14 +125,61 @@ async function acquire(sc, i, suffix, { videoOnly = false, minLuma = 65, attempt
   }
   return null;
 }
+const KIND_QUERY = { car: "car", motorcycle: "motorcycle", train: "train", aircraft: "airplane", ship: "ship", machine: "construction machine", truck: "truck" };
+
+/**
+ * VISION-FIRST footage for one scene (the main path). Up to three rounds of searching Pexels + Pixabay (the full description,
+ * a shortened one, then generic footage of the vehicle kind); every round collects a broad pool of videos and Gemini compares
+ * their preview frames in ONE request. The best acceptable clip becomes the scene's main shot and the runner-up its second shot,
+ * so the second shot costs no extra request. Rejected candidates are never offered again. Returns { rel, type, rel2? } or null.
+ * If Gemini is unavailable the pool order is used unchecked (the brightness test still applies), exactly like before.
+ */
+async function acquireByVision(sc, i) {
+  const hook = sc.kind === "hook";
+  const minLuma = hook ? HOOK_MIN_LUMA : 65;
+  const ctx = { sentence: sc.text, visual: sc.visual, vehicle: kind === "machine" ? "machine" : kind, hook };
+  const words = sc.visual.split(/\s+/);
+  const generic = [...fallbackQueries].sort(() => Math.random() - 0.5).slice(0, 2);
+  const rounds = [
+    { qs: [sc.visual, `${story.topic} ${sc.visual}`], visual: sc.visual },
+    { qs: [words.slice(0, 3).join(" "), `${KIND_QUERY[kind] ?? "car"} ${words.slice(-2).join(" ")}`], visual: words.slice(0, 3).join(" ") },
+    { qs: generic, visual: "" },
+  ];
+  for (const [r, round] of rounds.entries()) {
+    const pool = await candidatePool(round.qs, used, { pexelsKey: KEY, pixabayKey: PIXABAY, extraBlock, visual: round.visual, limit: 8, photos: r === rounds.length - 1 && !hook });
+    if (!pool.length) { report.push(`${sc.kind}: round ${r + 1} found no candidates for "${round.qs[0]}"`); continue; }
+    const pick = await pickBest(pool, ctx);
+    for (const x of pick.rejected) { used.add(x.c.id); report.push(`${sc.kind}: rejected ${x.c.id} (match ${x.match}, striking ${x.striking}, ${x.problem}: ${x.seen})`); }
+    if (pick.skipped) report.push(`${sc.kind}: vision skipped (${pick.why}), using the search order`);
+    const got = [];
+    for (const item of pick.ranked) {
+      if (got.length >= 2) break;
+      const c = item.c;
+      used.add(c.id);
+      if (got.length && c.type !== "video") continue;              // the second shot must be a video
+      const rel = `clips/story-${i}${got.length ? "b" : ""}.${c.type === "video" ? "mp4" : "jpg"}`;
+      try {
+        try { await download(c.url, `public/${rel}`, c.type === "image" ? 30_000 : 0, got.length ? 65 : minLuma); }
+        catch (e) { if (!c.fallbackUrl || e.message === "too dark") throw e; await download(c.fallbackUrl, `public/${rel}`, 5_000, minLuma); }
+      } catch (e) { report.push(`${sc.kind}: ${c.source} ${c.id} download failed (${e.message})`); continue; }
+      if (c.credit) credits.add(c.credit);
+      got.push({ rel, type: c.type, item });
+      report.push(`${sc.kind}${got.length > 1 ? "/2" : ""}: ${c.type} ${c.id} from ${c.source} (vision ${item.match ?? "-"}/${item.striking ?? "-"}, ${item.seen ?? "unchecked"}) round ${r + 1} for "${sc.visual}"`);
+      if (c.type !== "video") break;                                // a photo scene has no second shot
+    }
+    if (got.length) return { rel: got[0].rel, type: got[0].type, rel2: got[1]?.rel };
+  }
+  return null;
+}
+
 for (let i = 0; i < scenes.length; i++) {
   const sc = scenes[i];
   if (sc.kind === "cta") { // the CTA reuses the hook's visual so the Short loops
     sc.clip = scenes[0].clip; sc.image = scenes[0].image;
     continue;
   }
-  const got = await acquire(sc, i, "", { videoOnly: sc.kind === "hook", minLuma: sc.kind === "hook" ? HOOK_MIN_LUMA : 65, attempts: 6 });
-  if (got) { if (got.type === "video") sc.clip = got.rel; else sc.image = got.rel; }
+  const got = (await acquireByVision(sc, i)) ?? (await acquire(sc, i, "", { videoOnly: sc.kind === "hook", minLuma: sc.kind === "hook" ? HOOK_MIN_LUMA : 65, attempts: 4 }));
+  if (got) { if (got.type === "video") sc.clip = got.rel; else sc.image = got.rel; if (got.rel2) sc.clip2 = got.rel2; }
 }
 
 // scenes that found nothing: search the generic pool of this kind of vehicle (still never an off-topic clip)
@@ -151,15 +198,6 @@ for (let i = 0; i < scenes.length; i++) {
       break;
     } catch (e) { /* try the next generic query */ }
   }
-}
-
-// SECOND SHOT: a scene that holds one clip for 4-6 s feels static. Every scene that got a real video also gets a second,
-// different video, and Story.tsx cuts to it halfway through. Best effort: a scene without one simply keeps its single clip.
-for (let i = 0; i < scenes.length; i++) {
-  const sc = scenes[i];
-  if (sc.kind === "cta" || !sc.clip) continue;
-  const got = await acquire(sc, i, "b", { videoOnly: true, minLuma: 65, attempts: 3 });
-  if (got) sc.clip2 = got.rel;
 }
 
 // the CTA reuses the hook's visual so the Short loops
