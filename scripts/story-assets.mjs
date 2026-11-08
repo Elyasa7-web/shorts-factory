@@ -88,14 +88,24 @@ const report = [];
  * If a candidate cannot be downloaded or fails the check, its id stays in `used` and the next best is tried.
  */
 async function acquire(sc, i, suffix, { videoOnly = false, minLuma = 65, attempts = 4 } = {}) {
-  const queries = [...new Set(suffix ? [sc.visual, `${story.topic} ${sc.visual}`, story.topic] : [`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
-  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true, extraBlock, videoOnly };
+  let queries = [...new Set(suffix ? [sc.visual, `${story.topic} ${sc.visual}`, story.topic] : [`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
   const tag = `${sc.kind}${suffix ? "/2" : ""}`;
+  // Gemini often writes a very specific search ("vintage open top truck driving") that stock libraries have never heard of.
+  // When the full description finds nothing, the same scene is searched again with its first three words; the vision check
+  // then decides whether what turned up really shows the sentence.
+  const short = sc.visual.split(/\s+/).slice(0, 3).join(" ");
+  const variants = short === sc.visual ? [sc.visual] : [sc.visual, short];
+  let variant = 0;
+  let opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: variants[0], context, categoryWords, article, strict: true, extraBlock, videoOnly };
   for (let attempt = 0; attempt < attempts; attempt++) {
     try {
       // no loose guesses: a scene without a real match gets generic footage of the right vehicle kind (pool below)
       const v = await findVisual(queries, used, opts);
-      if (!v) { report.push(`${tag}: none for "${sc.visual}"`); return null; }
+      if (!v) {
+        if (variant + 1 < variants.length) { variant++; opts = { ...opts, visual: variants[variant] }; queries = [...new Set([variants[variant], `${story.topic} ${variants[variant]}`, ...queries])]; report.push(`${tag}: nothing for "${sc.visual}", retrying as "${variants[variant]}"`); continue; }
+        report.push(`${tag}: none for "${sc.visual}"`);
+        return null;
+      }
       const look = await checkVisual(v.preview, { sentence: sc.text, visual: sc.visual, vehicle: kind === "machine" ? "machine" : kind, hook: sc.kind === "hook" });
       if (!look.ok) { report.push(`${tag}: rejected ${v.id} by vision (match ${look.match}, striking ${look.striking}, ${look.problem}: ${look.seen})`); continue; }
       const ext = v.type === "video" ? (/\.webm(\?|$)/i.test(v.url) ? "webm" : "mp4") : "jpg";
@@ -107,7 +117,7 @@ async function acquire(sc, i, suffix, { videoOnly = false, minLuma = 65, attempt
         await download(v.fallbackUrl, `public/${rel}`, 5_000, minLuma);
       }
       if (v.credit) credits.add(v.credit);
-      report.push(`${tag}: ${v.type} from ${v.source} (scene ${v.scene?.toFixed?.(2)}, topic ${v.about?.toFixed?.(2)}, vision ${look.skipped ? "skipped" : `${look.match}/${look.striking}`}) for "${sc.visual}" <- ${String(v.hay ?? "").slice(0, 60)}`);
+      report.push(`${tag}: ${v.type} from ${v.source} (scene ${v.scene?.toFixed?.(2)}, topic ${v.about?.toFixed?.(2)}, vision ${look.skipped ? `skipped: ${look.why}` : `${look.match}/${look.striking} ${look.model}`}) for "${sc.visual}" <- ${String(v.hay ?? "").slice(0, 60)}`);
       return { rel, type: v.type };
     } catch (e) {
       report.push(`${tag}: failed for "${sc.visual}" (${e.message})`);

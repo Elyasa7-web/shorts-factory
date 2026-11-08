@@ -4,7 +4,28 @@
 //
 // FAIL-OPEN by design: no key, a quota error, a timeout or an unreadable answer all return { ok: true, skipped: true },
 // so the video pipeline never breaks because of this check. It also stops calling Gemini after repeated failures.
-const MODELS = (process.env.GEMINI_VISION_MODEL ? [process.env.GEMINI_VISION_MODEL] : ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash"]);
+// Model names rotate (the 2.x ones were retired by Nov 2026 and the newest are often over quota), so the list comes from
+// ListModels exactly like story-script.mjs does: the newest stable flash models first, the next one when a model answers 404/429/5xx.
+let modelList = null;
+async function visionModels() {
+  if (process.env.GEMINI_VISION_MODEL) return [process.env.GEMINI_VISION_MODEL];
+  if (modelList) return modelList;
+  try {
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", {
+      headers: { "x-goog-api-key": process.env.GEMINI_API_KEY }, signal: AbortSignal.timeout(20_000),
+    });
+    const { models = [] } = await res.json();
+    const ver = (n) => Number(n.match(/gemini-(\d+(?:\.\d+)?)/)?.[1] ?? 0);
+    modelList = models
+      .filter((m) => m.supportedGenerationMethods?.includes("generateContent"))
+      .map((m) => m.name.replace("models/", ""))
+      .filter((n) => /^gemini-[\d.]+-flash(-lite)?$/.test(n))
+      .sort((a, b) => ver(b) - ver(a) || (a.includes("lite") ? 1 : 0) - (b.includes("lite") ? 1 : 0))
+      .slice(0, 5);
+  } catch (e) { console.error(`  vision: model discovery failed (${e.message})`); }
+  if (!modelList?.length) modelList = ["gemini-3.6-flash", "gemini-3.5-flash", "gemini-3.5-flash-lite"];
+  return modelList;
+}
 const MIN_GAP_MS = 6500;        // the free tier allows roughly 10 requests per minute
 const MAX_CALLS = Number(process.env.VISION_MAX_CALLS || 16);
 const MAX_FAILURES = 3;         // consecutive infrastructure failures before the check switches itself off
@@ -25,7 +46,6 @@ const SCHEMA = {
 let calls = 0;
 let failures = 0;
 let lastCall = 0;
-let modelIndex = 0;
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const pass = (why) => ({ ok: true, skipped: true, why });
@@ -67,9 +87,10 @@ Answer as JSON:
   const image = await fetchImage(previewUrl).catch((e) => { console.error(`  vision: ${e.message}`); return null; });
   if (!image) return pass("preview unavailable");
 
-  for (let m = modelIndex; m < MODELS.length; m++) {
+  let lastError = "";
+  for (const model of await visionModels()) {
     try {
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODELS[m]}:generateContent`, {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": key },
         body: JSON.stringify({
@@ -78,20 +99,18 @@ Answer as JSON:
         }),
         signal: AbortSignal.timeout(40_000),
       });
-      if (res.status === 404) { modelIndex = m + 1; continue; }                 // retired model: try the next one
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) { lastError = `${model} HTTP ${res.status}`; if (/^(404|429|5\d\d)$/.test(String(res.status))) continue; throw new Error(lastError); }
       const out = JSON.parse((await res.json()).candidates[0].content.parts[0].text);
       failures = 0;
       const match = Number(out.match), striking = Number(out.striking), problem = String(out.problem || "none");
       if (!Number.isFinite(match) || !Number.isFinite(striking)) return pass("unreadable answer");
       const ok = match >= MIN_MATCH && !BAD.has(problem) && (!hook || striking >= 5);
-      return { ok, match, striking, problem, seen: String(out.seen || "").slice(0, 80) };
+      return { ok, match, striking, problem, seen: String(out.seen || "").slice(0, 80), model };
     } catch (e) {
-      failures++;
-      console.error(`  vision: ${MODELS[m]} failed (${String(e.message).slice(0, 80)})`);
-      return pass("request failed");
+      lastError = `${model}: ${String(e.message).slice(0, 80)}`;
     }
   }
-  failures = MAX_FAILURES;
-  return pass("no vision model available");
+  failures++;
+  console.error(`  vision: every model failed (${lastError}); the candidate is accepted unchecked`);
+  return pass(`all models failed: ${lastError}`);
 }
