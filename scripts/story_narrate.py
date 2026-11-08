@@ -7,6 +7,7 @@ Voice providers and their fallbacks are shared with scripts/narrate.py.
 import json
 import os
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -32,6 +33,22 @@ def word_timings(text: str, duration: float):
         out.append({"w": w, "s": round(t, 3), "e": round(t + span, 3)})
         t += span
     return out
+
+
+def normalize_loudness(path):
+    """Shorts are watched on phone speakers next to louder videos: bring the final mix to about -14 LUFS
+    (the 28-day sample was around -17 LUFS, noticeably quieter than the feed). Best effort: on any error keep the file."""
+    tmp = path.with_name("loud.m4a")
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(path), "-af", "loudnorm=I=-14:TP=-1.5:LRA=9",
+           "-ar", "44100", "-c:a", "aac", "-b:a", "160k", str(tmp)]
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, timeout=120)
+        if tmp.stat().st_size > 2000:
+            tmp.replace(path)
+            print("loudness normalised to -14 LUFS")
+    except Exception as e:
+        print(f"loudness step skipped ({e})", file=sys.stderr)
+        tmp.unlink(missing_ok=True)
 
 
 def main():
@@ -122,6 +139,7 @@ def main():
         print(f"library mix failed ({e}); keeping the plain voice track", file=sys.stderr)
     if used_music:
         mixed.replace(out / "narration.m4a")
+    normalize_loudness(out / "narration.m4a")
     print(f"narration ok (music: {used_music})")
 
 

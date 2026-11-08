@@ -64,7 +64,7 @@ export async function pexelsVideos(query, key) {
       if (!f || v.duration < 4) continue;
       // Pexels video URLs carry a descriptive slug: /video/ocean-waves-crashing-on-rocks-1234/
       const slug = (v.url ?? "").split("/video/")[1] ?? "";
-      out.push({ id: `pv${v.id}`, type: "video", url: f.link, score: relevance(query, slug), hay: slug, source: "Pexels", portrait: f.height >= f.width });
+      out.push({ id: `pv${v.id}`, type: "video", url: f.link, score: relevance(query, slug), hay: slug, source: "Pexels", portrait: f.height >= f.width, preview: v.image });
     }
     if (out.length >= 8) break;
   }
@@ -76,7 +76,7 @@ export async function pexelsPhotos(query, key) {
   const p = new URLSearchParams({ query, per_page: "15", orientation: "portrait" });
   const { photos = [] } = await getJson(`https://api.pexels.com/v1/search?${p}`, { Authorization: key });
   return photos.map((ph) => ({
-    id: `pp${ph.id}`, type: "image", url: ph.src.large2x ?? ph.src.large, source: "Pexels",
+    id: `pp${ph.id}`, type: "image", url: ph.src.large2x ?? ph.src.large, source: "Pexels", preview: ph.src.medium ?? ph.src.large,
     score: relevance(query, `${ph.alt ?? ""} ${(ph.url ?? "").split("/photo/")[1] ?? ""}`), hay: `${ph.alt ?? ""} ${(ph.url ?? "").split("/photo/")[1] ?? ""}`, portrait: ph.height >= ph.width,
   }));
 }
@@ -172,6 +172,7 @@ export async function pixabayVideos(query, key) {
     return f?.url ? {
       id: `pxv${h.id}`, type: "video", url: f.url, source: "Pixabay", score: relevance(query, h.tags), hay: h.tags,
       portrait: f.height >= f.width,
+      preview: f.thumbnail || (h.picture_id ? `https://i.vimeocdn.com/video/${h.picture_id}_640x360.jpg` : undefined),
     } : null;
   }).filter(Boolean);
 }
@@ -179,7 +180,7 @@ export async function pixabayPhotos(query, key) {
   if (!key) return [];
   const j = await getJson(`https://pixabay.com/api/?${new URLSearchParams({ key, q: query, image_type: "photo", orientation: "vertical", per_page: "15", safesearch: "true" })}`);
   return (j.hits ?? []).map((h) => ({
-    id: `pxp${h.id}`, type: "image", url: h.largeImageURL, fallbackUrl: h.webformatURL, source: "Pixabay",
+    id: `pxp${h.id}`, type: "image", url: h.largeImageURL, fallbackUrl: h.webformatURL, source: "Pixabay", preview: h.webformatURL,
     score: relevance(query, h.tags), hay: h.tags, portrait: h.imageHeight >= h.imageWidth,
   }));
 }
@@ -336,7 +337,7 @@ export function specificMatch(visual, hay) {
  *   article media: embedded in the topic's Wikipedia article, so always the right subject
  * `used` = ids already shown (or that failed to download) in this video.
  */
-export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [], strict = false, extraBlock = [] }) {
+export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTopic, topic = "", visual = "", context = new Set(), categoryWords = new Set(), article = [], strict = false, extraBlock = [], videoOnly = false }) {
   // `article` = topic-exact media (Wikipedia article + Commons category), searched once per story
   const safe = async (fn) => { try { return await fn(); } catch { return []; } };
   const jobs = [];
@@ -376,9 +377,9 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
       const trusted = TRUSTED.has(c.source);
       // What the scene says is on screen matters most; being about the topic is a bonus. A moving clip beats a still,
       // a portrait frame fits the phone. Noisy libraries must ALSO pass the vehicle-context test.
-      const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.15 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
+      const rank = 1.0 * scene + (sameSense ? 0.35 * about : 0) + (c.type === "video" ? 0.3 : 0) + (c.portrait ? 0.08 : 0) + (c.exact && sameSense ? 0.1 : 0);
       // at least half of the scene's words must be present: a lone "car" is no match ("rear axle shaft" once got night traffic lights)
-      const ok = !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (strict ? sameSense : (trusted || sameSense));   // vehicle channel: EVERY source must show a vehicle word
+      const ok = !(videoOnly && c.type !== "video") && !blocked(c.hay) && scene >= 0.5 && (!visual || specificMatch(visual, c.hay)) && (strict ? sameSense : (trusted || sameSense));   // vehicle channel: EVERY source must show a vehicle word
       return { ...c, scene, about, rank, ok };
     })
     .filter((c) => c.ok)

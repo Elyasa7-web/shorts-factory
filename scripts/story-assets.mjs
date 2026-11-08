@@ -5,14 +5,16 @@
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { findVisual, wikiArticleMedia, commonsCategoryMedia, tokenize, CATEGORY_CONTEXT } from "./sources/media.mjs";
 import { trimBlackLead, isTooDark } from "./clip-utils.mjs";
+import { checkVisual } from "./vision.mjs";
 
 const story = JSON.parse(readFileSync("data/story.json", "utf8"));
 const KEY = process.env.PEXELS_API_KEY;
 const PIXABAY = process.env.PIXABAY_API_KEY;
 const MAX_BYTES = 70 * 1024 * 1024;
+const HOOK_MIN_LUMA = Number(process.env.HOOK_MIN_LUMA || 90);   // the opening shot must be bright (average of 0-255)
 mkdirSync("public/clips", { recursive: true });
 
-async function download(url, file, min = 0) {
+async function download(url, file, min = 0, minLuma = 65) {
   const res = await fetch(url, { signal: AbortSignal.timeout(90_000), headers: { "User-Agent": "shorts-factory/1.0" } });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   if (Number(res.headers.get("content-length") ?? 0) > MAX_BYTES) throw new Error("file too large");
@@ -24,7 +26,7 @@ async function download(url, file, min = 0) {
   }
   if (/\.(mp4|webm|jpe?g|png)$/i.test(file)) {
     let dark = false;
-    try { dark = isTooDark(file); } catch { /* unknown brightness: keep */ }
+    try { dark = isTooDark(file, minLuma); } catch { /* unknown brightness: keep */ }
     if (dark) { rmSync(file, { force: true }); throw new Error("too dark"); }       // the caller moves on to the next candidate
   }
 }
@@ -78,38 +80,49 @@ const extraBlock = Object.entries(KIND_WORDS).filter(([k]) => k !== kind).flatMa
   // a truck or a machine topic may legitimately show trucks/cars on the road; keep those words only for the car/motorcycle kinds
   .filter((w) => !(["truck", "machine"].includes(kind) && ["car", "cars", "automobile"].includes(w)));
 const report = [];
+
+/**
+ * Finds, vision-checks and downloads one clip for a scene. Returns { rel, type } or null.
+ * `suffix` "" is the scene's main clip, "b" its second shot. The hook must be a bright VIDEO: the first second decides
+ * whether a viewer swipes away (56.9 % did on this channel), and a dark or still opening is the worst start.
+ * If a candidate cannot be downloaded or fails the check, its id stays in `used` and the next best is tried.
+ */
+async function acquire(sc, i, suffix, { videoOnly = false, minLuma = 65, attempts = 4 } = {}) {
+  const queries = [...new Set(suffix ? [sc.visual, `${story.topic} ${sc.visual}`, story.topic] : [`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
+  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true, extraBlock, videoOnly };
+  const tag = `${sc.kind}${suffix ? "/2" : ""}`;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      // no loose guesses: a scene without a real match gets generic footage of the right vehicle kind (pool below)
+      const v = await findVisual(queries, used, opts);
+      if (!v) { report.push(`${tag}: none for "${sc.visual}"`); return null; }
+      const look = await checkVisual(v.preview, { sentence: sc.text, visual: sc.visual, vehicle: kind === "machine" ? "machine" : kind, hook: sc.kind === "hook" });
+      if (!look.ok) { report.push(`${tag}: rejected ${v.id} by vision (match ${look.match}, striking ${look.striking}, ${look.problem}: ${look.seen})`); continue; }
+      const ext = v.type === "video" ? (/\.webm(\?|$)/i.test(v.url) ? "webm" : "mp4") : "jpg";
+      const rel = `clips/story-${i}${suffix}.${ext}`;
+      try {
+        await download(v.url, `public/${rel}`, v.type === "image" ? 30_000 : 0, minLuma);
+      } catch (e) {
+        if (!v.fallbackUrl || e.message === "too dark") { report.push(`${tag}: ${v.source} download failed (${e.message}), trying next`); continue; }
+        await download(v.fallbackUrl, `public/${rel}`, 5_000, minLuma);
+      }
+      if (v.credit) credits.add(v.credit);
+      report.push(`${tag}: ${v.type} from ${v.source} (scene ${v.scene?.toFixed?.(2)}, topic ${v.about?.toFixed?.(2)}, vision ${look.skipped ? "skipped" : `${look.match}/${look.striking}`}) for "${sc.visual}" <- ${String(v.hay ?? "").slice(0, 60)}`);
+      return { rel, type: v.type };
+    } catch (e) {
+      report.push(`${tag}: failed for "${sc.visual}" (${e.message})`);
+    }
+  }
+  return null;
+}
 for (let i = 0; i < scenes.length; i++) {
   const sc = scenes[i];
   if (sc.kind === "cta") { // the CTA reuses the hook's visual so the Short loops
     sc.clip = scenes[0].clip; sc.image = scenes[0].image;
     continue;
   }
-  const queries = [...new Set([`${story.topic} ${sc.visual}`, sc.visual, story.topic])];
-  const opts = { pexelsKey: KEY, pixabayKey: PIXABAY, spaceTopic: story.category === "space", topic: story.topic, visual: sc.visual, context, categoryWords, article, strict: true, extraBlock };
-  let done = false;
-  // up to 4 attempts: if the best candidate cannot be downloaded, its id stays in `used` and the next best is tried
-  for (let attempt = 0; attempt < 4 && !done; attempt++) {
-    try {
-      // no loose guesses: a scene without a real match gets generic footage of the right vehicle kind (pool below)
-      const v = await findVisual(queries, used, opts);
-      if (!v) { report.push(`${sc.kind}: none for "${sc.visual}"`); break; }
-      const ext = v.type === "video" ? (/\.webm(\?|$)/i.test(v.url) ? "webm" : "mp4") : "jpg";
-      const rel = `clips/story-${i}.${ext}`;
-      try {
-        await download(v.url, `public/${rel}`, v.type === "image" ? 30_000 : 0);
-      } catch (e) {
-        if (!v.fallbackUrl) { report.push(`${sc.kind}: ${v.source} download failed (${e.message}), trying next`); continue; }
-        await download(v.fallbackUrl, `public/${rel}`, 5_000);
-      }
-      if (v.type === "video") sc.clip = rel; else sc.image = rel;
-      if (v.credit) credits.add(v.credit);
-      used.add(v.id);
-      report.push(`${sc.kind}: ${v.type} from ${v.source} (scene ${v.scene?.toFixed?.(2)}, topic ${v.about?.toFixed?.(2)}, pool ${v.poolSize}) for "${sc.visual}" <- ${String(v.hay ?? "").slice(0, 60)}`);
-      done = true;
-    } catch (e) {
-      report.push(`${sc.kind}: failed for "${sc.visual}" (${e.message})`);
-    }
-  }
+  const got = await acquire(sc, i, "", { videoOnly: sc.kind === "hook", minLuma: sc.kind === "hook" ? HOOK_MIN_LUMA : 65, attempts: 6 });
+  if (got) { if (got.type === "video") sc.clip = got.rel; else sc.image = got.rel; }
 }
 
 // scenes that found nothing: search the generic pool of this kind of vehicle (still never an off-topic clip)
@@ -118,16 +131,25 @@ for (let i = 0; i < scenes.length; i++) {
   if (sc.kind === "cta" || sc.clip || sc.image) continue;
   for (const q of [...fallbackQueries].sort(() => Math.random() - 0.5)) {
     try {
-      const v = await findVisual([q], used, { pexelsKey: KEY, pixabayKey: PIXABAY, topic: "", visual: q, context, categoryWords, strict: true, extraBlock });
+      const v = await findVisual([q], used, { pexelsKey: KEY, pixabayKey: PIXABAY, topic: "", visual: q, context, categoryWords, strict: true, extraBlock, videoOnly: sc.kind === "hook" });
       if (!v) continue;
       const rel = `clips/story-${i}.${v.type === "video" ? "mp4" : "jpg"}`;
-      await download(v.url, `public/${rel}`, v.type === "image" ? 30_000 : 0);
+      await download(v.url, `public/${rel}`, v.type === "image" ? 30_000 : 0, sc.kind === "hook" ? HOOK_MIN_LUMA : 65);
       if (v.type === "video") sc.clip = rel; else sc.image = rel;
       if (v.credit) credits.add(v.credit);
       report.push(`${sc.kind}: generic ${v.type} from ${v.source} for "${q}" (scene wanted "${sc.visual}")`);
       break;
     } catch (e) { /* try the next generic query */ }
   }
+}
+
+// SECOND SHOT: a scene that holds one clip for 4-6 s feels static. Every scene that got a real video also gets a second,
+// different video, and Story.tsx cuts to it halfway through. Best effort: a scene without one simply keeps its single clip.
+for (let i = 0; i < scenes.length; i++) {
+  const sc = scenes[i];
+  if (sc.kind === "cta" || !sc.clip) continue;
+  const got = await acquire(sc, i, "b", { videoOnly: true, minLuma: 65, attempts: 3 });
+  if (got) sc.clip2 = got.rel;
 }
 
 // the CTA reuses the hook's visual so the Short loops
@@ -145,7 +167,7 @@ for (const sc of scenes) {
 
 writeFileSync("data/story-props.json", JSON.stringify({
   scenes, title: s.title, credits: [...credits],
-  accent: "#ff7a1a", lang: story.lang ?? "tr", ctaLabel: story.lang === "en" ? "COMMENT YOUR ANSWER 👇" : "CEVABINI YORUMA YAZ 👇", subLabel: story.lang === "en" ? "FOLLOW 🔔" : "TAKİP ET 🔔",   // works on YouTube and Instagram brand: "CANLI GARAJ",
+  accent: "#ff7a1a", lang: story.lang ?? "tr", ctaLabel: story.lang === "en" ? "COMMENT YOUR ANSWER 👇" : "CEVABINI YORUMA YAZ 👇", subLabel: story.lang === "en" ? "FOLLOW 🔔" : "TAKİP ET 🔔", likeLabel: story.lang === "en" ? "👍 LIKE" : "👍 BEĞEN",   // works on YouTube and Instagram brand: "CANLI GARAJ",
 }));
 console.log(report.map((r) => "  " + r).join("\n"));
 console.log(`story visuals: ${scenes.filter((x) => x.clip || x.image).length}/${scenes.length}${KEY ? "" : " (no PEXELS_API_KEY)"}`);

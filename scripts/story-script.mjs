@@ -49,10 +49,10 @@ OUTPUT LANGUAGE: Turkish, natural SPOKEN Turkish (the text is read aloud by a vo
 Rules, all mandatory:
 1. Facts come ONLY from the SOURCE TEXT. You may add simple, logical consequences that follow directly from the mechanics the source describes (for example: if the source says a gear has no synchronizer, you may explain that engaging it while moving grinds the gear teeth). Never invent numbers, percentages, names, dates, records, prices, model names or causes that the source does not support. If the source does not say it, leave it out.
 2. Never criticise or praise a brand. Brand names only when the source itself uses them for a fact.
-3. HOOK (the first sentence, at most 10 words): promise a concrete SPECTACLE or CONSEQUENCE the viewer feels in their own car or bike: a superlative ("dünyanın en ...", "ne kadar hızlı/büyük ...?"), a mistake and its price ("... koyarsan ne olur?"), or a danger. Proven on this channel (60-90 % of viewers watched to the end): "Çift katlı otobüs virajda neden devrilmez?", "Hava yastığı ne kadar hızlı şişer?", "Benzinli araca dizel koyarsan ne olur?", "Dev kepçeli ekskavatör bir günde ne kadar kazar?". Flops (about 30 % watched): "Motosikletler yollarda neden otomobiller kadar yaygın?", "Motosiklette neden bisiklet pedalı olur?", "Dişli oranı nedir?", "SUV aslında nedir?". NEVER open with a definition, popularity, history or market statistic ("yaygın", "nedir", "tarihçesi"). Never promise something the script does not deliver.
-4. Then EXACTLY 5 beats. BEAT 1 is the most important one: it must be SHORT (8-14 words) and must IMMEDIATELY deliver the most surprising concrete fact or the first half of the answer to the hook, because most viewers decide to leave in the first 5-10 seconds. No definitions, no background, no "X, ... olan bir parçadır" in beat 1. The other four beats are 12-22 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
-5. PAYOFF (at most 22 words): the useful takeaway, what a driver or rider should know.
-6. CTA (at most 14 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
+3. HOOK (the first sentence, at most 9 words, it is spoken and shown in the first 2 seconds): promise a concrete SPECTACLE or CONSEQUENCE the viewer feels in their own car or bike: a superlative ("dünyanın en ...", "ne kadar hızlı/büyük ...?"), a mistake and its price ("... koyarsan ne olur?"), or a danger. Proven on this channel (60-90 % of viewers watched to the end): "Çift katlı otobüs virajda neden devrilmez?", "Hava yastığı ne kadar hızlı şişer?", "Benzinli araca dizel koyarsan ne olur?", "Dev kepçeli ekskavatör bir günde ne kadar kazar?". Flops (about 30 % watched): "Motosikletler yollarda neden otomobiller kadar yaygın?", "Motosiklette neden bisiklet pedalı olur?", "Dişli oranı nedir?", "SUV aslında nedir?". NEVER open with a definition, popularity, history or market statistic ("yaygın", "nedir", "tarihçesi"). Never promise something the script does not deliver.
+4. Then EXACTLY 4 beats (the whole video must run about 30-35 seconds: viewers who reach the end are the ones the algorithm rewards, so cut everything that is not essential). BEAT 1 is the most important one: it must be SHORT (8-12 words) and must IMMEDIATELY deliver the most surprising concrete fact or the first half of the answer to the hook, because most viewers decide to leave in the first 5-10 seconds. No definitions, no background, no "X, ... olan bir parçadır" in beat 1. The other three beats are 10-18 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
+5. PAYOFF (at most 18 words): the useful takeaway, what a driver or rider should know.
+6. CTA (at most 10 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
 7. Spoken numbers and units: plain numbers may be digits, but write units in words ("kilometre", "derece", "bar", "devir") and never use abbreviations such as km/s, °C, rpm, hp.
 8. For the hook, every beat and the payoff give "visual": 3-5 ENGLISH words for a stock-footage search that returns REAL FILMED footage of that exact moment. ALWAYS name the vehicle or part in it ("car steering wheel turning", "mechanic checking car engine", "motorcycle chain close up", "truck driving highway", "car brake disc spinning"). Never abstract ideas, diagrams, money, cartoons or people's names. Never a brand. Every scene must have a DIFFERENT visual, and each visual must show EXACTLY what THAT scene's sentence is about (the part, the action or the situation named in the sentence, not just "car"): a sentence about the handbrake lever gets "car handbrake lever pulled", a sentence about a worn clutch disc gets "worn clutch disc close up", a sentence about the car rolling downhill gets "car rolling downhill street". Prefer common, easy-to-find footage (cars driving, wheels, engines, mechanics, dashboards, roads) over rare close-ups of exotic parts.
 9. "title": Turkish, at most 60 characters, no emoji, truthful, same promise as the hook: use "... Neden ...?", "... Ne Olur?", "... Ne Kadar Hızlı/Büyük/Güçlü ...?" with a CONCRETE object and a surprising consequence. NEVER "... Nasıl Çalışır ve ...", "... Hakkında Bilmeniz Gereken ...", "... Nedir ve Ne İşe Yarar", "... Aslında Nedir?", "... Tarihi", "... Neden Kadar Yaygın".
@@ -122,18 +122,18 @@ async function gemini(prompt, schema, system = SYSTEM, temperature = 0.7) {
 function validate(s) {
   const problems = [];
   const w = (t) => words(t ?? "");
-  if (w(s.hook?.text) < 3 || w(s.hook.text) > 14) problems.push("hook must be 3-14 words");
-  if (!Array.isArray(s.beats) || s.beats.length !== 5) problems.push("need exactly 5 beats");
-  else s.beats.forEach((b, i) => { if (w(b.text) < 8 || w(b.text) > 26) problems.push(`beat ${i + 1} must be 8-26 words`); });
-  if (w(s.payoff?.text) < 4 || w(s.payoff.text) > 25) problems.push("payoff must be 4-25 words");
+  if (w(s.hook?.text) < 3 || w(s.hook.text) > 11) problems.push("hook must be 3-11 words");
+  if (!Array.isArray(s.beats) || s.beats.length !== 4) problems.push("need exactly 4 beats");
+  else s.beats.forEach((b, i) => { if (w(b.text) < 6 || w(b.text) > 22) problems.push(`beat ${i + 1} must be 6-22 words`); });
+  if (w(s.payoff?.text) < 4 || w(s.payoff.text) > 20) problems.push("payoff must be 4-20 words");
   // every scene is voiced as its own clip, so it must be a finished sentence (a dangling "ve…" is heard as a stutter)
   [s.hook, ...(s.beats ?? []), s.payoff].forEach((v, i) => {
     const t = (v?.text ?? "").trim();
     if (!/[.?!]["”']?$/.test(t) || /(\.\.\.|…)/.test(t) || /(^|\s)(ve|ama|çünkü|ancak|fakat|ya da|veya|ki)[.?!]$/i.test(t)) problems.push(`scene ${i + 1} must be a COMPLETE sentence ending in . ? or ! (no "…", no trailing ve/çünkü)`);
   });
-  if (w(s.cta) < 3 || w(s.cta) > 16) problems.push("cta must be 3-16 words");
+  if (w(s.cta) < 3 || w(s.cta) > 12) problems.push("cta must be 3-12 words");
   const total = w(s.hook?.text) + (s.beats ?? []).reduce((a, b) => a + w(b.text), 0) + w(s.payoff?.text) + w(s.cta);
-  if (total > 150) problems.push(`script too long (${total} words)`);
+  if (total > 115) problems.push(`script too long (${total} words)`);
   if (!s.title || s.title.length > 95) problems.push("title missing or too long");
   for (const v of [s.hook, ...(s.beats ?? []), s.payoff]) if (!v?.visual || /[^\x00-\x7f]/.test(v.visual)) problems.push("every visual must be 2-5 plain English words");
   return problems;
@@ -146,8 +146,7 @@ const FIXTURE = {
     { text: "Motor sürekli döner, tekerlekler ise durmak zorunda. İkisini birbirine bağlayıp ayıran parça debriyajdır.", visual: "engine bay close up" },
     { text: "Pedala basınca debriyaj diski volandan ayrılır. Motorun gücü şanzımana gitmez ve vites rahatça değişir.", visual: "manual gearbox gears" },
     { text: "Pedalı bırakınca yaylar diski volana bastırır. Sürtünme sayesinde güç yavaş yavaş tekerleklere aktarılır.", visual: "car driving road" },
-    { text: "Diskin üzerindeki sürtünme malzemesi zamanla aşınır. Yarım basarak sürmek bu aşınmayı hızlandırır.", visual: "mechanic car repair" },
-    { text: "Aşınan debriyaj kayar. Gaza basarsın, devir yükselir ama araç aynı hızla gitmez.", visual: "car dashboard tachometer" },
+    { text: "Yarım basarak sürmek diski aşındırır. Aşınan debriyaj kayar, devir yükselir ama araç hızlanmaz.", visual: "car dashboard tachometer" },
   ],
   payoff: { text: "Debriyajı yarım basılı tutma, yoksa pahalı bir tamire doğru gidersin.", visual: "car garage workshop" },
   cta: "Sen debriyajı en son ne zaman değiştirdin?",

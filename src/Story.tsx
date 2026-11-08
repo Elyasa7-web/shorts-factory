@@ -21,6 +21,7 @@ export const storySchema = z.object({
   lang: z.string().optional(),       // "tr": captions are upper-cased with Turkish rules (i -> İ)
   ctaLabel: z.string().optional(),
   subLabel: z.string().optional(),   // second end-card button, e.g. "ABONE OL 🔔"
+  likeLabel: z.string().optional(),  // small end-card pill, e.g. "👍 BEĞEN" (the like rate was ~1 %)
   brand: z.string().optional(),
   accent: z.string().optional(),
   totalSeconds: z.number().optional(),
@@ -30,6 +31,7 @@ export const storySchema = z.object({
       text: z.string(),
       visual: z.string().optional(),
       clip: z.string().optional(),
+      clip2: z.string().optional(), // a second shot: the scene cuts to it halfway through
       image: z.string().optional(), // a still: animated with a slow camera move
       seconds: z.number(),
       words: z.array(wordSchema),
@@ -69,7 +71,10 @@ const Backdrop: React.FC<{ scene: Scene; accent: string; punches: number[]; zoom
   const base = zoomOut
     ? interpolate(frame, [0, durationInFrames], [1.14, 1.0])
     : interpolate(frame, [0, durationInFrames], [1.0, 1.14]);
-  const punch = punches.reduce((s, f) => (frame >= f ? s + 0.06 * Math.exp(-(frame - f) / 5) : s), 0);
+  // second shot: hard cut at the middle of the scene, with the same little "punch" zoom as the word punches
+  const cut = scene.clip2 ? Math.round(durationInFrames * 0.5) : durationInFrames;
+  const allPunches = scene.clip2 ? [...punches, cut] : punches;
+  const punch = allPunches.reduce((s, f) => (frame >= f ? s + 0.06 * Math.exp(-(frame - f) / 5) : s), 0);
   const drift = Math.sin(frame / 38) * 16;
   if (scene.image) {
     // still image: stronger push-in/pull-out + drift so it never feels like a slideshow
@@ -89,11 +94,22 @@ const Backdrop: React.FC<{ scene: Scene; accent: string; punches: number[]; zoom
   if (scene.clip) {
     return (
       <AbsoluteFill style={{ transform: `translateX(${drift}px) scale(${base + punch})` }}>
-        <OffthreadVideo
-          src={staticFile(scene.clip)}
-          muted
-          style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(1.18) contrast(1.06) brightness(0.95)" }}
-        />
+        <Sequence from={0} durationInFrames={cut}>
+          <OffthreadVideo
+            src={staticFile(scene.clip)}
+            muted
+            style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(1.18) contrast(1.06) brightness(0.95)" }}
+          />
+        </Sequence>
+        {scene.clip2 ? (
+          <Sequence from={cut}>
+            <OffthreadVideo
+              src={staticFile(scene.clip2)}
+              muted
+              style={{ width: "100%", height: "100%", objectFit: "cover", filter: "saturate(1.18) contrast(1.06) brightness(0.95)" }}
+            />
+          </Sequence>
+        ) : null}
       </AbsoluteFill>
     );
   }
@@ -170,7 +186,21 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: str
   );
 };
 
-const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; brand?: string }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, brand }) => {
+// The cover: ONE frame (1/30 s, too short to see) at the very start of the video. YouTube's Shorts thumbnail comes from a
+// frame of the video, so this frame is what the channel page, search and suggestions show. run.mjs also cuts it out of the
+// finished file and uploads it with thumbnails.set. The hook footage stays underneath, so it still looks like the video.
+const CoverFrame: React.FC<{ title: string; accent: string; lang: string }> = ({ title, accent, lang }) => {
+  const text = lang === "tr" ? title.toLocaleUpperCase("tr-TR") : title.toUpperCase();
+  const size = text.length > 44 ? 84 : 98;
+  return (
+    <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.16) 40%, rgba(0,0,0,0.16) 60%, rgba(0,0,0,0.62) 100%)", justifyContent: "center", alignItems: "center", padding: "0 80px" }}>
+      <div lang={lang} style={{ fontFamily, fontWeight: 900, fontSize: size, lineHeight: 1.12, textAlign: "center", color: "#fff", ...outline(10) }}>{text}</div>
+      <div style={{ marginTop: 56, width: 360, height: 18, borderRadius: 9, background: accent }} />
+    </AbsoluteFill>
+  );
+};
+
+const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; likeLabel?: string; brand?: string; title?: string }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, likeLabel, brand, title }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const chunks = chunkWords(scene.words);
@@ -205,9 +235,15 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
           <div style={{ fontFamily, fontWeight: 900, fontSize: 54, padding: "20px 48px", borderRadius: 60, background: accent, color: "#111" }}>
             {ctaLabel}
           </div>
+          {likeLabel ? (
+            <div style={{ fontFamily, fontWeight: 900, fontSize: 46, padding: "14px 40px", borderRadius: 50, background: "#fff", color: "#111", boxShadow: "0 8px 30px rgba(0,0,0,.5)" }}>
+              {likeLabel}
+            </div>
+          ) : null}
         </div>
       ) : null}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
+      {index === 0 && scene.kind === "hook" && frame === 0 && title ? <CoverFrame title={title} accent={accent} lang={lang} /> : null}
     </AbsoluteFill>
   );
 };
@@ -217,7 +253,7 @@ const FadeIn: React.FC<{ frames: number; children: React.ReactNode }> = ({ frame
   return <AbsoluteFill style={{ opacity: interpolate(frame, [0, frames], [0, 1], { extrapolateRight: "clamp" }) }}>{children}</AbsoluteFill>;
 };
 
-export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang = "en", ctaLabel = "COMMENT YOUR ANSWER 👇", subLabel, brand }) => {
+export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang = "en", ctaLabel = "COMMENT YOUR ANSWER 👇", subLabel, likeLabel, brand, title }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const lens = scenes.map((s) => Math.max(1, Math.round(s.seconds * fps)));
@@ -228,13 +264,13 @@ export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang =
     <AbsoluteFill style={{ background: "#000" }}>
       {scenes.map((sc, i) => (
         <Sequence key={i} from={starts[i]} durationInFrames={lens[i]}>
-          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} brand={brand} />
+          <SceneView scene={sc} index={i} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} likeLabel={likeLabel} brand={brand} title={title} />
         </Sequence>
       ))}
       {/* seamless loop: the Short's last frames fade into its first frame */}
       <Sequence from={starts[last] + lens[last] - LOOP} durationInFrames={LOOP}>
         <FadeIn frames={LOOP - 3}>
-          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} brand={brand} />
+          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} likeLabel={likeLabel} brand={brand} title={title} />
         </FadeIn>
       </Sequence>
       <div style={{ position: "absolute", top: 0, left: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: accent }} />
