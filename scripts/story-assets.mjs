@@ -143,16 +143,19 @@ async function acquireByVision(sc, i) {
   const rounds = [
     { qs: [sc.visual, `${story.topic} ${sc.visual}`], visual: sc.visual },
     { qs: [words.slice(0, 3).join(" "), `${KIND_QUERY[kind] ?? "car"} ${words.slice(-2).join(" ")}`], visual: words.slice(0, 3).join(" ") },
-    { qs: generic, visual: "" },
+    // last round: no clip shows the exact thing, so generic footage of this vehicle kind is rated as a GENERAL shot for the topic
+    { qs: [...generic, `${KIND_QUERY[kind] ?? "car"} ${story.topic}`], visual: "", lenient: true },
   ];
   for (const [r, round] of rounds.entries()) {
-    const pool = await candidatePool(round.qs, used, { pexelsKey: KEY, pixabayKey: PIXABAY, extraBlock, visual: round.visual, limit: 8, photos: r === rounds.length - 1 && !hook });
+    const pool = await candidatePool(round.qs, used, { pexelsKey: KEY, pixabayKey: PIXABAY, extraBlock, visual: round.visual, limit: 8, photos: r === rounds.length - 1 && !hook, commons: r < 2 });
     if (!pool.length) { report.push(`${sc.kind}: round ${r + 1} found no candidates for "${round.qs[0]}"`); continue; }
-    const pick = await pickBest(pool, ctx);
+    const pick = await pickBest(pool, { ...ctx, lenient: Boolean(round.lenient), topic: story.topic });
     for (const x of pick.rejected) { used.add(x.c.id); report.push(`${sc.kind}: rejected ${x.c.id} (match ${x.match}, striking ${x.striking}, ${x.problem}: ${x.seen})`); }
     if (pick.skipped) report.push(`${sc.kind}: vision skipped (${pick.why}), using the search order`);
     const got = [];
-    for (const item of pick.ranked) {
+    // without a vision verdict only the well-labelled libraries are trusted (Wikimedia titles say little about what is on screen)
+    const candidates = pick.skipped ? pick.ranked.filter((x) => ["Pexels", "Pixabay"].includes(x.c.source)) : pick.ranked;
+    for (const item of candidates) {
       if (got.length >= 2) break;
       const c = item.c;
       used.add(c.id);

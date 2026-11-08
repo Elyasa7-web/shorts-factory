@@ -125,7 +125,7 @@ export async function commonsImages(query) {
 export async function commonsVideos(query) {
   const p = new URLSearchParams({
     action: "query", generator: "search", gsrnamespace: "6", gsrsearch: `${query} filetype:video`, gsrlimit: "12",
-    prop: "videoinfo", viprop: "url|size|mime|extmetadata|derivatives|duration", format: "json", formatversion: "2",
+    prop: "videoinfo", viprop: "url|size|mime|extmetadata|derivatives|duration", viurlwidth: "640", format: "json", formatversion: "2",
   });
   const j = await getJson(`https://commons.wikimedia.org/w/api.php?${p}`);
   const out = [];
@@ -143,7 +143,7 @@ export async function commonsVideos(query) {
     const title = pg.title.replace(/^File:/, "");
     out.push({
       id: `wv${pg.pageid}`, type: "video", url: best.src, source: "Wikimedia Commons", score: relevance(query, title), hay: title,
-      portrait: (best.height ?? 0) >= (best.width ?? 1), credit: `${artist}, ${lic}, via Wikimedia Commons`, seconds: vi.duration,
+      portrait: (best.height ?? 0) >= (best.width ?? 1), credit: `${artist}, ${lic}, via Wikimedia Commons`, seconds: vi.duration, preview: vi.thumburl,
     });
   }
   return out;
@@ -401,11 +401,12 @@ export async function findVisual(queries, used, { pexelsKey, pixabayKey, spaceTo
  * preview frames to decide what really shows the sentence. Videos only, unless `photos` is set (last-resort round).
  * Returns up to `limit` candidates that all carry a `preview` image URL.
  */
-export async function candidatePool(queries, used, { pexelsKey, pixabayKey, extraBlock = [], visual = "", limit = 8, photos = false }) {
+export async function candidatePool(queries, used, { pexelsKey, pixabayKey, extraBlock = [], visual = "", limit = 8, photos = false, commons = false }) {
   const safe = async (fn) => { try { return await fn(); } catch { return []; } };
   const jobs = [];
   for (const q of queries) {
     jobs.push(safe(() => pexelsVideos(q, pexelsKey)), safe(() => pixabayVideos(q, pixabayKey)));
+    if (commons) jobs.push(safe(() => commonsVideos(q)));
     if (photos) jobs.push(safe(() => pexelsPhotos(q, pexelsKey)), safe(() => pixabayPhotos(q, pixabayKey)));
   }
   const extra = new Set(extraBlock);

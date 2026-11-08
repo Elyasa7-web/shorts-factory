@@ -140,7 +140,7 @@ const PICK_SCHEMA = {
  * `rejected` = the rest with their verdict. When Gemini cannot be used (no key, quota, errors) the answer is { skipped: true } and
  * `ranked` is the unchecked input order, so the caller keeps working exactly as before.
  */
-export async function pickBest(cands, { sentence, visual, vehicle = "car", hook = false }) {
+export async function pickBest(cands, { sentence, visual, vehicle = "car", hook = false, lenient = false, topic = "" }) {
   const unchecked = (why) => ({ skipped: true, why, ranked: cands.map((c) => ({ c })), rejected: [] });
   if (!cands.length) return { skipped: false, ranked: [], rejected: [] };
   if (!visionAvailable()) return unchecked("vision unavailable");
@@ -156,7 +156,7 @@ export async function pickBest(cands, { sentence, visual, vehicle = "car", hook 
   const prompt = `You pick background footage for a vertical YouTube Short about ${vehicle}s. The narrator says (Turkish): "${sentence}"
 We searched stock footage for: "${visual}". Below are ${loaded.length} numbered preview frames of candidate clips.
 Rate EVERY image (index = its number):
-- match (0-10): how clearly the frame shows what the sentence is about (the named part, action or situation, on the right kind of vehicle). 0 = unrelated or the wrong vehicle, 10 = exactly it.
+- match (0-10): ${lenient ? `no stock clip shows this exact thing, so rate each frame as a GENERAL illustrative shot for a video about "${topic}" (a ${vehicle} topic): 6-10 = a fitting general shot of a ${vehicle} (driving, mechanics, parts, workshop) that would not look wrong under this sentence; 0-3 = unrelated or the wrong subject.` : "how clearly the frame shows what the sentence is about (the named part, action or situation, on the right kind of vehicle). 0 = unrelated or the wrong vehicle, 10 = exactly it."}
 - striking (0-10): would a thumb-scrolling viewer stop for it? Bright, sharp, close, clear subject or motion = high. Dark, empty, flat, cluttered = low.${hook ? " This is the OPENING shot of the video: be strict." : ""}
 - problem: one of none, text_overlay (visible text, logos, watermarks), cartoon (drawing, diagram or 3D render), wrong_vehicle (not a ${vehicle}), dark, people_only (a person or crowd with no vehicle subject), blurry.
 - seen: at most 8 English words saying what the frame shows.`;
