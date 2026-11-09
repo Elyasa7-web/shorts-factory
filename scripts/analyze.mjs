@@ -10,6 +10,8 @@ import { PARTS, SCENARIOS } from "./sources/garage-topics.mjs";
 
 const arg = (n, d) => { const i = process.argv.indexOf(`--${n}`); return i > 0 ? process.argv[i + 1] : d; };
 const CUTOFF = Date.parse(arg("cutoff", "2026-10-17T00:30:00Z"));
+// 2026-11-09 overhaul: vision-picked footage, 4-beat ~35 s scripts, -14 LUFS, 2 videos a day, whole-hook headline, mini-series, one-word CTA
+const CUTOFF2 = Date.parse(arg("cutoff2", "2026-11-09T12:00:00Z"));
 const MIN_AGE_H = Number(arg("min-age-h", 48));
 const START = "2026-10-04";
 const today = new Date().toISOString().slice(0, 10);
@@ -61,7 +63,8 @@ for (const l of log) {
   const s = stats[l.id], a = per[l.id], t = topicOf(l.key ?? "");
   if (!s || !a || s.priv !== "public") continue;
   const ageH = (Date.now() - Date.parse(l.publishAt)) / 3600e3;
-  rows.push({ id: l.id, title: l.title, after: Date.parse(l.uploadedAt) >= CUTOFF, ageH, hourTRT: (new Date(l.publishAt).getUTCHours() + 3) % 24, kind: t?.kind ?? "?", angle: t?.angle ?? "?", cat: t?.cat ?? "?",
+  rows.push({ id: l.id, title: l.title, after: Date.parse(l.uploadedAt) >= CUTOFF, after2: Date.parse(l.uploadedAt) >= CUTOFF2,
+    hookStyle: l.hookStyle ?? "(before 11-09)", seriesPart: l.series ? `part ${l.series.part}/${l.series.of}` : "no series", ageH, hourTRT: (new Date(l.publishAt).getUTCHours() + 3) % 24, kind: t?.kind ?? "?", angle: t?.angle ?? "?", cat: t?.cat ?? "?",
     views: s.views, secs: s.secs, avgPct: a.averageViewPercentage, avgSec: a.averageViewDuration, subs: a.subscribersGained, shares: a.shares });
 }
 const eligible = rows.filter((r) => r.ageH >= MIN_AGE_H && r.views >= 100);   // old enough to judge, not a distribution failure
@@ -87,10 +90,13 @@ const before = eligible.filter((r) => !r.after), after = eligible.filter((r) => 
 let md = `# Canlı Garaj analysis ${today}\n\nVideos judged: ${eligible.length} (public, >= ${MIN_AGE_H} h old, >= 100 views). "After" = uploaded after ${new Date(CUTOFF).toISOString()}.\n`;
 md += `Channel: ${rows.length} public analysed videos, ${rows.reduce((a, r) => a + r.views, 0)} views, ${rows.reduce((a, r) => a + r.subs, 0)} subscribers gained since ${START}.\n\n`;
 md += `## Before vs after the 2026-10-17 changes\n${head}\n${line("BEFORE", summary(before))}\n${line("AFTER", summary(after))}\n\n`;
+const old2 = eligible.filter((r) => !r.after2), new2 = eligible.filter((r) => r.after2);
+md += `## Before vs after the 2026-11-09 overhaul\n${head}\n${line("BEFORE", summary(old2))}\n${line("AFTER", summary(new2))}\n\n`;
+md += `Not in this report (YouTube Studio only: Content > Shorts > "Viewed vs swiped away"): baseline on 2026-11-07 was 43.1% viewed / 56.9% swiped away, average view 22-28 s. Compare it manually 1-2 weeks after the overhaul.\n\n`;
 for (const kind of ["motorcycle", "machine"]) {
   md += `### ${kind}\n${head}\n${line(`${kind} before`, summary(before.filter((r) => r.kind === kind)))}\n${line(`${kind} after`, summary(after.filter((r) => r.kind === kind)))}\n\n`;
 }
-for (const [key, label] of [["kind", "vehicle kind"], ["angle", "angle"], ["hourTRT", "publish hour (TRT)"]]) {
+for (const [key, label] of [["kind", "vehicle kind"], ["angle", "angle"], ["hourTRT", "publish hour (TRT)"], ["hookStyle", "hook style (videos since 2026-11-09)"], ["seriesPart", "mini-series position"]]) {
   md += `## By ${label} (all judged videos)\n${head}\n`;
   for (const [k, g] of Object.entries(Object.groupBy(eligible, (r) => r[key])).sort((a, b) => mean(b[1].map((r) => r.avgPct)) - mean(a[1].map((r) => r.avgPct)))) md += line(String(k), summary(g)) + "\n";
   md += "\n";

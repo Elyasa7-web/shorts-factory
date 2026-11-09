@@ -118,10 +118,11 @@ async function makeGarage() {
   // (Pexels, Pixabay, CC0, public domain), and the narration is our own wording of plain facts.
   const description = [
     sc.title, "", sc.payoff.text, "", sc.cta, "",
+    ...(story.series ? [`Seri: ${story.series.tr} (${story.series.part}/${story.series.of}). Devamı için kanalı takip et.`, ""] : []),
     "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.",
     "", [...new Set(tagLine)].map((t) => `#${t}`).join(" "),
   ].join("\n");
-  return { format: "garage", key: story.key, title: sc.title, description, tags, kind: story.vehicle ?? "car", category: story.category };
+  return { format: "garage", key: story.key, title: sc.title, description, tags, kind: story.vehicle ?? "car", category: story.category, hookStyle: story.hookStyle, series: story.series ?? undefined };
 }
 
 // Only the garage format is made (the old English ranking videos do not fit the channel any more).
@@ -219,7 +220,7 @@ try {
   if (saved) continueBatchIfNeeded();   // the video exists as a package: the batch goes on
   process.exit(0);
 }
-log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt });
+log.push({ id, format: made.format, key: made.key, title: made.title, uploadedAt: new Date().toISOString(), publishAt, hookStyle: made.hookStyle, series: made.series ? { part: made.series.part, of: made.series.of, wiki: made.series.wiki } : undefined });
 writeFileSync(SCHEDULE, JSON.stringify(log.slice(-500), null, 1));
 if (made.format === "garage") {
   // remember the topic so it is not repeated (rankings record themselves in generate-topic.mjs)

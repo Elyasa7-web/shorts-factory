@@ -186,7 +186,7 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: str
   );
 };
 
-const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; likeLabel?: string; brand?: string; title?: string }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, likeLabel, brand, title }) => {
+const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; likeLabel?: string; brand?: string; title?: string; bare?: boolean }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, likeLabel, brand, title, bare }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const chunks = chunkWords(scene.words);
@@ -209,12 +209,12 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
           {brand}
         </div>
       ) : null}
-      <Captions scene={scene} accent={accent} big={scene.kind === "hook" || isPayoff} lang={lang} />
+      {bare ? null : scene.kind === "hook" ? <HookHeadline scene={scene} accent={accent} lang={lang} /> : <Captions scene={scene} accent={accent} big={isPayoff} lang={lang} />}
       {scene.kind === "cta" ? (
         <div lang={lang} style={{ position: "absolute", top: 1180, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 26 }}>
           {subLabel ? (
             // the subscribe button pulses gently so the eye lands on it
-            <div style={{ fontFamily, fontWeight: 900, fontSize: 60, padding: "24px 56px", borderRadius: 70, background: "#ff0033", color: "#fff", border: "6px solid #fff", boxShadow: "0 10px 40px rgba(0,0,0,.55)", transform: `scale(${1 + 0.035 * Math.sin(frame / 4)})` }}>
+            <div style={{ fontFamily, fontWeight: 900, fontSize: subLabel.length > 16 ? 48 : 60, padding: "24px 56px", borderRadius: 70, background: "#ff0033", color: "#fff", border: "6px solid #fff", boxShadow: "0 10px 40px rgba(0,0,0,.55)", transform: `scale(${1 + 0.035 * Math.sin(frame / 4)})` }}>
               {subLabel}
             </div>
           ) : null}
@@ -230,6 +230,30 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
       ) : null}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
     </AbsoluteFill>
+  );
+};
+
+// The hook shows its WHOLE sentence from frame 0 (the viewer decides within 1-2 s; with 3-4 word chunks the promise was only
+// readable at the end of the hook). The word being spoken is highlighted, like the other captions.
+const HookHeadline: React.FC<{ scene: Scene; accent: string; lang: string }> = ({ scene, accent, lang }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const t = frame / fps;
+  const up = (s: string) => s.toLocaleUpperCase(lang === "tr" ? "tr-TR" : "en-US");
+  const whole = up(scene.words.map((w) => w.w).join(" "));
+  const AVAIL = 920 - 2 * 14 - 24;
+  const longest = Math.max(...scene.words.map((w) => textEm(up(w.w))));
+  const fitLines = Math.floor((AVAIL * 3.3) / Math.max(1, textEm(whole)));   // size at which the sentence needs ~3 lines
+  const size = Math.max(60, Math.min(104, Math.floor(AVAIL / (longest * 1.05)), fitLines));
+  return (
+    <div lang={lang} style={{ position: "absolute", left: 50, right: 110, top: 690, textAlign: "center", fontFamily, fontWeight: 900, fontSize: size, lineHeight: 1.1, ...outline(14) }}>
+      {scene.words.map((w, i) => {
+        const active = t >= w.s - 0.02 && t < w.e + 0.02;
+        return (
+          <span key={i} style={{ color: active ? accent : "#fff", display: "inline-block", margin: "0 14px", transform: active ? "scale(1.06)" : "scale(1)" }}>{up(w.w)}</span>
+        );
+      })}
+    </div>
   );
 };
 
@@ -255,7 +279,7 @@ export const Story: React.FC<StoryProps> = ({ accent = "#ffcc00", scenes, lang =
       {/* seamless loop: the Short's last frames fade into its first frame */}
       <Sequence from={starts[last] + lens[last] - LOOP} durationInFrames={LOOP}>
         <FadeIn frames={LOOP - 3}>
-          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} likeLabel={likeLabel} brand={brand} title={title} />
+          <SceneView scene={scenes[0]} index={0} total={scenes.length} accent={accent} lang={lang} ctaLabel={ctaLabel} subLabel={subLabel} likeLabel={likeLabel} brand={brand} title={title} bare />
         </FadeIn>
       </Sequence>
       <div style={{ position: "absolute", top: 0, left: 0, height: 10, width: `${(frame / durationInFrames) * 100}%`, background: accent }} />

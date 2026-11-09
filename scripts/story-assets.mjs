@@ -218,7 +218,7 @@ for (const sc of scenes) {
 
 writeFileSync("data/story-props.json", JSON.stringify({
   scenes, title: s.title, credits: [...credits],
-  accent: "#ff7a1a", lang: story.lang ?? "tr", ctaLabel: story.lang === "en" ? "COMMENT YOUR ANSWER 👇" : "CEVABINI YORUMA YAZ 👇", subLabel: story.lang === "en" ? "FOLLOW 🔔" : "TAKİP ET 🔔", likeLabel: story.lang === "en" ? "👍 LIKE" : "👍 BEĞEN",   // works on YouTube and Instagram brand: "CANLI GARAJ",
+  accent: "#ff7a1a", lang: story.lang ?? "tr", ctaLabel: story.lang === "en" ? "COMMENT YOUR ANSWER 👇" : "CEVABINI YORUMA YAZ 👇", subLabel: story.lang === "en" ? "FOLLOW 🔔" : story.series && story.series.part < story.series.of ? "DEVAMI İÇİN TAKİP ET 🔔" : "TAKİP ET 🔔", likeLabel: story.lang === "en" ? "👍 LIKE" : "👍 BEĞEN",   // works on YouTube and Instagram brand: "CANLI GARAJ",
 }));
 console.log(report.map((r) => "  " + r).join("\n"));
 console.log(`story visuals: ${scenes.filter((x) => x.clip || x.image).length}/${scenes.length}${KEY ? "" : " (no PEXELS_API_KEY)"}`);

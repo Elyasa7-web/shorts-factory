@@ -11,6 +11,7 @@ import { PARTS, SCENARIOS, anglesFor } from "./sources/garage-topics.mjs";
 
 const HISTORY = "data/history.json";
 const OUT = "data/story.json";
+const SCHEDULE = "data/schedule.json";
 
 // Gemini model names change often (older ones get retired for new users), so the model list is
 // discovered from the API instead of being hard-coded: newest "flash" first, "lite" as a last resort.
@@ -52,7 +53,7 @@ Rules, all mandatory:
 3. HOOK (the first sentence, at most 9 words, it is spoken and shown in the first 2 seconds): promise a concrete SPECTACLE or CONSEQUENCE the viewer feels in their own car or bike: a superlative ("dünyanın en ...", "ne kadar hızlı/büyük ...?"), a mistake and its price ("... koyarsan ne olur?"), or a danger. Proven on this channel (60-90 % of viewers watched to the end): "Çift katlı otobüs virajda neden devrilmez?", "Hava yastığı ne kadar hızlı şişer?", "Benzinli araca dizel koyarsan ne olur?", "Dev kepçeli ekskavatör bir günde ne kadar kazar?". Flops (about 30 % watched): "Motosikletler yollarda neden otomobiller kadar yaygın?", "Motosiklette neden bisiklet pedalı olur?", "Dişli oranı nedir?", "SUV aslında nedir?". NEVER open with a definition, popularity, history or market statistic ("yaygın", "nedir", "tarihçesi"). Never promise something the script does not deliver.
 4. Then EXACTLY 4 beats (the whole video must run about 30-35 seconds: viewers who reach the end are the ones the algorithm rewards, so cut everything that is not essential). BEAT 1 is the most important one: it must be SHORT (8-12 words) and must IMMEDIATELY deliver the most surprising concrete fact or the first half of the answer to the hook, because most viewers decide to leave in the first 5-10 seconds. No definitions, no background, no "X, ... olan bir parçadır" in beat 1. The other three beats are 10-18 words. Each beat gives one new idea. Every beat is one or two COMPLETE sentences that make sense on their own and end with ".", "?" or "!". NEVER cut a sentence off between beats: no trailing comma, no "...", no "…", and no beat ending on "ve", "ama", "çünkü", "ancak" or "fakat" (each beat is read aloud as its own separate clip). The "open loop" is made by an intriguing complete sentence or a short question, for example "Peki bu mandal kırılırsa ne olur?". Build to the answer.
 5. PAYOFF (at most 18 words): the useful takeaway, what a driver or rider should know.
-6. CTA (at most 10 words): an easy, debatable question that makes the viewer want to answer in the comments ("Sen ... ?").
+6. CTA (at most 10 words): a question the viewer can answer in the comments with ONE word, because short answers are what people actually type: make them CHOOSE between two things ("... mı, ... mı?"), CONFESS ("Sen hiç ... yaptın mı?") or GUESS a number. Never "ne düşünüyorsun?" or "yorumlara yaz".
 7. Spoken numbers and units: plain numbers may be digits, but write units in words ("kilometre", "derece", "bar", "devir") and never use abbreviations such as km/s, °C, rpm, hp.
 8. For the hook, every beat and the payoff give "visual": 3-5 ENGLISH words for a stock-footage search that returns REAL FILMED footage of that exact moment. ALWAYS name the vehicle or part in it ("car steering wheel turning", "mechanic checking car engine", "motorcycle chain close up", "truck driving highway", "car brake disc spinning"). Never abstract ideas, diagrams, money, cartoons or people's names. Never a brand. Every scene must have a DIFFERENT visual, and each visual must show EXACTLY what THAT scene's sentence is about (the part, the action or the situation named in the sentence, not just "car"): a sentence about the handbrake lever gets "car handbrake lever pulled", a sentence about a worn clutch disc gets "worn clutch disc close up", a sentence about the car rolling downhill gets "car rolling downhill street". Prefer common, easy-to-find footage (cars driving, wheels, engines, mechanics, dashboards, roads) over rare close-ups of exotic parts.
 9. "title": Turkish, at most 60 characters, no emoji, truthful, same promise as the hook: use "... Neden ...?", "... Ne Olur?", "... Ne Kadar Hızlı/Büyük/Güçlü ...?" with a CONCRETE object and a surprising consequence. NEVER "... Nasıl Çalışır ve ...", "... Hakkında Bilmeniz Gereken ...", "... Nedir ve Ne İşe Yarar", "... Aslında Nedir?", "... Tarihi", "... Neden Kadar Yaygın".
@@ -158,6 +159,21 @@ function loadHistory() {
   try { return JSON.parse(readFileSync(HISTORY, "utf8")); } catch { return []; }
 }
 
+// Hook styles the script is steered towards (parts only; scenario questions keep their own wording). classifyHook() labels the
+// FINISHED hook by its wording, and that label is stored with the video so scripts/analyze.mjs can compare the styles.
+const HOOK_STYLES = [
+  { id: "consequence", brief: 'a MISTAKE and its price or danger ("... koyarsan ne olur?", "... yaparsan ne olur?")' },
+  { id: "spectacle", brief: 'a SUPERLATIVE or spectacle ("dünyanın en ...", "... ne kadar hızlı/büyük/güçlü?")' },
+  { id: "why", brief: 'a surprising WHY puzzle the viewer never thought about ("... neden ...?")' },
+];
+export function classifyHook(text = "") {
+  const t = text.toLocaleLowerCase("tr-TR");
+  if (/ne olur|olursa|yaparsan|edersen|takarsan|koyarsan|basarsan|çekersen|kullanırsan|gidersen|kapatırsan|unutursan|bırakırsan|kopsa|biterse|patlarsa/.test(t)) return "consequence";
+  if (/ne kadar|dünyanın en|en (büyük|hızlı|güçlü|ağır|uzun|pahalı|yüksek)|rekor|kaç (kilometre|ton|metre)/.test(t)) return "spectacle";
+  if (/neden|niçin|niye|nasıl/.test(t)) return "why";
+  return "other";
+}
+
 // ---- what to make next -------------------------------------------------------------------------------------
 // ~55 % "what happens if...?" scenarios (they keep viewers longest: 54 % average view vs ~48 % for parts) (the viewer's own questions), the rest parts told from a rotating angle.
 export const KIND_SHARE = {};   // all kinds equal: the motorcycle double share of 17 Oct did not pay off (retention 38.7 %, 0.31 subs/1k)
@@ -176,6 +192,21 @@ export function nextTopic(history, forced) {
   }
   let fresh = all.filter((t) => !done.has(t.key));
   if (!fresh.length) fresh = all; // everything made once: start a new round
+  // MINI-SERIES: viewers who liked one video about a part are the best audience for the next one about the same part (the
+  // algorithm also keeps showing a channel's related Shorts together). A series is SERIES_LEN videos on the same Wikipedia
+  // article, one after the other, each from a new angle; afterwards the article rests and a new series starts.
+  const SERIES_LEN = Number(process.env.SERIES_LEN || 3);
+  const topicByKey = new Map(all.map((x) => [x.key, x]));
+  const recent = history.filter((h) => h.at).map((h) => topicByKey.get(h.key)).filter(Boolean);
+  const lastTopic = recent.at(-1);
+  let run = 0;
+  for (let i = recent.length - 1; lastTopic && i >= 0 && recent[i].wiki === lastTopic.wiki; i--) run++;
+  const siblingsOf = (t) => fresh.filter((x) => x.wiki === t.wiki && x.vehicle === t.vehicle && x.key !== t.key);
+  if (lastTopic && run < SERIES_LEN) {
+    const sib = siblingsOf(lastTopic);
+    if (sib.length) return { ...pick(sib), series: { wiki: lastTopic.wiki, part: run + 1, of: SERIES_LEN } };
+  }
+  if (lastTopic && run >= SERIES_LEN && fresh.some((t) => t.wiki !== lastTopic.wiki)) fresh = fresh.filter((t) => t.wiki !== lastTopic.wiki);
   // 1) which KIND of vehicle: a fair rotation. The kind with the FEWEST videos made so far goes next; ties follow
   //    KIND_ORDER (car, train, aircraft, machine, ship, motorcycle, truck). So the kinds alternate one after the other
   //    and a kind that is behind catches up before the others get a second video.
@@ -192,9 +223,13 @@ export function nextTopic(history, forced) {
   const kind = [...candidates].sort((a, b) => score(a) - score(b) || order(a) - order(b))[0];
   const pool = fresh.filter((t) => t.vehicle === kind);
   // 2) a "what happens if...?" question (40 %) or a part told from a fresh angle
-  const scen = pool.filter((t) => t.kind === "scenario");
-  const parts = pool.filter((t) => t.kind === "part");
-  return scen.length && (!parts.length || Math.random() < 0.7) ? pick(scen) : pick(parts);
+  // start a series only where enough fresh angles are left to finish it
+  const rich = pool.filter((t) => siblingsOf(t).length >= SERIES_LEN - 1);
+  const base = rich.length ? rich : pool;
+  const scen = base.filter((t) => t.kind === "scenario");
+  const parts = base.filter((t) => t.kind === "part");
+  const t = scen.length && (!parts.length || Math.random() < 0.7) ? pick(scen) : pick(parts);
+  return siblingsOf(t).length >= SERIES_LEN - 1 ? { ...t, series: { wiki: t.wiki, part: 1, of: SERIES_LEN } } : t;
 }
 
 async function loadSource(t) {
@@ -229,9 +264,21 @@ export async function generateStory({ fixture = false, topic } = {}) {
     let source;
     try { source = await loadSource(t); } catch (e) { console.error(`source failed (${t.wiki}): ${e.message}`); history.push({ key: t.key }); continue; }
 
-    const brief = t.kind === "scenario"
+    let brief = t.kind === "scenario"
       ? `VIDEO IDEA: answer this viewer question in Turkish: "${t.q}"`
       : `VIDEO IDEA: tell the viewer about "${t.tr}" (Wikipedia: ${source.title}). Angle: ${t.angle.brief}.`;
+    if (t.kind !== "scenario") {
+      const style = HOOK_STYLES[history.filter((h) => h.at).length % HOOK_STYLES.length];
+      brief += `\nHOOK STYLE for this video: the hook is ${style.brief}.`;
+    }
+    if (t.series) {
+      const schedule = existsSync(SCHEDULE) ? (() => { try { return JSON.parse(readFileSync(SCHEDULE, "utf8")); } catch { return []; } })() : [];
+      const earlier = history.filter((h) => h.at).slice(-(t.series.part - 1)).filter(() => t.series.part > 1)
+        .map((h) => schedule.find((l) => l.key === h.key)?.title ?? h.key.split("|").pop());
+      brief += `\nThis is video ${t.series.part} of ${t.series.of} in a mini-series about the same subject. ${earlier.length
+        ? `The earlier videos of the series were: ${earlier.map((x) => `"${x}"`).join(", ")}. Do NOT repeat their hook or facts: reveal something NEW.`
+        : "Make it a strong video that stands on its own."} Never say "bölüm" or "part" aloud and never promise content the script does not deliver.`;
+    }
     const base = `SOURCE TEXT (Wikipedia):\n"""\n${source.text}\n"""\n\n${brief}\nWrite the Short script now.`;
     let script = await gemini(base, SCHEMA);
     let problems = validate(script);
@@ -260,6 +307,7 @@ export async function generateStory({ fixture = false, topic } = {}) {
     }
     return {
       topic: source.title, key: t.key, category: t.category, vehicle: t.vehicle, lang: "tr",
+      series: t.series ? { ...t.series, tr: t.tr ?? source.title } : null, hookStyle: classifyHook(script.hook.text),
       source: { title: source.title, url: source.url, urls: source.urls }, script,
     };
   }
