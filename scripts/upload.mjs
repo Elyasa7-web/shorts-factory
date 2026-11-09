@@ -45,18 +45,6 @@ export async function accessToken() {
  * @param {{file:string,title:string,description:string,tags:string[],publishAt?:string}} v
  * @returns {Promise<string>} the new video id
  */
-/** Sets the video's cover (thumbnails.set, 50 quota units). Needs a channel that may use custom thumbnails; best effort. */
-export async function setThumbnail(videoId, file) {
-  const token = await accessToken();
-  const res = await ytFetch(`https://www.googleapis.com/upload/youtube/v3/thumbnails/set?videoId=${encodeURIComponent(videoId)}&uploadType=media`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "image/jpeg" },
-    body: readFileSync(file),
-    signal: AbortSignal.timeout(60_000),
-  });
-  if (!res.ok) throw new Error(`thumbnails.set ${res.status}: ${(await res.text()).slice(0, 200)}`);
-}
-
 export async function uploadToYouTube(v) {
   if (!YT_CLIENT_ID || !YT_CLIENT_SECRET || !YT_REFRESH_TOKEN) {
     throw new Error("Missing YT_CLIENT_ID / YT_CLIENT_SECRET / YT_REFRESH_TOKEN");

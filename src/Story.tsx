@@ -186,20 +186,6 @@ const Captions: React.FC<{ scene: Scene; accent: string; big: boolean; lang: str
   );
 };
 
-// The cover: ONE frame (1/30 s, too short to see) at the very start of the video. YouTube's Shorts thumbnail comes from a
-// frame of the video, so this frame is what the channel page, search and suggestions show. run.mjs also cuts it out of the
-// finished file and uploads it with thumbnails.set. The hook footage stays underneath, so it still looks like the video.
-const CoverFrame: React.FC<{ title: string; accent: string; lang: string }> = ({ title, accent, lang }) => {
-  const text = lang === "tr" ? title.toLocaleUpperCase("tr-TR") : title.toUpperCase();
-  const size = text.length > 44 ? 84 : 98;
-  return (
-    <AbsoluteFill style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.16) 40%, rgba(0,0,0,0.16) 60%, rgba(0,0,0,0.62) 100%)", justifyContent: "center", alignItems: "center", padding: "0 80px" }}>
-      <div lang={lang} style={{ fontFamily, fontWeight: 900, fontSize: size, lineHeight: 1.12, textAlign: "center", color: "#fff", ...outline(10) }}>{text}</div>
-      <div style={{ marginTop: 56, width: 360, height: 18, borderRadius: 9, background: accent }} />
-    </AbsoluteFill>
-  );
-};
-
 const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: string; lang: string; ctaLabel: string; subLabel?: string; likeLabel?: string; brand?: string; title?: string }> = ({ scene, index, total, accent, lang, ctaLabel, subLabel, likeLabel, brand, title }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -243,7 +229,6 @@ const SceneView: React.FC<{ scene: Scene; index: number; total: number; accent: 
         </div>
       ) : null}
       <AbsoluteFill style={{ background: "#fff", opacity: flash }} />
-      {index === 0 && scene.kind === "hook" && frame === 0 && title ? <CoverFrame title={title} accent={accent} lang={lang} /> : null}
     </AbsoluteFill>
   );
 };

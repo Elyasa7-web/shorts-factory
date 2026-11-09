@@ -111,7 +111,6 @@ jobs:
           name: test-video
           path: |
             out/final.mp4
-            out/cover.jpg
           retention-days: 2
 
       - name: Save state

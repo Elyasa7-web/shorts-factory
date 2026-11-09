@@ -4,7 +4,7 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync, mkdirSync, rmSync, copyFileSync } from "node:fs";
 import { generateTopic } from "./generate-topic.mjs";
-import { uploadToYouTube, setThumbnail, accessToken, ytFetch } from "./upload.mjs";
+import { uploadToYouTube, accessToken, ytFetch } from "./upload.mjs";
 import { takeBacklogVideo, markBacklogDone } from "./backlog.mjs";
 import { publishInstagramPack, pruneInstagramPacks } from "./instagram.mjs";
 import { addToPlaylists, reconcilePlaylists } from "./playlists.mjs";
@@ -145,15 +145,6 @@ if (!made) {
 if (!fromBacklog) sh("ffmpeg", ["-y", "-loglevel", "error", "-i", "out/video.mp4", "-i", "out/narration.m4a",
   "-c:v", "copy", "-c:a", "aac", "-shortest", "out/final.mp4"]);
 
-// The one-frame cover hidden at the start of a story video (see CoverFrame in src/Story.tsx): cut it out of the FINISHED file,
-// so the thumbnail is literally a frame of the video. Best effort: a failure here never stops the upload.
-const coverFile = "out/cover.jpg";
-let hasCover = false;
-if (!fromBacklog && made.format === "garage") {
-  try { sh("ffmpeg", ["-y", "-loglevel", "error", "-i", "out/final.mp4", "-frames:v", "1", "-q:v", "2", coverFile]); hasCover = true; }
-  catch (e) { console.error(`::warning::cover frame not extracted: ${String(e.message).slice(0, 120)}`); }
-}
-
 if (process.env.DRY_RUN) {
   console.log(`DRY_RUN set: built out/final.mp4 (${made.format}), not uploading.`);
   process.exit(0);
@@ -236,10 +227,6 @@ if (made.format === "garage") {
   const h = existsSync(hp) ? JSON.parse(readFileSync(hp, "utf8")) : [];
   h.push({ key: made.key, at: new Date().toISOString() });
   writeFileSync(hp, JSON.stringify(h.slice(-2000), null, 1));
-}
-if (hasCover) {
-  try { await setThumbnail(id, coverFile); console.log("cover frame set as the thumbnail"); }
-  catch (e) { console.error(`::warning::custom thumbnail not set (${String(e.message).slice(0, 200)})`); }
 }
 console.log(`Uploaded https://youtube.com/shorts/${id} (${made.format}) -> goes public at ${publishAt}  [${madeToday + 1}/${DAILY_TARGET} today]`);
 if (fromBacklog) markBacklogDone(made.backlogTag, id);
