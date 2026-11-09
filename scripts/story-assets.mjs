@@ -36,7 +36,8 @@ const scenes = [
   { kind: "hook", text: s.hook.text, visual: s.hook.visual },
   ...s.beats.map((b) => ({ kind: "beat", text: b.text, visual: b.visual })),
   { kind: "payoff", text: s.payoff.text, visual: s.payoff.visual },
-  { kind: "cta", text: s.cta, visual: s.payoff.visual },
+  // the like request is spoken too (the like rate was ~1 %); the question stays LAST so the answer is what the viewer types
+  { kind: "cta", text: story.lang === "en" ? s.cta : `Beğenmeyi unutma! ${s.cta}`, visual: s.payoff.visual },
 ];
 
 const used = new Set(); // never show the same asset twice in one video
