@@ -319,5 +319,5 @@ if (process.argv[1]?.endsWith("story-script.mjs")) {
   const story = await generateStory({ fixture: args.includes("--fixture"), topic: args.includes("--topic") ? args[args.indexOf("--topic") + 1] : undefined });
   mkdirSync(dirname(OUT), { recursive: true });
   writeFileSync(OUT, JSON.stringify(story, null, 2));
-  console.log(`story: ${story.topic} -> ${story.script.title}`);
+  console.log(`story: ${story.topic} -> ${story.script.title}  [series ${story.series ? `${story.series.part}/${story.series.of}` : "-"}, hook style: ${story.hookStyle ?? "-"}]`);
 }
