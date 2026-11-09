@@ -118,7 +118,7 @@ async function makeGarage() {
   // (Pexels, Pixabay, CC0, public domain), and the narration is our own wording of plain facts.
   const description = [
     sc.title, "", sc.payoff.text, "", sc.cta, "",
-    ...(story.series ? [`Seri: ${story.series.tr} (${story.series.part}/${story.series.of}). Devamı için kanalı takip et.`, ""] : []),
+    ...(story.series ? [`Seri: ${story.series.tr} (${story.series.part}/${story.series.of}). Devamı için abone ol.`, ""] : []),
     "Bu video bilgilendirme amaçlıdır. Aracınla ilgili bir arıza şüphesinde yetkili bir servise başvur.",
     "", [...new Set(tagLine)].map((t) => `#${t}`).join(" "),
   ].join("\n");
