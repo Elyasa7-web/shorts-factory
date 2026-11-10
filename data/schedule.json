@@ -1245,5 +1245,19 @@
   "title": "Aşınmış Lastikle Yağmurda Ne Olur?",
   "uploadedAt": "2026-11-09T08:40:00.861Z",
   "publishAt": "2026-11-10T09:00:00.000Z"
+ },
+ {
+  "id": "Jwob2QoZPNQ",
+  "format": "garage",
+  "key": "garage|q|Lastik havası çok düşükken araç kullanırsan ne olur?",
+  "title": "Düşük Lastik Havasıyla Araç Kullanırsan Ne Olur?",
+  "uploadedAt": "2026-11-10T10:17:13.851Z",
+  "publishAt": "2026-11-10T17:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Tire"
+  }
  }
 ]
