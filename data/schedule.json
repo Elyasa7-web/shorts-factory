@@ -1287,5 +1287,19 @@
    "of": 3,
    "wiki": "Bogie"
   }
+ },
+ {
+  "id": "e2kwdsVIvIs",
+  "format": "garage",
+  "key": "garage|Bogie|mistake",
+  "title": "Tren Bojisi Virajda Dönmezse Ne Olur?",
+  "uploadedAt": "2026-11-11T10:27:06.362Z",
+  "publishAt": "2026-11-12T09:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Bogie"
+  }
  }
 ]
