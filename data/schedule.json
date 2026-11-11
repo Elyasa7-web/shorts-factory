@@ -1273,5 +1273,19 @@
    "of": 3,
    "wiki": "Tire"
   }
+ },
+ {
+  "id": "A3YYeuJYOcQ",
+  "format": "garage",
+  "key": "garage|q|Tren neden düz raylarda bile sallanır?",
+  "title": "Tren Düz Rayda Neden Sağa Sola Sallanır?",
+  "uploadedAt": "2026-11-11T10:16:26.062Z",
+  "publishAt": "2026-11-11T17:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Bogie"
+  }
  }
 ]
