@@ -1315,5 +1315,19 @@
    "of": 3,
    "wiki": "Bogie"
   }
+ },
+ {
+  "id": "4A8epWJlWNE",
+  "format": "garage",
+  "key": "garage|Winglet|wow",
+  "title": "Uçak Kanat Uçları Neden Yukarı Kıvrıktır?",
+  "uploadedAt": "2026-11-12T08:39:55.551Z",
+  "publishAt": "2026-11-13T09:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Winglet"
+  }
  }
 ]
