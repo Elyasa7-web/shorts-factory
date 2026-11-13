@@ -1329,5 +1329,19 @@
    "of": 3,
    "wiki": "Winglet"
   }
+ },
+ {
+  "id": "fJFkz2E3bgk",
+  "format": "garage",
+  "key": "garage|Winglet|failure",
+  "title": "Uçağın Kanadını Uzatırsan Ne Olur?",
+  "uploadedAt": "2026-11-13T08:21:57.819Z",
+  "publishAt": "2026-11-13T17:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Winglet"
+  }
  }
 ]
