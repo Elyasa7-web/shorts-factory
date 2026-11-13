@@ -1343,5 +1343,19 @@
    "of": 3,
    "wiki": "Winglet"
   }
+ },
+ {
+  "id": "PWviTDPBMd0",
+  "format": "garage",
+  "key": "garage|Winglet|surprise",
+  "title": "Uçak Kanat Ucu Burgacı Uçağı Ne Kadar Yavaşlatır?",
+  "uploadedAt": "2026-11-13T08:39:06.371Z",
+  "publishAt": "2026-11-14T09:00:00.000Z",
+  "hookStyle": "spectacle",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Winglet"
+  }
  }
 ]
