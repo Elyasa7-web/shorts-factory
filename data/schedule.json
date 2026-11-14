@@ -1357,5 +1357,19 @@
    "of": 3,
    "wiki": "Winglet"
   }
+ },
+ {
+  "id": "_GDr2dZB-KY",
+  "format": "garage",
+  "key": "garage|Bulldozer|surprise",
+  "title": "Dev Dozer Çamurda Neden Batmaz?",
+  "uploadedAt": "2026-11-14T09:17:29.484Z",
+  "publishAt": "2026-11-14T17:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Bulldozer"
+  }
  }
 ]
