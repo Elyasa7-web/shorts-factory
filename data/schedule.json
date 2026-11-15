@@ -1399,5 +1399,19 @@
    "of": 3,
    "wiki": "Bulldozer"
   }
+ },
+ {
+  "id": "D4dZTamfb6o",
+  "format": "garage",
+  "key": "garage|q|Gemi çapası gemiyi suyun içinde nasıl yerinde tutar?",
+  "title": "Devasa Gemi Suda Nasıl Sabit Kalır?",
+  "uploadedAt": "2026-11-15T08:42:34.590Z",
+  "publishAt": "2026-11-16T09:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Anchor"
+  }
  }
 ]
