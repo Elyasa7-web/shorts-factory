@@ -1385,5 +1385,19 @@
    "of": 3,
    "wiki": "Bulldozer"
   }
+ },
+ {
+  "id": "LLTOz5DoDfo",
+  "format": "garage",
+  "key": "garage|q|Dozer paletleri çamurda neden batmaz?",
+  "title": "Dev Dozer Asfalta Çıkarsa Ne Olur?",
+  "uploadedAt": "2026-11-15T08:33:54.185Z",
+  "publishAt": "2026-11-15T17:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Bulldozer"
+  }
  }
 ]
