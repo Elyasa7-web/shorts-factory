@@ -1441,5 +1441,19 @@
    "of": 3,
    "wiki": "Anchor"
   }
+ },
+ {
+  "id": "Caa09Y18w_Q",
+  "format": "garage",
+  "key": "garage|q|Motosiklet kaskı çarpışmada kafayı nasıl korur?",
+  "title": "Kask Ölüm Riskini Ne Kadar Düşürür?",
+  "uploadedAt": "2026-11-17T08:27:32.895Z",
+  "publishAt": "2026-11-17T17:00:00.000Z",
+  "hookStyle": "spectacle",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Motorcycle helmet"
+  }
  }
 ]
