@@ -1469,5 +1469,19 @@
    "of": 3,
    "wiki": "Motorcycle helmet"
   }
+ },
+ {
+  "id": "irLm9IBFHoQ",
+  "format": "garage",
+  "key": "garage|Motorcycle helmet|wow",
+  "title": "Motosiklet Kaskı Şiddetli Darbeye Nasıl Dayanır?",
+  "uploadedAt": "2026-11-18T11:33:18.495Z",
+  "publishAt": "2026-11-18T17:00:00.000Z",
+  "hookStyle": "spectacle",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Motorcycle helmet"
+  }
  }
 ]
