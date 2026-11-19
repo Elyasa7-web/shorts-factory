@@ -1483,5 +1483,19 @@
    "of": 3,
    "wiki": "Motorcycle helmet"
   }
+ },
+ {
+  "id": "MgF2T-D-75U",
+  "format": "garage",
+  "key": "garage|Fifth-wheel coupling|wow",
+  "title": "Tır Dorsesi Çekiciye Neden Beşinci Tekerlekle Bağlanır?",
+  "uploadedAt": "2026-11-19T00:23:14.478Z",
+  "publishAt": "2026-11-19T09:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Fifth-wheel coupling"
+  }
  }
 ]
