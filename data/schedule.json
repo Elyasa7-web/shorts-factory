@@ -1539,5 +1539,19 @@
    "of": 3,
    "wiki": "Motor oil"
   }
+ },
+ {
+  "id": "klQ08jkSbTY",
+  "format": "garage",
+  "key": "garage|q|Araba soğuk sabahlarda neden zor çalışır?",
+  "title": "Soğuk Sabahlarda Araba Neden Zor Çalışır?",
+  "uploadedAt": "2026-11-20T11:18:19.986Z",
+  "publishAt": "2026-11-21T17:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Motor oil"
+  }
  }
 ]
