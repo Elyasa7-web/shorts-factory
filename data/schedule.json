@@ -1525,5 +1525,19 @@
    "of": 3,
    "wiki": "Fifth-wheel coupling"
   }
+ },
+ {
+  "id": "xKJvcfPRr-4",
+  "format": "garage",
+  "key": "garage|q|Motor yağı değişimini bir yıl geciktirirsen motora ne olur?",
+  "title": "Motor Yağını Bir Yıl Değiştirmezsen Ne Olur?",
+  "uploadedAt": "2026-11-20T10:22:06.132Z",
+  "publishAt": "2026-11-21T09:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Motor oil"
+  }
  }
 ]
