@@ -1567,5 +1567,19 @@
    "of": 3,
    "wiki": "Motor oil"
   }
+ },
+ {
+  "id": "0zB6MAhkq10",
+  "format": "garage",
+  "key": "garage|Rack railway|mistake",
+  "title": "Dağ Trenleri Dik Yokuşta Neden Aşağı Kaymaz?",
+  "uploadedAt": "2026-11-21T13:18:36.323Z",
+  "publishAt": "2026-11-22T17:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Rack railway"
+  }
  }
 ]
