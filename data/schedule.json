@@ -1581,5 +1581,19 @@
    "of": 3,
    "wiki": "Rack railway"
   }
+ },
+ {
+  "id": "XtjGRx9j6tQ",
+  "format": "garage",
+  "key": "garage|Rack railway|surprise",
+  "title": "Dik Yokuşa Normal Tren Rayı Döşersen Ne Olur?",
+  "uploadedAt": "2026-11-22T08:22:54.190Z",
+  "publishAt": "2026-11-23T09:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Rack railway"
+  }
  }
 ]
