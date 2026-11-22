@@ -1595,5 +1595,19 @@
    "of": 3,
    "wiki": "Rack railway"
   }
+ },
+ {
+  "id": "hO2aQe7sD_g",
+  "format": "garage",
+  "key": "garage|Rack railway|wow",
+  "title": "Dişli Trenler Ne Kadar Dik Yokuşa Tırmanabilir?",
+  "uploadedAt": "2026-11-22T08:34:57.703Z",
+  "publishAt": "2026-11-23T17:00:00.000Z",
+  "hookStyle": "spectacle",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Rack railway"
+  }
  }
 ]
