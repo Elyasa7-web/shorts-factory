@@ -1623,5 +1623,19 @@
    "of": 3,
    "wiki": "Cockpit"
   }
+ },
+ {
+  "id": "a1JTLTEDb3M",
+  "format": "garage",
+  "key": "garage|Cockpit|mistake",
+  "title": "Uçak Kokpit Kapısını Zorlarsan Ne Olur?",
+  "uploadedAt": "2026-11-23T08:37:39.110Z",
+  "publishAt": "2026-11-24T17:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Cockpit"
+  }
  }
 ]
