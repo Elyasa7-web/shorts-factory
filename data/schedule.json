@@ -1651,5 +1651,19 @@
    "of": 3,
    "wiki": "Cockpit"
   }
+ },
+ {
+  "id": "WVDL90WNvr0",
+  "format": "garage",
+  "key": "garage|Tower crane|mistake",
+  "title": "Dev Vinçler Tonlarca Ağırlığı Neden Kolayca Kaldırır?",
+  "uploadedAt": "2026-11-24T09:40:11.353Z",
+  "publishAt": "2026-11-25T17:00:00.000Z",
+  "hookStyle": "why",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Tower crane"
+  }
  }
 ]

@@ -714,5 +714,9 @@
  {
   "key": "garage|Cockpit|failure",
   "at": "2026-11-24T09:29:59.420Z"
+ },
+ {
+  "key": "garage|Tower crane|mistake",
+  "at": "2026-11-24T09:40:11.353Z"
  }
 ]
