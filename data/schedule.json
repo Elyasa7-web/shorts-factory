@@ -1637,5 +1637,19 @@
    "of": 3,
    "wiki": "Cockpit"
   }
+ },
+ {
+  "id": "GOyy_6BFF8Y",
+  "format": "garage",
+  "key": "garage|Cockpit|failure",
+  "title": "Yarış Arabasında Kokpit Neden En Kritik Alandır?",
+  "uploadedAt": "2026-11-24T09:29:59.419Z",
+  "publishAt": "2026-11-25T09:00:00.000Z",
+  "hookStyle": "other",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Cockpit"
+  }
  }
 ]
