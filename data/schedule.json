@@ -1665,5 +1665,19 @@
    "of": 3,
    "wiki": "Tower crane"
   }
+ },
+ {
+  "id": "TF5B6s4qDM8",
+  "format": "garage",
+  "key": "garage|Tower crane|wow",
+  "title": "Vince Fazla Yük Yüklersen Ne Olur?",
+  "uploadedAt": "2026-11-25T08:16:35.525Z",
+  "publishAt": "2026-11-26T09:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Tower crane"
+  }
  }
 ]
