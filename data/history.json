@@ -730,5 +730,9 @@
  {
   "key": "garage|Ballast tank|failure",
   "at": "2026-11-26T08:29:16.581Z"
+ },
+ {
+  "key": "garage|Ballast tank|wow",
+  "at": "2026-11-26T17:18:34.090Z"
  }
 ]

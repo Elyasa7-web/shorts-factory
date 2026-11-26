@@ -1707,5 +1707,19 @@
    "of": 3,
    "wiki": "Ballast tank"
   }
+ },
+ {
+  "id": "dgIf05_Q9GI",
+  "format": "garage",
+  "key": "garage|Ballast tank|wow",
+  "title": "Sığ Suya Girerken Balast Suyu Boşaltılmazsa Ne Olur?",
+  "uploadedAt": "2026-11-26T17:18:34.089Z",
+  "publishAt": "2026-11-27T17:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Ballast tank"
+  }
  }
 ]
