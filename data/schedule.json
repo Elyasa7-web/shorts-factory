@@ -1735,5 +1735,19 @@
    "of": 3,
    "wiki": "Ballast tank"
   }
+ },
+ {
+  "id": "KEHrVkhE5cs",
+  "format": "garage",
+  "key": "garage|q|Slipper debriyaj motosikleti kilitlenmeden nasıl yavaşlatır?",
+  "title": "Sert Frende Arka Teker Neden Kilitlenmez?",
+  "uploadedAt": "2026-11-27T08:38:51.482Z",
+  "publishAt": "2026-11-28T17:00:00.000Z",
+  "hookStyle": "other",
+  "series": {
+   "part": 1,
+   "of": 3,
+   "wiki": "Slipper clutch"
+  }
  }
 ]
