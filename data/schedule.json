@@ -1721,5 +1721,19 @@
    "of": 3,
    "wiki": "Ballast tank"
   }
+ },
+ {
+  "id": "zbUM9mnkTGs",
+  "format": "garage",
+  "key": "garage|Ballast tank|mistake",
+  "title": "Dev Gemiler Dalgalarda Neden Kırılmaz?",
+  "uploadedAt": "2026-11-27T08:18:32.252Z",
+  "publishAt": "2026-11-28T09:00:00.000Z",
+  "hookStyle": "spectacle",
+  "series": {
+   "part": 3,
+   "of": 3,
+   "wiki": "Ballast tank"
+  }
  }
 ]
