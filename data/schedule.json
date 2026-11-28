@@ -1749,5 +1749,19 @@
    "of": 3,
    "wiki": "Slipper clutch"
   }
+ },
+ {
+  "id": "r3x_ZA5Xm6c",
+  "format": "garage",
+  "key": "garage|Slipper clutch|failure",
+  "title": "Sert Frende Kaymalı Debriyaj Bozulursa Ne Olur?",
+  "uploadedAt": "2026-11-28T08:19:13.157Z",
+  "publishAt": "2026-11-29T09:00:00.000Z",
+  "hookStyle": "consequence",
+  "series": {
+   "part": 2,
+   "of": 3,
+   "wiki": "Slipper clutch"
+  }
  }
 ]
